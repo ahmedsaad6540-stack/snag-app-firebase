@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Smart Mall OS</title>
+    <meta name="description" content="نظام إدارة المولات الذكي — تسجيل ومتابعة الملاحظات والصيانة" />
+    <meta name="theme-color" content="#060d1a">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        background: #060d1a;
+        color: #e2e8f0;
+        font-family: 'IBM Plex Sans Arabic', Arial, sans-serif;
+        direction: rtl;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+      }
+      input, textarea, select, button { font-family: inherit; }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #0f172a; }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+
+      /* ── Layout Grid ── */
+      .app-grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+      .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+      /* ── Bell Pulse Animation ── */
+      @keyframes bellPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+      }
+      .bell-pulse {
+        animation: bellPulse 2s ease-in-out infinite;
+      }
+      @keyframes badgeBounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+      }
+      .badge-bounce {
+        animation: badgeBounce 1.5s ease-in-out infinite;
+      }
+
+      /* ── Live Notification Banner Slide-up ── */
+      @keyframes slideUpNotif {
+        from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+        to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+      .live-notif-banner {
+        animation: slideUpNotif 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      /* ── Notification item hover ── */
+      .notif-item:hover {
+        background: rgba(59,130,246,0.06) !important;
+      }
+
+      /* 🔔 Modern Notification Overlay & Panel (Desktop & Base) */
+      .notif-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(6px);
+        z-index: 10000;
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+      }
+
+      .notif-panel {
+        position: absolute;
+        top: 60px;
+        left: 20px;
+        width: 400px;
+        height: 520px;
+        max-height: 80vh;
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 18px;
+        box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* ══════════════════════════════════════════════════════════ */
+      /* ██  TABLET BREAKPOINT (≤ 900px)                       ██ */
+      /* ══════════════════════════════════════════════════════════ */
+      @media (max-width: 900px) {
+        .app-grid { grid-template-columns: 1fr; }
+      }
+
+      /* ══════════════════════════════════════════════════════════ */
+      /* ██  MOBILE BREAKPOINT (≤ 600px) — Full Overhaul        ██ */
+      /* ══════════════════════════════════════════════════════════ */
+      @media (max-width: 600px) {
+        /* Form row stacking */
+        .form-row { grid-template-columns: 1fr; }
+
+        /* User Bar — vertical stack */
+        .user-bar-wrap {
+          flex-direction: column !important;
+          gap: 10px !important;
+          align-items: stretch !important;
+          padding: 12px !important;
+          border-radius: 12px !important;
+        }
+        .user-bar-actions {
+          flex-wrap: wrap !important;
+          justify-content: center !important;
+          gap: 8px !important;
+        }
+        .user-bar-actions button {
+          font-size: 12px !important;
+          padding: 8px 12px !important;
+        }
+
+        /* Tabs — scrollable horizontal */
+        .tabs-row {
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch;
+          flex-wrap: nowrap !important;
+          gap: 4px !important;
+          padding-bottom: 8px !important;
+          scrollbar-width: none;
+        }
+        .tabs-row::-webkit-scrollbar { display: none; }
+        .tabs-row button, .tabs-row > div {
+          font-size: 12px !important;
+          padding: 8px 12px !important;
+          white-space: nowrap !important;
+          flex-shrink: 0 !important;
+        }
+
+        /* Tables — horizontal scroll */
+        .table-scroll {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .table-scroll table { min-width: 600px; }
+
+        /* Module headers — stack vertically */
+        .module-header {
+          flex-direction: column !important;
+          gap: 10px !important;
+          align-items: stretch !important;
+        }
+        .module-header h2 {
+          font-size: 16px !important;
+          text-align: center;
+        }
+        .module-header-actions {
+          flex-wrap: wrap !important;
+          justify-content: center !important;
+          gap: 6px !important;
+        }
+        .module-header-actions input[type="text"] {
+          min-width: 0 !important;
+          width: 100% !important;
+        }
+        .module-header-actions button {
+          flex: 1 1 auto;
+          min-width: 0 !important;
+          font-size: 11px !important;
+          padding: 8px 10px !important;
+        }
+
+        /* Modal forms */
+        .modal-form-grid { grid-template-columns: 1fr !important; }
+
+        /* Snag card actions */
+        .snag-actions {
+          flex-wrap: wrap !important;
+          gap: 4px !important;
+        }
+        .snag-actions button {
+          font-size: 10px !important;
+          padding: 6px 8px !important;
+        }
+
+        /* Details modal grid */
+        .details-grid { grid-template-columns: 1fr !important; }
+
+        /* Notification popup — full width on mobile */
+        .notif-popup {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100% !important;
+          max-height: 100% !important;
+          border-radius: 0 !important;
+          z-index: 9999 !important;
+        }
+
+        /* 🔔 Mobile Notification Panel Overrides */
+        .notif-overlay {
+          justify-content: center;
+          align-items: center;
+          padding: 20px;
+        }
+        .notif-panel {
+          position: relative !important;
+          top: auto !important;
+          left: auto !important;
+          right: auto !important;
+          bottom: auto !important;
+          width: 95% !important;
+          height: 75vh !important;
+          max-height: 600px !important;
+          border-radius: 18px !important;
+          border: 1px solid #1e293b !important;
+          box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.9) !important;
+        }
+
+        /* Stat bar — 2 column on narrow screens */
+        .stat-grid {
+          grid-template-columns: repeat(2, 1fr) !important;
+        }
+        .stat-grid > div:last-child {
+          grid-column: span 2;
+        }
+
+        /* Header — stack vertically */
+        .app-header {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 12px !important;
+          text-align: center;
+        }
+        .app-header h1 {
+          font-size: 20px !important;
+          justify-content: center !important;
+        }
+        .header-actions {
+          flex-wrap: wrap !important;
+          justify-content: center !important;
+          gap: 6px !important;
+        }
+        .header-actions button {
+          font-size: 11px !important;
+          padding: 8px 10px !important;
+          flex: 1 1 auto;
+        }
+
+        /* Live notification banner */
+        .live-notif-banner {
+          width: 95% !important;
+          bottom: 10px !important;
+        }
+      }
+
+      /* ══════════════════════════════════════════════════════════ */
+      /* ██  VERY SMALL SCREENS (≤ 380px)                       ██ */
+      /* ══════════════════════════════════════════════════════════ */
+      @media (max-width: 380px) {
+        .stat-grid {
+          grid-template-columns: 1fr 1fr !important;
+          gap: 6px !important;
+        }
+        .stat-grid > div {
+          padding: 10px 8px !important;
+        }
+        .stat-grid > div > div:first-child {
+          font-size: 24px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

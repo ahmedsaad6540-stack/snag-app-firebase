@@ -1,0 +1,6 @@
+services:
+  snagappfirebase:
+    image: snagappfirebase
+    build:
+      context: .
+      dockerfile: ./Dockerfile
