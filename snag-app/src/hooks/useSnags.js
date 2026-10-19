@@ -17,18 +17,27 @@ import { genId } from "../constants/index.js"
 
 const SNAGS_COL = "snags"
 
-export function useSnags(notify) {
+export function useSnags(notify, currentUser) {
   const [snags,   setSnags]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
 
   // ── Real-time listener ───────────────────────────────────────────────────
   useEffect(() => {
+    if (!currentUser) {
+      setSnags([])
+      setError(null)
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    setError(null)
     const q = query(collection(db, SNAGS_COL), orderBy("timestamp", "desc"))
     const unsub = onSnapshot(
       q,
       (snap) => {
         setSnags(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+        setError(null)
         setLoading(false)
       },
       (err) => {
@@ -38,7 +47,7 @@ export function useSnags(notify) {
       }
     )
     return unsub
-  }, [])
+  }, [currentUser?.uid])
 
   // ── Stats ────────────────────────────────────────────────────────────────
   const stats = useMemo(() => ({

@@ -4,12 +4,18 @@ import { db } from "../lib/firebase.js"
 
 const LISTS_COL = "custom_lists"
 
-export function useCustomLists() {
+export function useCustomLists(currentUser) {
   const [customLists, setCustomLists] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!currentUser) {
+      setCustomLists([])
+      setError(null)
+      setLoading(false)
+      return
+    }
     const q = query(collection(db, LISTS_COL), orderBy("timestamp", "asc"))
     const unsub = onSnapshot(
       q,
@@ -24,7 +30,7 @@ export function useCustomLists() {
       }
     )
     return unsub
-  }, [])
+  }, [currentUser?.uid])
 
   async function addCustomList(name) {
     try {

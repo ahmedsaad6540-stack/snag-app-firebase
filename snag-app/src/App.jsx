@@ -20,8 +20,8 @@ import { Toaster } from "react-hot-toast"
 export default function App() {
   const { user, loading: authLoading, error: authError, login, register, logout, setError } = useAuth()
   const { notifications, unreadCount, notify, markAsRead, markAllAsRead, deleteNotification, clearAllNotifications, liveToast, dismissLiveToast } = useNotifications(user)
-  const { snags, stats, loading, error, addSnag, cycleStatus, removeSnag, updateSnag, mergeImported, wipeAll } = useSnags(notify)
-  const { customLists, addCustomList, removeCustomList } = useCustomLists()
+  const { snags, stats, loading, error, addSnag, cycleStatus, removeSnag, updateSnag, mergeImported, wipeAll } = useSnags(notify, user)
+  const { customLists, addCustomList, removeCustomList } = useCustomLists(user)
   const [filteredSnags, setFilteredSnags] = useState([])
   const [showUsersManager, setShowUsersManager] = useState(false)
   const [activeTab, setActiveTab] = useState("snags") // "snags" | "restrooms" | "units" | "stores" | custom_id
