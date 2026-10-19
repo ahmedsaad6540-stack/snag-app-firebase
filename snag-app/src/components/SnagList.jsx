@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react"
 import ConfirmDialog from "./ConfirmDialog.jsx"
-import { TRADES, TYPES, PRIORITIES, tradeOf, priOf, staOf, typeOf, avatarColor, formatDate } from "../constants/index.js"
+import { TRADES, TYPES, PRIORITIES, PARK_ST_TRACKS, tradeOf, priOf, staOf, typeOf, avatarColor, formatDate } from "../constants/index.js"
 import { useLocations } from "../hooks/useLocations.js"
 
 const FILTER_TABS = [
@@ -16,9 +16,36 @@ const STATUS_OPTIONS = [
   { id: "closed",      label: "✅ مغلق" },
 ]
 
+const SECTOR_MATCH_MAP = {
+  "security": {
+    trades: ["security"],
+    locations: ["security-points", "mall-entrances"],
+  },
+  "customer-journey": {
+    trades: ["customer-journey"],
+    locations: ["customer-journey", "mall-entrances", "plaza"],
+  },
+  "landscape": {
+    trades: ["landscape"],
+    locations: ["landscape-gardens"],
+  },
+  "traffic-parking": {
+    trades: ["traffic-parking"],
+    locations: ["basement-car-path", "basement-ramps", "garage-b1", "garage-b2"],
+  },
+}
+
+function matchesSector(snag, sectorId) {
+  if (!sectorId || sectorId === "all") return true
+  const rule = SECTOR_MATCH_MAP[sectorId]
+  if (!rule) return true
+  return rule.trades.includes(snag.trade) || rule.locations.includes(snag.location)
+}
+
 export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onFilteredChange, currentUser, externalStatusFilter, onExternalStatusChange }) {
   const { locations } = useLocations()
   const [query,          setQuery]          = useState("")
+  const [filterSector,   setFilterSector]   = useState("all")
   const [filterTrade,    setFilterTrade]    = useState("all")
   const [filterLocation, setFilterLocation] = useState("all")
   const [filterType,     setFilterType]     = useState("all")
@@ -27,8 +54,17 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
   const filterStatus = externalStatusFilter ?? "all"
   const setFilterStatus = (val) => { if (onExternalStatusChange) onExternalStatusChange(val) }
 
+  const sectorCounts = useMemo(() => {
+    const counts = { all: snags.length }
+    for (const track of PARK_ST_TRACKS) {
+      counts[track.id] = snags.filter(sn => matchesSector(sn, track.id)).length
+    }
+    return counts
+  }, [snags])
+
   const filtered = useMemo(() => {
     return snags.filter((s) => {
+      const matchSector = matchesSector(s, filterSector)
       const matchStatus = filterStatus === "all" || 
                           (filterStatus === "urgent" ? s.priority === "urgent" : s.status === filterStatus)
       const matchTrade  = filterTrade    === "all" || s.trade    === filterTrade
@@ -46,9 +82,9 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
         tradeOf(s.trade).label.toLowerCase().includes(q) ||
         locName.includes(q)
 
-      return matchStatus && matchTrade && matchLoc && matchType && matchQuery
+      return matchSector && matchStatus && matchTrade && matchLoc && matchType && matchQuery
     })
-  }, [snags, filterStatus, filterTrade, filterLocation, filterType, query, locations])
+  }, [snags, filterSector, filterStatus, filterTrade, filterLocation, filterType, query, locations])
 
   // Inform parent when filtered list changes — use stable IDs to prevent infinite loop
   const filteredIds = useMemo(() => filtered.map(s => s.id).join(","), [filtered])
@@ -60,9 +96,73 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
 
   return (
     <div style={s.card}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
         <h3 style={{ fontWeight:800, fontSize:17 }}>قائمة الملاحظات</h3>
         <span style={{ color:"#475569", fontSize:13 }}>{filtered.length} / {snags.length}</span>
+      </div>
+
+      {/* ── Park St. Main Sectors Filter Bar ── */}
+      <div style={{
+        display: "flex",
+        gap: 6,
+        flexWrap: "wrap",
+        marginBottom: 12,
+        padding: "8px 10px",
+        background: "#060d1a",
+        borderRadius: 12,
+        border: "1px solid #1e293b",
+      }}>
+        <button
+          type="button"
+          onClick={() => setFilterSector("all")}
+          style={{
+            border: `1px solid ${filterSector === "all" ? "#38bdf8" : "#1e293b"}`,
+            background: filterSector === "all" ? "rgba(56,189,248,0.18)" : "#0f172a",
+            color: filterSector === "all" ? "#38bdf8" : "#94a3b8",
+            borderRadius: 8,
+            padding: "6px 10px",
+            fontSize: 11,
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          📋 كل القطاعات ({sectorCounts.all || 0})
+        </button>
+        {PARK_ST_TRACKS.map(track => {
+          const active = filterSector === track.id
+          return (
+            <button
+              key={track.id}
+              type="button"
+              onClick={() => setFilterSector(active ? "all" : track.id)}
+              style={{
+                border: `1px solid ${active ? track.color : "#1e293b"}`,
+                background: active ? `${track.color}25` : "#0f172a",
+                color: active ? track.color : "#cbd5e1",
+                borderRadius: 8,
+                padding: "6px 10px",
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              <span>{track.icon}</span>
+              <span>{track.title}</span>
+              <span style={{
+                background: active ? track.color : "#1e293b",
+                color: active ? "#fff" : "#94a3b8",
+                borderRadius: 999,
+                padding: "1px 6px",
+                fontSize: 10,
+              }}>
+                {sectorCounts[track.id] || 0}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       <input style={s.input} placeholder="🔍 بحث في الوصف أو الموقع أو المشرف..." value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -71,11 +171,11 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
       <div style={{ display:"flex", gap:8, marginTop: 10, flexWrap: "wrap" }}>
         <select style={{...s.input, flex:1, minWidth:110}} value={filterTrade} onChange={e => setFilterTrade(e.target.value)}>
           <option value="all">كل التخصصات</option>
-          {TRADES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+          {TRADES.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}
         </select>
         <select style={{...s.input, flex:1, minWidth:110}} value={filterLocation} onChange={e => setFilterLocation(e.target.value)}>
           <option value="all">كل المواقع</option>
-          {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+          {locations.map(l => <option key={l.id} value={l.id}>{l.icon} {l.name}</option>)}
         </select>
         <select style={{...s.input, flex:1, minWidth:110}} value={filterType} onChange={e => setFilterType(e.target.value)}>
           <option value="all">كل الأنواع</option>

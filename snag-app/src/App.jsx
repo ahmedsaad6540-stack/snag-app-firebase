@@ -9,6 +9,7 @@ import NotificationCenter, { LiveNotifBanner } from "./components/NotificationCe
 import UnitsModule  from "./components/UnitsModule.jsx"
 import StoresModule from "./components/StoresModule.jsx"
 import RestroomsModule from "./components/RestroomsModule.jsx"
+import ParkStreetModule from "./components/ParkStreetModule.jsx"
 import AICommandCenter from "./components/AICommandCenter.jsx"
 import { useSnags } from "./hooks/useSnags.js"
 import { useAuth }  from "./hooks/useAuth.js"
@@ -181,6 +182,12 @@ export default function App() {
             📋 سجل الملاحظات
           </button>
           <button 
+            style={{ ...s.tab, ...(activeTab === "park-street" ? { ...s.activeTab, background: "linear-gradient(135deg, #0e7490, #4c1d95)", color: "#f0f9ff" } : {}) }}
+            onClick={() => setActiveTab("park-street")}
+          >
+            🌟 سناج بارك ستريت (الأمن • العميل • الزراعة • البيزمنت)
+          </button>
+          <button 
             style={{ ...s.tab, ...(activeTab === "restrooms" ? { ...s.activeTab, background: "linear-gradient(135deg, #065f46, #047857)", color: "#ecfdf5" } : {}) }}
             onClick={() => setActiveTab("restrooms")}
           >
@@ -243,44 +250,85 @@ export default function App() {
 
         {activeTab === "snags" && (
           <>
-            {/* Quick-access banner to Restroom Snag Center inside the main Snag tab */}
-            <div
-              onClick={() => setActiveTab("restrooms")}
-              style={{
-                background: "linear-gradient(135deg, rgba(6,95,70,0.28), rgba(30,27,75,0.5))",
-                border: "1px solid #059669",
-                borderRadius: 14,
-                padding: "12px 18px",
-                marginBottom: 16,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 10,
-                cursor: "pointer",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 24 }}>🚽</span>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: "#ecfdf5" }}>
-                    RESTROOM SNAG | مركز متابعة وفحص الحمامات التفصيلي
-                  </div>
-                  <div style={{ fontSize: 12, color: "#a7f3d0" }}>
-                    حصر فني شامل (50 حمام • 1,450 مكون) • جولات الفحص • تصدير إكسيل بالصور المدمجة بدون روابط
+            {/* Quick-access banners to Park St. Inspection & Restroom Snag Center */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12, marginBottom: 16 }}>
+              <div
+                onClick={() => setActiveTab("park-street")}
+                style={{
+                  background: "linear-gradient(135deg, rgba(14,116,144,0.32), rgba(76,29,149,0.45))",
+                  border: "1px solid #06b6d4",
+                  borderRadius: 14,
+                  padding: "12px 16px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 10,
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 24 }}>🌟</span>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "#f0f9ff" }}>
+                      PARK ST. SNAG | منظومة فحص بارك ستريت الشاملة
+                    </div>
+                    <div style={{ fontSize: 11, color: "#a5f3fc" }}>
+                      🛡️ الأمن والحراسة • 🚶‍♂️ رحلة العميل • 🌿 الزراعة واللاندسكيب • 🚗 مسار السيارات بالبيزمنت
+                    </div>
                   </div>
                 </div>
+                <span style={{
+                  background: "#06b6d4",
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: 11,
+                  padding: "6px 12px",
+                  borderRadius: 8,
+                  whiteSpace: "nowrap",
+                }}>
+                  فتح سناج بارك ستريت ←
+                </span>
               </div>
-              <span style={{
-                background: "#10b981",
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 12,
-                padding: "7px 14px",
-                borderRadius: 8,
-              }}>
-                فتح مركز الحمامات ←
-              </span>
+
+              <div
+                onClick={() => setActiveTab("restrooms")}
+                style={{
+                  background: "linear-gradient(135deg, rgba(6,95,70,0.28), rgba(30,27,75,0.5))",
+                  border: "1px solid #059669",
+                  borderRadius: 14,
+                  padding: "12px 16px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 10,
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 24 }}>🚽</span>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "#ecfdf5" }}>
+                      RESTROOM SNAG | مركز متابعة الحمامات
+                    </div>
+                    <div style={{ fontSize: 11, color: "#a7f3d0" }}>
+                      50 حمام • 1,450 مكون • تصدير إكسيل بالصور المدمجة بدون روابط
+                    </div>
+                  </div>
+                </div>
+                <span style={{
+                  background: "#10b981",
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: 11,
+                  padding: "6px 12px",
+                  borderRadius: 8,
+                  whiteSpace: "nowrap",
+                }}>
+                  فتح مركز الحمامات ←
+                </span>
+              </div>
             </div>
 
             <StatBar
@@ -304,6 +352,7 @@ export default function App() {
           </>
         )}
         
+        {activeTab === "park-street" && <ParkStreetModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "restrooms" && <RestroomsModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "units" && <UnitsModule currentUser={user} notify={notify} />}
         {activeTab === "stores" && <StoresModule currentUser={user} notify={notify} />}

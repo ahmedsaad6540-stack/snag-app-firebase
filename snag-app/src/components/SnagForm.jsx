@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react"
-import { LOCATIONS, TRADES, TYPES, PRIORITIES, DEFAULT_FORM, tradeOf, typeOf, priOf } from "../constants/index.js"
+import { LOCATIONS, TRADES, TYPES, PRIORITIES, DEFAULT_FORM, PARK_ST_TRACKS, tradeOf, typeOf, priOf } from "../constants/index.js"
 import { classifyAll } from "../utils/classify.js"
 import { classifyNCRI } from "../ai/ncri.js"
 import { useAttachments } from "../hooks/useAttachments.js"
@@ -13,8 +13,36 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
   const [saving, setSaving] = useState(false)
   const [aiResult, setAiResult] = useState(null)
   const [showCamera, setShowCamera] = useState(false)
+  const [activeTrackId, setActiveTrackId] = useState(null)
   const fileRef = useRef(null)
   const { attachments, addFiles, removeFile, clear } = useAttachments()
+
+  const activeTrack = PARK_ST_TRACKS.find(t => t.id === activeTrackId) || null
+
+  function selectTrack(track) {
+    if (activeTrackId === track.id) {
+      setActiveTrackId(null)
+      return
+    }
+    setActiveTrackId(track.id)
+    setForm(prev => ({
+      ...prev,
+      location: track.defaultLocation,
+      trade: track.defaultTrade,
+    }))
+  }
+
+  function applyQuickItem(track, item) {
+    setForm(prev => ({
+      ...prev,
+      description: item.desc,
+      location: item.location || track.defaultLocation,
+      trade: track.defaultTrade,
+      type: item.type || "maintenance",
+      priority: item.priority || "medium",
+    }))
+    if (notify) notify("info", `تم اختيار: ${item.label}`)
+  }
 
   // 🤖 Auto-classify trade + type + priority + validate location (NCRI v2)
   useEffect(() => {
@@ -126,6 +154,103 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
     <form style={s.card} onSubmit={handleSubmit}>
       <h3 style={s.heading}>➕ إضافة ملاحظة جديدة</h3>
 
+      {/* ⚡ Park St. Quick Inspection Tracks */}
+      <div style={{
+        background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.75))",
+        border: "1px solid #1e293b",
+        borderRadius: 14,
+        padding: 12,
+        marginBottom: 14,
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: "#38bdf8" }}>
+            ⚡ الفحص السريع — بارك ستريت (Park St.)
+          </div>
+          <span style={{ fontSize: 10, color: "#64748b" }}>اختر القطاع لتعبئة الملاحظة بضغطة واحدة</span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {PARK_ST_TRACKS.map(track => {
+            const isSelected = activeTrackId === track.id
+            return (
+              <button
+                key={track.id}
+                type="button"
+                onClick={() => selectTrack(track)}
+                style={{
+                  background: isSelected ? `${track.color}22` : "#060d1a",
+                  border: `1.5px solid ${isSelected ? track.color : "#1e293b"}`,
+                  borderRadius: 10,
+                  padding: "9px 10px",
+                  cursor: "pointer",
+                  textAlign: "right",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  transition: "all .15s",
+                }}
+              >
+                <span style={{ fontSize: 20 }}>{track.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: isSelected ? track.color : "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {track.title}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {track.items.length} بنود جاهزة
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        {activeTrack && (
+          <div style={{
+            marginTop: 10,
+            paddingTop: 10,
+            borderTop: "1px solid #1e293b",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: activeTrack.color }}>
+                {activeTrack.icon} بنود فحص {activeTrack.title}:
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveTrackId(null)}
+                style={{ background: "transparent", border: "none", color: "#64748b", fontSize: 11, cursor: "pointer" }}
+              >
+                إخفاء ▲
+              </button>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 195, overflowY: "auto", paddingLeft: 2 }}>
+              {activeTrack.items.map((item, idx) => {
+                const isCurrent = form.description === item.desc
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => applyQuickItem(activeTrack, item)}
+                    style={{
+                      background: isCurrent ? activeTrack.color : "#0f172a",
+                      color: isCurrent ? "#fff" : "#cbd5e1",
+                      border: `1px solid ${isCurrent ? activeTrack.color : "#334155"}`,
+                      borderRadius: 8,
+                      padding: "6px 10px",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      textAlign: "right",
+                    }}
+                  >
+                    {item.priority === "urgent" ? "🔴 " : "🟡 "}{item.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Inspector */}
       <Field label="اسم المشرف">
         <input style={s.input} value={form.inspector} onChange={(e) => set("inspector", e.target.value)} />
@@ -162,7 +287,7 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
           style={{ ...s.input, minHeight:90, resize:"vertical" }}
           value={form.description}
           onChange={(e) => set("description", e.target.value)}
-          placeholder="مثال: تسريب مياه أسفل الحوض في حمام الدور الأرضي"
+          placeholder="مثال: عطل في ذراع البوابة بمسار السيارات بالبيزمنت، أو جفاف أشجار اللاندسكيب، أو غياب فرد الأمن..."
         />
       </Field>
 
