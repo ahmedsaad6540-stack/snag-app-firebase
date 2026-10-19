@@ -13,6 +13,7 @@ import { useRestrooms } from "../hooks/useRestrooms.js"
 import { processFile } from "../utils/compress.js"
 import { exportRestroomsExcel, exportRestroomsReport } from "../utils/export.js"
 import ConfirmDialog from "./ConfirmDialog.jsx"
+import CameraModal from "./CameraModal.jsx"
 
 export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
   const userName = currentUser?.displayName || currentUser?.email || "مشرف الفحص"
@@ -839,6 +840,7 @@ function InspectorComponentRow({ row, userName, onSave, onOpenModal, onPromoteTo
   const health = getRowHealth(row)
   const fileInputRef = useRef(null)
   const [uploading, setUploading] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
 
   const rowBg =
     health === "defect"
@@ -862,9 +864,8 @@ function InspectorComponentRow({ row, userName, onSave, onOpenModal, onPromoteTo
     await onSave(row.id, updates, userName)
   }
 
-  async function handleQuickPhoto(e) {
-    const files = Array.from(e.target.files || [])
-    if (!files.length) return
+  async function processAndSaveFiles(files) {
+    if (!files || !files.length) return
     setUploading(true)
     try {
       const existing = row.photos || []
@@ -879,14 +880,19 @@ function InspectorComponentRow({ row, userName, onSave, onOpenModal, onPromoteTo
         })
       }
       await onSave(row.id, { photos: [...existing, ...added].slice(0, 3) }, userName)
-      toast.success("تم إرفاق الصورة وحفظها")
+      toast.success("تم حفظ الصورة بنجاح")
     } catch (err) {
       console.error(err)
-      toast.error("تعذر إرفاق الصورة")
+      toast.error("تعذر حفظ الصورة")
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
     }
+  }
+
+  async function handleQuickPhoto(e) {
+    const files = Array.from(e.target.files || [])
+    await processAndSaveFiles(files)
   }
 
   return (
@@ -979,12 +985,21 @@ function InspectorComponentRow({ row, userName, onSave, onOpenModal, onPromoteTo
             <>
               <button
                 type="button"
+                style={{ ...s.iconBtn, background: "#0284c7", borderColor: "#38bdf8" }}
+                onClick={() => setShowCamera(true)}
+                disabled={uploading}
+                title="التقاط بالكاميرا مباشرة"
+              >
+                {uploading ? "⏳" : "📷"}
+              </button>
+              <button
+                type="button"
                 style={s.iconBtn}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                title="إرفاق صورة"
+                title="إرفاق صورة من الجهاز"
               >
-                {uploading ? "⏳" : "📷"}
+                📎
               </button>
               <input
                 ref={fileInputRef}
@@ -994,6 +1009,12 @@ function InspectorComponentRow({ row, userName, onSave, onOpenModal, onPromoteTo
                 hidden
                 onChange={handleQuickPhoto}
               />
+              {showCamera && (
+                <CameraModal
+                  onCapture={file => processAndSaveFiles([file])}
+                  onClose={() => setShowCamera(false)}
+                />
+              )}
             </>
           )}
         </div>
@@ -1056,11 +1077,11 @@ function EditComponentModal({ row, userName, onClose, onSave, onPromoteToSnag })
     photos: row.photos || [],
   })
   const [uploading, setUploading] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
   const fileRef = useRef(null)
 
-  async function handleAddPhotos(e) {
-    const files = Array.from(e.target.files || [])
-    if (!files.length) return
+  async function processFilesIntoForm(files) {
+    if (!files || !files.length) return
     setUploading(true)
     try {
       const added = []
@@ -1078,6 +1099,11 @@ function EditComponentModal({ row, userName, onClose, onSave, onPromoteToSnag })
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ""
     }
+  }
+
+  async function handleAddPhotos(e) {
+    const files = Array.from(e.target.files || [])
+    await processFilesIntoForm(files)
   }
 
   function removePhoto(id) {
@@ -1215,17 +1241,33 @@ function EditComponentModal({ row, userName, onClose, onSave, onPromoteToSnag })
               </div>
             ))}
             {form.photos.length < 3 && (
-              <button
-                type="button"
-                style={{ ...s.actionBtn, background: "#1e293b", border: "1px dashed #475569" }}
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? "⏳ جاري الضغط..." : "📷 إرفاق صورة"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  style={{ ...s.actionBtn, background: "linear-gradient(135deg, #0ea5e9, #2563eb)" }}
+                  onClick={() => setShowCamera(true)}
+                  disabled={uploading}
+                >
+                  {uploading ? "⏳ جاري الضغط..." : "📷 التقاط بالكاميرا"}
+                </button>
+                <button
+                  type="button"
+                  style={{ ...s.actionBtn, background: "#1e293b", border: "1px dashed #475569" }}
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                >
+                  📎 إرفاق صورة
+                </button>
+              </>
             )}
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handleAddPhotos} />
           </div>
+          {showCamera && (
+            <CameraModal
+              onCapture={file => processFilesIntoForm([file])}
+              onClose={() => setShowCamera(false)}
+            />
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 8 }}>

@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react"
 import { useCustomItems } from "../hooks/useCustomItems.js"
 import { useAttachments } from "../hooks/useAttachments.js"
 import ConfirmDialog from "./ConfirmDialog.jsx"
+import CameraModal from "./CameraModal.jsx"
 import * as XLSX from "xlsx"
 import { extractTextFromFile } from "../utils/extractText.js"
 
@@ -17,6 +18,7 @@ export default function CustomListModule({ list, currentUser, notify }) {
   const [extracting, setExtracting] = useState(false)
   const excelInputRef = useRef(null)
   const [lightbox, setLightbox] = useState(null) // { images, index }
+  const [showCamera, setShowCamera] = useState(false)
 
   const isPdfFile = (p) => {
     return p.type === "application/pdf" || 
@@ -26,7 +28,6 @@ export default function CustomListModule({ list, currentUser, notify }) {
 
   const { attachments, addFiles, removeFile, clear: clearFiles } = useAttachments()
   const fileRef = useRef(null)
-  const cameraRef = useRef(null)
 
   function defaultForm() {
     return { title: "", subtitle: "", notes: "" }
@@ -328,15 +329,20 @@ export default function CustomListModule({ list, currentUser, notify }) {
                 {/* Add Photo Buttons */}
                 {((items.find(i => i.id === editingId)?.photos?.length || 0) + attachments.length < 3) && (
                   <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                    <button type="button" style={s.uploadBtn} onClick={() => fileRef.current?.click()}>
-                      📁 ملف
+                    <button type="button" style={{ ...s.uploadBtn, background: "#3b82f6" }} onClick={() => setShowCamera(true)}>
+                      📷 التقاط بالكاميرا
                     </button>
-                    <button type="button" style={{ ...s.uploadBtn, background: "#3b82f6" }} onClick={() => cameraRef.current?.click()}>
-                      📷 كاميرا
+                    <button type="button" style={s.uploadBtn} onClick={() => fileRef.current?.click()}>
+                      📁 إرفاق ملف
                     </button>
                     <input type="file" accept="image/*,application/pdf" ref={fileRef} style={{ display: "none" }} onChange={handleFileSelect} multiple />
-                    <input type="file" accept="image/*" capture="environment" ref={cameraRef} style={{ display: "none" }} onChange={handleFileSelect} />
                   </div>
+                )}
+                {showCamera && (
+                  <CameraModal
+                    onCapture={file => handleFileSelect({ target: { files: [file], value: "" } })}
+                    onClose={() => setShowCamera(false)}
+                  />
                 )}
               </div>
 

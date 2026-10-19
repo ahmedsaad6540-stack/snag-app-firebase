@@ -4,6 +4,7 @@ import { classifyAll } from "../utils/classify.js"
 import { classifyNCRI } from "../ai/ncri.js"
 import { useAttachments } from "../hooks/useAttachments.js"
 import { useLocations } from "../hooks/useLocations.js"
+import CameraModal from "./CameraModal.jsx"
 
 export default function SnagForm({ onAdd, userName, userEmail, notify }) {
   const { locations, addLocation, removeLocation } = useLocations()
@@ -11,6 +12,7 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
   const [dragOn, setDragOn] = useState(false)
   const [saving, setSaving] = useState(false)
   const [aiResult, setAiResult] = useState(null)
+  const [showCamera, setShowCamera] = useState(false)
   const fileRef = useRef(null)
   const { attachments, addFiles, removeFile, clear } = useAttachments()
 
@@ -243,20 +245,54 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
         </select>
       </Field>
 
-      {/* Drop zone */}
-      <div
-        style={{ ...s.drop, borderColor: dragOn ? "#f59e0b" : "#1e293b" }}
-        onDragOver={(e) => { e.preventDefault(); setDragOn(true) }}
-        onDragLeave={() => setDragOn(false)}
-        onDrop={onDrop}
-        onClick={() => fileRef.current?.click()}
-      >
-        <input ref={fileRef} type="file" multiple hidden
-          accept="image/*,.pdf,.doc,.docx,.xlsx,.xls" onChange={onPickFiles} 
-          onClick={(e) => e.stopPropagation()} />
-        <div style={{ fontWeight:800 }}>📎 أرفق صور أو ملفات</div>
-        <div style={{ color:"#475569", fontSize:12, marginTop:4 }}>اسحب الملفات هنا أو اضغط للاختيار (الحد الأقصى 4 ملفات)</div>
+      {/* Drop zone + Camera Capture */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={() => setShowCamera(true)}
+          style={{
+            flex: 1,
+            minWidth: 150,
+            background: "linear-gradient(135deg, #0ea5e9, #2563eb)",
+            color: "#fff",
+            border: "none",
+            borderRadius: 14,
+            padding: "14px 16px",
+            fontWeight: 800,
+            fontSize: 14,
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+          }}
+        >
+          <span>📷 التقاط بالكاميرا</span>
+          <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>تصوير مباشر فوري</span>
+        </button>
+
+        <div
+          style={{ ...s.drop, flex: 1, minWidth: 160, marginBottom: 0, borderColor: dragOn ? "#f59e0b" : "#1e293b" }}
+          onDragOver={(e) => { e.preventDefault(); setDragOn(true) }}
+          onDragLeave={() => setDragOn(false)}
+          onDrop={onDrop}
+          onClick={() => fileRef.current?.click()}
+        >
+          <input ref={fileRef} type="file" multiple hidden
+            accept="image/*,.pdf,.doc,.docx,.xlsx,.xls" onChange={onPickFiles} 
+            onClick={(e) => e.stopPropagation()} />
+          <div style={{ fontWeight:800 }}>📎 أرفق صور أو ملفات</div>
+          <div style={{ color:"#475569", fontSize:11, marginTop:4 }}>من الاستوديو أو الجهاز (حد 4)</div>
+        </div>
       </div>
+
+      {showCamera && (
+        <CameraModal
+          onCapture={file => addFiles([file])}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
 
       {/* Attachments preview */}
       {attachments.length > 0 && (

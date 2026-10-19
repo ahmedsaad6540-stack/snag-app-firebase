@@ -3,6 +3,7 @@ import { useStores } from "../hooks/useStores.js"
 import { useAttachments } from "../hooks/useAttachments.js"
 import { exportStoresReport, exportStoresExcel } from "../utils/export.js"
 import ConfirmDialog from "./ConfirmDialog.jsx"
+import CameraModal from "./CameraModal.jsx"
 import * as XLSX from "xlsx"
 
 export default function StoresModule({ currentUser, notify }) {
@@ -16,11 +17,11 @@ export default function StoresModule({ currentUser, notify }) {
   const [importing, setImporting] = useState(false)
   const excelInputRef = useRef(null)
   const [lightbox, setLightbox] = useState(null) // { images, index }
+  const [showCamera, setShowCamera] = useState(false)
 
   // Attachments for the current form session
   const { attachments, addFiles, removeFile, clear: clearFiles } = useAttachments()
   const fileRef = useRef(null)
-  const cameraRef = useRef(null)
 
   function defaultForm() {
     return { storeNo: "", companyName: "", notes: "" }
@@ -262,17 +263,15 @@ export default function StoresModule({ currentUser, notify }) {
                   style={{ display: "none" }}
                   onChange={async e => { await addFiles(e.target.files); e.target.value = "" }}
                 />
-                <input
-                  ref={cameraRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  style={{ display: "none" }}
-                  onChange={async e => { await addFiles(e.target.files); e.target.value = "" }}
-                />
-
                 {attachments.length < 3 && (
                   <div style={{ display: "flex", gap: 10 }}>
+                    <button
+                      type="button"
+                      style={{ ...s.uploadBtn, borderColor: "#0ea5e9", color: "#0ea5e9" }}
+                      onClick={() => setShowCamera(true)}
+                    >
+                      📷 التقاط بالكاميرا
+                    </button>
                     <button
                       type="button"
                       style={s.uploadBtn}
@@ -280,14 +279,14 @@ export default function StoresModule({ currentUser, notify }) {
                     >
                       🖼️ اختيار من المعرض
                     </button>
-                    <button
-                      type="button"
-                      style={{ ...s.uploadBtn, borderColor: "#0ea5e9", color: "#0ea5e9" }}
-                      onClick={() => cameraRef.current?.click()}
-                    >
-                      📷 التقاط صورة
-                    </button>
                   </div>
+                )}
+
+                {showCamera && (
+                  <CameraModal
+                    onCapture={file => addFiles([file])}
+                    onClose={() => setShowCamera(false)}
+                  />
                 )}
 
                 {attachments.length > 0 && (
