@@ -114,3 +114,29 @@ firebase login
 firebase init hosting    # public dir = dist
 firebase deploy
 ```
+
+## تكامل Slack مع المهام
+
+يرسل التطبيق إشعارًا إلى قناة Slack عند إنشاء ملاحظة جديدة، وعند تغيير حالتها أو أولويتها. يعمل الإرسال من Cloud Functions مباشرة بعد تحديث Firestore، لذلك لا يحتاج المستخدم إلى إبقاء التطبيق مفتوحًا.
+
+1. أنشئ Slack App وفعّل **Incoming Webhooks**، ثم أضف Webhook إلى القناة المطلوبة وانسخ رابطه.
+2. من مجلد `snag-app` سجّل الدخول إلى Firebase واختر المشروع:
+
+   ```bash
+   firebase login
+   firebase use snag-app-firebase
+   ```
+
+3. احفظ الرابط كسر في Firebase Secret Manager، والصقه عند مطالبة CLI:
+
+   ```bash
+   firebase functions:secrets:set SLACK_WEBHOOK_URL
+   ```
+
+4. انشر الدوال:
+
+   ```bash
+   firebase deploy --only functions
+   ```
+
+يتطلب نشر Cloud Functions تفعيل خطة Firebase Blaze والفوترة في المشروع. لا تضف رابط Webhook إلى `.env` الخاص بالواجهة أو إلى مستودع Git. لإيقاف الإشعارات، احذف الدوال المنشورة أو أزل السر وأعد نشرها.
