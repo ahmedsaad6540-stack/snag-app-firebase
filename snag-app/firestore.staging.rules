@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profilePath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function activeUser() {
+      return signedIn()
+        && exists(profilePath(request.auth.uid))
+        && get(profilePath(request.auth.uid)).data.approved == true
+        && get(profilePath(request.auth.uid)).data.disabled != true
+        && get(profilePath(request.auth.uid)).data.deleted != true;
+    }
+
+    function activeAdmin() {
+      return activeUser()
+        && get(profilePath(request.auth.uid)).data.role == "admin";
+    }
+
+    function appCollection(collection) {
+      return collection in [
+        "snags",
+        "park_street_snags",
+        "units",
+        "stores",
+        "custom_lists",
+        "custom_items",
+        "locations",
+        "restroom_inspections",
+        "restroom_status",
+        "notifications"
+      ];
+    }
+
+    match /users/{uid} {
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == "user"
+        && request.resource.data.approved == false
+        && request.resource.data.keys().hasOnly([
+          "uid", "email", "displayName", "role", "approved", "createdAt"
+        ]);
+      allow get: if signedIn() && request.auth.uid == uid || activeAdmin();
+      allow list: if activeAdmin();
+      allow update: if activeAdmin()
+        && uid != request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "role", "approved", "disabled", "deleted"
+        ]);
+      allow delete: if false;
+    }
+
+    match /{collection}/{document} {
+      allow read, write: if activeUser() && appCollection(collection);
+    }
+  }
+}
