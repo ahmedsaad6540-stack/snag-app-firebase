@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:rules": "firebase emulators:exec --config firebase.staging.json --only firestore --project demo-snag-rules \"node --test test/firestoreRules.test.mjs\""
   },
   "dependencies": {
     "date-fns": "^4.1.0",
@@ -20,7 +21,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
     "@vitejs/plugin-react": "^4.3.1",
+    "firebase-tools": "^15.34.0",
     "vite": "^5.4.1",
     "vite-plugin-pwa": "^1.2.0"
   }

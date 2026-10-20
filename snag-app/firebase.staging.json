@@ -1,0 +1,14 @@
+{
+  "firestore": {
+    "rules": "firestore.staging.rules"
+  },
+  "emulators": {
+    "host": "127.0.0.1",
+    "firestore": {
+      "port": 8085
+    },
+    "ui": {
+      "enabled": false
+    }
+  }
+}

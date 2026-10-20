@@ -2,7 +2,7 @@
 
 ## المتطلبات
 - Node.js 18+
-- مشروع Firebase (مجاني Spark plan يكفي)
+- مشروع Firebase (خطة Spark تكفي لتشغيل الواجهة؛ Cloud Functions وإدارة أسرار Slack في staging تحتاج Blaze)
 
 ---
 
@@ -73,18 +73,13 @@ snag-app/
 
 ---
 
-## Firestore Security Rules (الإنتاج)
+## أمان Firestore
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /snags/{snagId} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
+**تنبيه:** ملف `firestore.rules` الحالي يسمح بالقراءة والكتابة المجهولة على كل المستندات (`allow read, write: if true`). هذا كشف واسع للبلاغات والمستخدمين وبيانات الوحدات، وليس وضعًا آمنًا للإنتاج. لا تنشر هذا الملف باعتباره قواعد إنتاج آمنة.
+
+أُضيفت `firestore.staging.rules` كاقتراح مرحلي معزول وغير مربوط بـ`firebase.json`: يسمح بإنشاء المستخدم لحسابه المعلّق فقط، ويتيح قراءة ملفه الشخصي، ويقصر إدارة المستخدمين على المدير، ويقصر مجموعات التطبيق على المستخدمين الموافق عليهم. هذا اقتراح انتقالي؛ ما زالت صلاحيات البيانات بين المستخدمين المعتمدين واسعة، ويجب تصميم عزل المستأجرين والتحقق من حقول كل مجموعة قبل اعتماده.
+
+اختبارات المحاكي تغطي إنشاء الحساب وقراءة ملفه قبل الموافقة، رفض وصول الحساب المعلّق، صلاحيات المدير، وعمليات القراءة/الكتابة التي تستخدمها مجموعات الملاحظات وبارك ستريت والوحدات والمخازن والقوائم المخصصة والحمامات والإشعارات. شغّلها محليًا عبر `npm run test:rules`. هذا لا يغيّر قواعد المشروع المنشور ولا يثبت نجاح النشر؛ قبل أي ترحيل، اختبر القواعد على نسخة staging وراجع واجهة الموافقة، خصوصًا أن hooks الحالية تبدأ بعض المستمعات قبل عرض شاشة انتظار الموافقة.
 
 ## Storage Security Rules
 
@@ -99,7 +94,7 @@ service firebase.storage {
 }
 ```
 
-> للاختبار السريع استبدل `request.auth != null` بـ `true` مؤقتاً
+لا تستخدم `allow read, write: if true` في الإنتاج. لا تُستبدل القواعد الحالية قبل اختبار الهجرة والنسخ الاحتياطي ومراجعة نموذج المستخدمين والمستأجرين.
 
 ---
 
@@ -109,34 +104,37 @@ service firebase.storage {
 npm run build
 
 # Firebase Hosting
-npm install -g firebase-tools
 firebase login
-firebase init hosting    # public dir = dist
-firebase deploy
+firebase deploy --only hosting --project <firebase-project-id>
 ```
 
 ## تكامل Slack مع المهام
 
-يرسل التطبيق إشعارًا إلى قناة Slack عند إنشاء ملاحظة جديدة، وعند تغيير حالتها أو أولويتها. يعمل الإرسال من Cloud Functions مباشرة بعد تحديث Firestore، لذلك لا يحتاج المستخدم إلى إبقاء التطبيق مفتوحًا.
+إشعارات البيانات الحقيقية **مغلقة عمدًا** في هذا التغيير. القيمة الافتراضية لـ`SLACK_NOTIFICATIONS_MODE` هي `off`، ووضع `live` لا يرسل إشعارات حتى اعتماد تجربة staging ومراجعة إنتاجية منفصلة. لا تنشر Cloud Functions إلى Firebase الإنتاج من هذا الفرع.
 
-1. أنشئ Slack App وفعّل **Incoming Webhooks**، ثم أضف Webhook إلى القناة المطلوبة وانسخ رابطه.
-2. من مجلد `snag-app` سجّل الدخول إلى Firebase واختر المشروع:
+عند اعتماد staging فقط، أنشئ Slack App بأقل صلاحية `chat:write` وأضفه يدويًا إلى قناة الاختبار الخاصة `C0CAS6S7RR8`. لا تستخدم Webhook أو Bot Token حقيقيًا في الاختبارات المحلية.
 
-   ```bash
-   firebase login
-   firebase use snag-app-firebase
-   ```
-
-3. احفظ الرابط كسر في Firebase Secret Manager، والصقه عند مطالبة CLI:
+1. أنشئ مشروع Firebase منفصلًا للتجربة، فعّل Blaze وواجهات Cloud Functions/Secret Manager، ثم من مجلد `snag-app` اختر مشروع staging صراحة.
+2. خزّن Bot Token لذلك المشروع فقط:
 
    ```bash
-   firebase functions:secrets:set SLACK_WEBHOOK_URL
+   firebase functions:secrets:set SLACK_BOT_TOKEN --project <staging-project-id>
    ```
 
-4. انشر الدوال:
+3. في ملف محلي غير مُلتزم `functions/.env.<staging-project-id>`، عيّن:
 
    ```bash
-   firebase deploy --only functions
+   SLACK_NOTIFICATIONS_MODE=test
    ```
 
-يتطلب نشر Cloud Functions تفعيل خطة Firebase Blaze والفوترة في المشروع. لا تضف رابط Webhook إلى `.env` الخاص بالواجهة أو إلى مستودع Git. لإيقاف الإشعارات، احذف الدوال المنشورة أو أزل السر وأعد نشرها.
+   ثم انشر الدوال إلى staging فقط:
+
+   ```bash
+   firebase deploy --only functions --project <staging-project-id>
+   ```
+
+   أنشئ بعد ذلك من Firebase Console مستندًا اصطناعيًا في `snag_integration_tests/{testId}` مع `isDemo: true`. الوضع `test` يتجاهل `snags` و`park_street_snags` كليًا، ولا يسمح إلا بحدث الإنشاء أو تغيير الحالة/الأولوية للمستند التجريبي الموسوم. احذف بيانات الاختبار بعد التحقق. لا تضع Bot Token في ملف البيئة؛ Firebase Secret Manager هو المصدر الوحيد له.
+
+التوجيه المستقبلي يستخدم مفاتيح ثابتة في الكود فقط: `security`, `customer-journey`, `landscape`, `traffic-parking`, `maintenance`, و`housekeeping`. لا تؤخذ معرفات القنوات من Firestore. رسائل Slack محصورة في معرف البلاغ والحالة والموقع والوصف القصير؛ لا تضاف الصور أو المرفقات أو أسماء/بريد المفتش. تُحجب أنماط البريد والهاتف الشائعة من الوصف، لكن يجب أن يظل الوصف خاليًا من البيانات الشخصية من المصدر. لا تفعّل `live` أو تنشر إلى المشروع الحقيقي قبل اعتماد المالك واختبار staging.
+
+يحتاج نشر Cloud Functions إلى Firebase Blaze، وتخزين الأسرار عبر Secret Manager. لا تتضمن هذه التعليمات أمر نشر للإنتاج عمدًا.
