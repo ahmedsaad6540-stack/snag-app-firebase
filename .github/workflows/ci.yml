@@ -49,7 +49,7 @@ jobs:
 
       - name: Execute Test Suite with Live Firebase Firestore Emulator
         run: |
-          npx --yes firebase-tools@13.35.1 emulators:exec --only firestore --project snag-ops-staging --rules firestore.staging.rules "node --test test/*.test.js"
+          npx --yes firebase-tools@13.35.1 emulators:exec --only firestore --project snag-ops-staging "node --test test/*.test.js"
         env:
           NODE_ENV: test
           FIREBASE_PROJECT_ID: snag-ops-staging
