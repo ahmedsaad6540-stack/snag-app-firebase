@@ -22,10 +22,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: park-street-operations/package-lock.json
 
@@ -37,8 +37,11 @@ jobs:
           test ! -f .env
           echo "Verified: No .env committed"
 
+      - name: Run code safety and syntax verification
+        run: npm run check
+
       - name: Run unit test suite
-        run: npm test -- --reporter=tap
+        run: npm test
         env:
           NODE_ENV: test
           FIREBASE_PROJECT_ID: snag-ops-staging

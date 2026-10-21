@@ -8,6 +8,14 @@ const EMULATOR_HOST = '127.0.0.1';
 const EMULATOR_PORT = 8080;
 const PROJECT_ID = 'snag-ops-staging';
 
+function checkEmulatorOnline() {
+  return new Promise((resolve) => {
+    const req = http.get(`http://${EMULATOR_HOST}:${EMULATOR_PORT}/`, (res) => resolve(res.statusCode < 500));
+    req.on('error', () => resolve(false));
+    req.setTimeout(1500, () => { req.destroy(); resolve(false); });
+  });
+}
+
 function rawHttpRequest(path, method = 'GET', body = null, headers = {}) {
   return new Promise((resolve, reject) => {
     const opts = {
@@ -31,29 +39,49 @@ function rawHttpRequest(path, method = 'GET', body = null, headers = {}) {
   });
 }
 
-test('Firestore Security Rules: Unauthenticated client requests are blocked (403 Forbidden)', async () => {
+test('Firestore Security Rules: Unauthenticated client requests are blocked (403 Forbidden)', async (t) => {
+  if (!(await checkEmulatorOnline())) {
+    t.skip('Firestore emulator not running on 127.0.0.1:8080 - skipping live network check');
+    return;
+  }
   const res = await rawHttpRequest('/slack_ops_staging_workspaces/T0CBGG2QASU/tickets/TEST-PSO-001');
   assert.equal(res.statusCode, 403, `Expected 403 Forbidden, got ${res.statusCode}`);
 });
 
-test('Firestore Security Rules: Production /users collection is strictly forbidden (403 Forbidden)', async () => {
+test('Firestore Security Rules: Production /users collection is strictly forbidden (403 Forbidden)', async (t) => {
+  if (!(await checkEmulatorOnline())) {
+    t.skip('Firestore emulator not running on 127.0.0.1:8080 - skipping live network check');
+    return;
+  }
   const res = await rawHttpRequest('/users/any-user-id');
   assert.equal(res.statusCode, 403, `Expected 403 Forbidden, got ${res.statusCode}`);
 });
 
-test('Firestore Security Rules: Production /snags write is strictly forbidden (403 Forbidden)', async () => {
+test('Firestore Security Rules: Production /snags write is strictly forbidden (403 Forbidden)', async (t) => {
+  if (!(await checkEmulatorOnline())) {
+    t.skip('Firestore emulator not running on 127.0.0.1:8080 - skipping live network check');
+    return;
+  }
   const res = await rawHttpRequest('/snags?documentId=exploit', 'POST', {
     fields: { title: { stringValue: 'exploit attempt' } }
   });
   assert.equal(res.statusCode, 403, `Expected 403 Forbidden, got ${res.statusCode}`);
 });
 
-test('Firestore Security Rules: Production /companies collection is strictly forbidden (403 Forbidden)', async () => {
+test('Firestore Security Rules: Production /companies collection is strictly forbidden (403 Forbidden)', async (t) => {
+  if (!(await checkEmulatorOnline())) {
+    t.skip('Firestore emulator not running on 127.0.0.1:8080 - skipping live network check');
+    return;
+  }
   const res = await rawHttpRequest('/companies/comp-001');
   assert.equal(res.statusCode, 403, `Expected 403 Forbidden, got ${res.statusCode}`);
 });
 
-test('Firestore Security Rules: Production /inspections collection is strictly forbidden (403 Forbidden)', async () => {
+test('Firestore Security Rules: Production /inspections collection is strictly forbidden (403 Forbidden)', async (t) => {
+  if (!(await checkEmulatorOnline())) {
+    t.skip('Firestore emulator not running on 127.0.0.1:8080 - skipping live network check');
+    return;
+  }
   const res = await rawHttpRequest('/inspections/insp-001');
   assert.equal(res.statusCode, 403, `Expected 403 Forbidden, got ${res.statusCode}`);
 });
