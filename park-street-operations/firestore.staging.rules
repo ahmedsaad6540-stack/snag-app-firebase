@@ -1,12 +1,45 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Isolated Slack Staging Workspace rules (Admin SDK bypasses rules, client SDK denied by default unless staging)
-    match /slack_ops_staging_workspaces/{teamId}/{collection}/{docId} {
+    
+    // Explicit deny-all on any legacy production collections if ever queried
+    match /users/{userId} {
       allow read, write: if false;
     }
-    match /{document=**} {
+    match /snags/{snagId} {
       allow read, write: if false;
+    }
+    match /companies/{companyId} {
+      allow read, write: if false;
+    }
+
+    // Isolated Slack Staging Namespace
+    match /slack_ops_staging_workspaces/{teamId} {
+      // Workspace root configuration document (read-only for members)
+      allow read: if request.auth != null;
+      allow write: if false;
+
+      // Tickets (Work Orders) subcollection
+      match /tickets/{ticketId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+                      && request.resource.data.teamId == teamId
+                      && request.resource.data.isDemo == true
+                      && request.resource.data.source == 'slack-staging';
+        allow update: if request.auth != null
+                      && resource.data.teamId == teamId
+                      && resource.data.isDemo == true;
+        allow delete: if request.auth != null && resource.data.teamId == teamId;
+      }
+
+      // Operational modules (Park Street, Restrooms, Units, Stores, Permits, etc.)
+      match /{moduleCollection}/{docId} {
+        allow read: if request.auth != null;
+        allow create, update: if request.auth != null
+                              && request.resource.data.teamId == teamId
+                              && request.resource.data.isDemo == true;
+        allow delete: if request.auth != null && resource.data.teamId == teamId;
+      }
     }
   }
 }
