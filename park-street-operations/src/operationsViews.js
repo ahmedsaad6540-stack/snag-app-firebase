@@ -42,8 +42,8 @@ function navBlock(){
       button('parkops_dashboard','🏠 الرئيسية'),
       button('parkops_modules','📚 الأقسام'),
       button('parkops_create','➕ أمر عمل','create','primary'),
-      button('parkops_go','🧠 الذكاء AI','ai'),
-      button('parkops_go','📊 التقارير','reports')
+      button('parkops_go_ai','🧠 الذكاء AI','ai'),
+      button('parkops_go_reports','📊 التقارير','reports')
     ]
   };
 }
@@ -224,8 +224,8 @@ function moduleHome(type,records=[],context={}){
     blocks.push({
       type:'actions',
       elements:[
-        button('parkops_park_filter','الكل (51)','all'),
-        ...PARK_SECTORS.map(s=>button('parkops_park_filter',s.name.slice(0,22),s.id))
+        button('parkops_park_filter_all','الكل (51)','all'),
+        ...PARK_SECTORS.map(s=>button(`parkops_park_filter_${s.id}`,s.name.slice(0,22),s.id))
       ]
     });
 
@@ -276,9 +276,9 @@ function moduleHome(type,records=[],context={}){
     blocks.push({
       type:'actions',
       elements:[
-        button('parkops_restroom_filter','الكل','all'),
-        button('parkops_restroom_filter','🚨 الأعطال فقط','defects'),
-        ...RESTROOM_ZONES.slice(0,3).map(z=>button('parkops_restroom_filter',z,z))
+        button('parkops_restroom_filter_all','الكل','all'),
+        button('parkops_restroom_filter_defects','🚨 الأعطال فقط','defects'),
+        ...RESTROOM_ZONES.slice(0,3).map((z,idx)=>button(`parkops_restroom_filter_z${idx}`,z,z))
       ]
     });
 

@@ -21,6 +21,7 @@ const {
 const {isRestroomRowDefective}=require('./restroomCatalog');
 const {classifyNCRI}=require('./ai/ncri');
 const {buildMasterOperationsWorkbook,buildOperationsSummaryCsv}=require('./reportExporter');
+const {notifyDemoChannelFromApp}=require('./slackNotifications');
 
 const SAFE_DEMO_CHANNEL_ID='C0CAS6S7RR8';
 
@@ -93,6 +94,7 @@ function registerOperations(app,{repo,originalRepo,config,logger=console}){
   });
 
   app.action('parkops_go',refresh);
+  app.action(/^parkops_go_/,refresh);
   app.action('parkops_refresh_module',refresh);
 
   app.action('parkops_add_module',async({ack,body,action,client})=>{
@@ -103,17 +105,21 @@ function registerOperations(app,{repo,originalRepo,config,logger=console}){
     }catch(e){logger.error(e.message);}
   });
 
-  app.action('parkops_park_filter',async({ack,body,action,client})=>{
+  const parkFilterHandler=async({ack,body,action,client})=>{
     await ack();
     if(!permitted(body))return;
     try{await publish(client,body.user.id,'park',{sectorFilter:action.value});}catch(e){logger.error(e.message);}
-  });
+  };
+  app.action('parkops_park_filter',parkFilterHandler);
+  app.action(/^parkops_park_filter_/,parkFilterHandler);
 
-  app.action('parkops_restroom_filter',async({ack,body,action,client})=>{
+  const restroomFilterHandler=async({ack,body,action,client})=>{
     await ack();
     if(!permitted(body))return;
     try{await publish(client,body.user.id,'restroom',{zoneFilter:action.value});}catch(e){logger.error(e.message);}
-  });
+  };
+  app.action('parkops_restroom_filter',restroomFilterHandler);
+  app.action(/^parkops_restroom_filter_/,restroomFilterHandler);
 
   app.action('parkops_promote_park',async({ack,body,action,client})=>{
     await ack();
@@ -266,7 +272,7 @@ function registerOperations(app,{repo,originalRepo,config,logger=console}){
         `• الوحدات: ${ctx.units.length} | المخازن: ${ctx.stores.length}\n` +
         `_تنبيه أمان: رسالة اختبارية مقتصرة على القناة التجريبية الخاصة (${SAFE_DEMO_CHANNEL_ID}) ولا تحتوي على بيانات حقيقية._`;
       await logNotification('إرسال ملخص تجريبي لقناة الاختبار',`تم تجهيز ملخص لقناة #snag-ops-demo (${SAFE_DEMO_CHANNEL_ID})`,body.user.id);
-      if(client?.chat?.postMessage && process.env.ENABLE_DEMO_CHANNEL_POST==='true'){
+      if(client?.chat?.postMessage && (process.env.ENABLE_DEMO_CHANNEL_POST==='true'||process.env.SLACK_NOTIFICATIONS_MODE==='test')){
         await client.chat.postMessage({channel:SAFE_DEMO_CHANNEL_ID,text:digestText});
       }
       await publish(client,body.user.id,'notifications');
@@ -332,8 +338,18 @@ function registerOperations(app,{repo,originalRepo,config,logger=console}){
     }
     await ack();
     try{
-      await repo.upsert(config.team,body.user.id,type,values,view.id);
+      const saved=await repo.upsert(config.team,body.user.id,type,values,view.id);
       await logNotification(`تسجيل جديد في ${type}`,values.title||values.key||values.restroomKey||type,body.user.id);
+      if(type==='park'){
+        await notifyDemoChannelFromApp({
+          client,
+          collection:'park',
+          eventType:'created',
+          documentId:saved?.id||values.key||view.id,
+          after:{...(saved||values),isDemo:true},
+          logger
+        });
+      }
       await publish(client,body.user.id,type);
     }catch(e){logger.error(e.message);}
   });
