@@ -10,8 +10,8 @@ function validateFirebaseTarget(env = process.env) {
   if (FORBIDDEN_PROJECTS.has(projectId)) throw new Error('PRODUCTION_BLOCK: Firebase project snag-app-firebase is prohibited by this staging app.');
   const emulator = String(env.FIRESTORE_EMULATOR_HOST || '').trim();
   if (emulator) {
-    if (!/^(localhost|127\.0\.0\.1|\[::1\]):\d{2,5}$/.test(emulator)) {
-      throw new Error('FIRESTORE_EMULATOR_HOST must be local (localhost:8080 or 127.0.0.1:8080).');
+    if (!/^(localhost|127\.0\.0\.1|\[::1\]|firestore-emulator):\d{2,5}$/.test(emulator)) {
+      throw new Error('FIRESTORE_EMULATOR_HOST must be local or trusted Docker host (localhost:8080, 127.0.0.1:8080, or firestore-emulator:8080).');
     }
     return { projectId, emulator: true };
   }

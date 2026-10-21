@@ -10,6 +10,7 @@ test('blocks current SNAG production project even with emulator',()=>assert.thro
 test('blocks direct remote projects by default',()=>assert.throws(()=>validateFirebaseTarget({FIREBASE_PROJECT_ID:'snag-ops-staging'}),/Remote Firebase disabled/));
 test('blocks remote staging without proper project suffix',()=>assert.throws(()=>validateFirebaseTarget({FIREBASE_PROJECT_ID:'wrong-project',ENABLE_REMOTE_STAGING:'I_CONFIRM_SEPARATE_STAGING_PROJECT'}),/MUST end/));
 test('blocks nonlocal emulators',()=>assert.throws(()=>validateFirebaseTarget({...mockEnv,FIRESTORE_EMULATOR_HOST:'prod.example.com:8080'}),/must be local/));
+test('allows trusted internal Docker firestore-emulator host',()=>{const res=validateFirebaseTarget({...mockEnv,FIRESTORE_EMULATOR_HOST:'firestore-emulator:8080'});assert.equal(res.emulator,true);});
 test('only explicit allowlist user+workspace can access',()=>{const cfg=appConfig(mockEnv);assert.equal(authorized(cfg,{team_id:'TABC12',user:{id:'UABC12'}}),true);assert.equal(authorized(cfg,{team_id:'TOTHER',user:{id:'UABC12'}}),false);assert.equal(authorized(cfg,{team_id:'TABC12',user:{id:'UOTHER'}}),false);});
 test('requires Slack secrets and user allowlist',()=>{assert.throws(()=>appConfig({...mockEnv,SLACK_BOT_TOKEN:''}),/Slack/);assert.throws(()=>appConfig({...mockEnv,SLACK_ALLOWED_USER_IDS:''}),/allowlist/);});
 test('preserves exact Park Street sectors',()=>{assert.equal(CATEGORIES.security,'الأمن');assert.ok(CATEGORIES['customer-journey']);assert.ok(CATEGORIES.landscape);assert.ok(CATEGORIES.parking);});
