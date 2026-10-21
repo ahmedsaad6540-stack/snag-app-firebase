@@ -14,6 +14,24 @@ const path = require('node:path');
 const LOGS_DIR = path.join(__dirname, '../logs');
 fs.mkdirSync(LOGS_DIR, { recursive: true });
 
+// Enforce single supervisor instance
+const supLockFile = path.join(__dirname, '../.supervisor.lock');
+if (fs.existsSync(supLockFile)) {
+  try {
+    const existingPid = parseInt(fs.readFileSync(supLockFile, 'utf8').trim(), 10);
+    if (existingPid && !isNaN(existingPid) && existingPid !== process.pid) {
+      process.kill(existingPid, 0);
+      console.warn(`[SINGLETON LOCK] Supervisor is already running (PID: ${existingPid}). Exiting current process.`);
+      process.exit(0);
+    }
+  } catch (e) {
+    // Stale lock file
+  }
+}
+fs.writeFileSync(supLockFile, String(process.pid), 'utf8');
+const cleanSupLock = () => { try { if (fs.existsSync(supLockFile) && fs.readFileSync(supLockFile, 'utf8').trim() === String(process.pid)) fs.unlinkSync(supLockFile); } catch(_) {} };
+process.on('exit', cleanSupLock);
+
 const supervisorLog = (msg) => {
   const line = `[${new Date().toISOString()}] [SUPERVISOR] ${msg}\n`;
   process.stdout.write(line);

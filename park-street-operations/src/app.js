@@ -186,6 +186,25 @@ function createApp({config=appConfig(),repo=createFirestoreRepo(),moduleRepo=cre
 if(require.main===module){
   try {
     const fs=require('node:fs'),path=require('node:path');
+    const lockFile=path.join(__dirname,'../.bolt.lock');
+    if(fs.existsSync(lockFile)){
+      try{
+        const existingPid=parseInt(fs.readFileSync(lockFile,'utf8').trim(),10);
+        if(existingPid&&!isNaN(existingPid)&&existingPid!==process.pid){
+          process.kill(existingPid,0);
+          console.warn(`[SINGLETON LOCK] An instance is already running (PID: ${existingPid}). Exiting current process (${process.pid}) to prevent duplicate Socket Mode connections.`);
+          process.exit(0);
+        }
+      }catch(e){
+        // Stale lock file from a dead process - safe to proceed
+      }
+    }
+    fs.writeFileSync(lockFile,String(process.pid),'utf8');
+    const cleanLock=()=>{try{if(fs.existsSync(lockFile)&&fs.readFileSync(lockFile,'utf8').trim()===String(process.pid))fs.unlinkSync(lockFile);}catch(_){}};
+    process.on('exit',cleanLock);
+    process.on('SIGINT',()=>process.exit(0));
+    process.on('SIGTERM',()=>process.exit(0));
+
     const envPath=path.join(__dirname,'../.env');
     if(fs.existsSync(envPath)){
       for(const line of fs.readFileSync(envPath,'utf8').split(/\r?\n/)){
