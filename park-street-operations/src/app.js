@@ -81,11 +81,13 @@ function createApp({config=appConfig(),repo=createFirestoreRepo(),moduleRepo=cre
     await ack();if(!allow(body))return;try{await home(client,body.user.id);}catch(e){tryLog(logger,e);}
   });
 
-  app.action('parkops_filter_status',async({ack,body,action,client,logger})=>{
+  const filterStatusHandler=async({ack,body,action,client,logger})=>{
     await ack();
     if(!allow(body))return;
     try{await home(client,body.user.id,{filterStatus:action.value||'all'});}catch(e){tryLog(logger,e);}
-  });
+  };
+  app.action('parkops_filter_status',filterStatusHandler);
+  app.action(/^parkops_filter_status_/,filterStatusHandler);
 
   app.action('parkops_edit',async({ack,body,action,client,logger})=>{
     await ack();if(!allow(body))return;
@@ -182,7 +184,18 @@ function createApp({config=appConfig(),repo=createFirestoreRepo(),moduleRepo=cre
 }
 
 if(require.main===module){
-  try {const app=createApp();app.start().then(()=>console.log('Park Street Operations staging app ready (NO production access).')).catch(e=>{console.error(e.message);process.exitCode=1;});}
+  try {
+    const fs=require('node:fs'),path=require('node:path');
+    const envPath=path.join(__dirname,'../.env');
+    if(fs.existsSync(envPath)){
+      for(const line of fs.readFileSync(envPath,'utf8').split(/\r?\n/)){
+        const m=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+        if(m&&!process.env[m[1]]&&m[2])process.env[m[1]]=m[2].replace(/^['"]|['"]$/g,'');
+      }
+    }
+    const app=createApp();
+    app.start().then(()=>console.log('Park Street Operations staging app ready (NO production access).')).catch(e=>{console.error(e.message);process.exitCode=1;});
+  }
   catch(e){console.error('Startup refused:',e.message);process.exitCode=1;}
 }
 module.exports={createApp};

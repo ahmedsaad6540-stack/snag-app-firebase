@@ -122,11 +122,11 @@ function homeView(tickets=[], userId='', options={}){
       {type:'button',action_id:'parkops_go',text:plain('🧠 مركز الذكاء AI'),value:'ai'}
     ]},
     {type:'actions',elements:[
-      {type:'button',action_id:'parkops_filter_status',text:plain(`الكل (${tickets.length})`),value:'all'},
-      {type:'button',action_id:'parkops_filter_status',text:plain(`🔵 جديد (${counts.open})`),value:'open'},
-      {type:'button',action_id:'parkops_filter_status',text:plain(`🟠 تنفيذ (${counts['in-progress']})`),value:'in-progress'},
-      {type:'button',action_id:'parkops_filter_status',text:plain(`🟡 مراجعة (${counts.review})`),value:'review'},
-      {type:'button',action_id:'parkops_filter_status',text:plain(`🚨 عاجل (${urgentCount})`),value:'urgent'}
+      {type:'button',action_id:'parkops_filter_status_all',text:plain(`الكل (${tickets.length})`),value:'all'},
+      {type:'button',action_id:'parkops_filter_status_open',text:plain(`🔵 جديد (${counts.open})`),value:'open'},
+      {type:'button',action_id:'parkops_filter_status_in_progress',text:plain(`🟠 تنفيذ (${counts['in-progress']})`),value:'in-progress'},
+      {type:'button',action_id:'parkops_filter_status_review',text:plain(`🟡 مراجعة (${counts.review})`),value:'review'},
+      {type:'button',action_id:'parkops_filter_status_urgent',text:plain(`🚨 عاجل (${urgentCount})`),value:'urgent'}
     ]},
     {type:'divider'},
     {type:'section',text:{type:'mrkdwn',text:`*آخر أوامر العمل التجريبية* ${filterStatus!=='all'?`(تصفية: ${STATUSES[filterStatus]||filterStatus})`:''}`}}
