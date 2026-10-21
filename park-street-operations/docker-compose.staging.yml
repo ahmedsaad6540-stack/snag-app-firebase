@@ -24,7 +24,7 @@ services:
     restart: unless-stopped
     working_dir: /emulator
     volumes:
-      - ./.emulator-data:/emulator/data
+      - ./.emulator-data-docker-test:/emulator/data
       - ./firebase.docker.json:/emulator/firebase.json
       - ./firestore.staging.rules:/emulator/firestore.staging.rules
     ports:

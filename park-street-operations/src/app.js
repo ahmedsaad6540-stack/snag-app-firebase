@@ -199,11 +199,13 @@ if(require.main===module){
         // Stale lock file from a dead process - safe to proceed
       }
     }
-    fs.writeFileSync(lockFile,String(process.pid),'utf8');
-    const cleanLock=()=>{try{if(fs.existsSync(lockFile)&&fs.readFileSync(lockFile,'utf8').trim()===String(process.pid))fs.unlinkSync(lockFile);}catch(_){}};
-    process.on('exit',cleanLock);
-    process.on('SIGINT',()=>process.exit(0));
-    process.on('SIGTERM',()=>process.exit(0));
+    try {
+      fs.writeFileSync(lockFile,String(process.pid),'utf8');
+      const cleanLock=()=>{try{if(fs.existsSync(lockFile)&&fs.readFileSync(lockFile,'utf8').trim()===String(process.pid))fs.unlinkSync(lockFile);}catch(_){}};
+      process.on('exit',cleanLock);
+      process.on('SIGINT',()=>process.exit(0));
+      process.on('SIGTERM',()=>process.exit(0));
+    } catch(_) {}
 
     const envPath=path.join(__dirname,'../.env');
     if(fs.existsSync(envPath)){
