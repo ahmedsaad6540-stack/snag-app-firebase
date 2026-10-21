@@ -1,0 +1,26 @@
+services:
+  park-street-slack-app:
+    build: .
+    container_name: park-street-operations-slack
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SLACK_SOCKET_MODE=true
+      - FIREBASE_PROJECT_ID=snag-ops-staging
+      - FIRESTORE_EMULATOR_HOST=firestore-emulator:8080
+      - SLACK_NOTIFICATIONS_MODE=test
+    depends_on:
+      - firestore-emulator
+
+  firestore-emulator:
+    image: eclipse-temurin:17-jre
+    container_name: park-street-firestore-emulator
+    restart: unless-stopped
+    working_dir: /emulator
+    volumes:
+      - ./.emulator-data:/emulator/data
+    ports:
+      - "127.0.0.1:8080:8080"
+    command: >
+      sh -c "npx --yes firebase-tools emulators:start --only firestore --project snag-ops-staging --import=/emulator/data --export-on-exit=/emulator/data"

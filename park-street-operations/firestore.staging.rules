@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Isolated Slack Staging Workspace rules (Admin SDK bypasses rules, client SDK denied by default unless staging)
+    match /slack_ops_staging_workspaces/{teamId}/{collection}/{docId} {
+      allow read, write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
