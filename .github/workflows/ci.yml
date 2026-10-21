@@ -3,6 +3,7 @@ name: Park Street Operations CI
 on:
   push:
     branches:
+      - feat/park-street-operations-isolated
       - feat/park-street-operations-slack-complete
       - main
   pull_request:
@@ -11,7 +12,7 @@ on:
 
 jobs:
   test:
-    name: Unit Tests & Safety Audit
+    name: Unit & Security Tests with Live Firestore Emulator
     runs-on: ubuntu-latest
 
     defaults:
@@ -21,6 +22,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Java 17 for Firebase Emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
@@ -37,11 +44,12 @@ jobs:
           test ! -f .env
           echo "Verified: No .env committed"
 
-      - name: Run code safety and syntax verification
+      - name: Run code syntax verification
         run: npm run check
 
-      - name: Run unit test suite
-        run: npm test
+      - name: Execute Test Suite with Live Firebase Firestore Emulator
+        run: |
+          npx --yes firebase-tools@13.35.1 emulators:exec --only firestore --project snag-ops-staging --rules firestore.staging.rules "node --test test/*.test.js"
         env:
           NODE_ENV: test
           FIREBASE_PROJECT_ID: snag-ops-staging
