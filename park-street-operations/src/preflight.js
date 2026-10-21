@@ -28,6 +28,13 @@ function preflight(env=process.env, manifest='') {
   return {ready:checks.every(c=>c.ok),checks};
 }
 if(require.main===module){
+  const envPath=path.join(__dirname,'../.env');
+  if(fs.existsSync(envPath)){
+    for(const line of fs.readFileSync(envPath,'utf8').split(/\r?\n/)){
+      const m=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+      if(m&&!process.env[m[1]]&&m[2])process.env[m[1]]=m[2].replace(/^['"]|['"]$/g,'');
+    }
+  }
   const filename=process.env.SLACK_SOCKET_MODE==='true'?'app-manifest.socket-mode.yaml':'app-manifest.yaml';
   const manifest=fs.readFileSync(path.join(__dirname,'../'+filename),'utf8');
   const result=preflight(process.env,manifest);
