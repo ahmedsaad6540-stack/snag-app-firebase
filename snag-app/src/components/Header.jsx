@@ -17,8 +17,12 @@ export default function Header({ snags, onImport, isAdmin, onWipeAll }) {
       </div>
 
       <div style={s.actions} className="header-actions">
-        <button style={{ ...s.btn, ...s.ghost }} onClick={() => exportExcel(snags, locations)}>
-          📊 إكسيل
+        <button 
+          style={{ ...s.btn, background: "linear-gradient(135deg, #059669, #047857)", color: "#ffffff", border: "1px solid #10b981", boxShadow: "0 2px 8px rgba(16,185,129,0.3)" }} 
+          onClick={() => exportExcel(snags, locations)}
+          title="تصدير شيت إكسيل تفاعلي شامل يحتوي على فلاتر وقوائم منسدلة ومعادلات ولوحة مؤشرات ليعمل كبديل متكامل للتطبيق"
+        >
+          📊 شيت إكسيل الشامل (بديل التطبيق)
         </button>
         <button style={{ ...s.btn, ...s.ghost }} onClick={() => exportWord(snags, locations)}>
           📝 وورد

@@ -1,5 +1,6 @@
-import { tradeOf, locOf, priOf, staOf, typeOf, formatDate } from "../constants/index.js"
-import { getRowHealth } from "../constants/restroomsData.js"
+import { tradeOf, locOf, priOf, staOf, typeOf, formatDate, TRADES, LOCATIONS } from "../constants/index.js"
+import { getRowHealth, RESTROOM_LOCATIONS, STANDARD_COMPONENTS } from "../constants/restroomsData.js"
+import { PARK_SECTORS } from "../constants/parkStreetData.js"
 import * as XLSX from "xlsx"
 import ExcelJS from "exceljs"
 
@@ -81,88 +82,543 @@ export async function exportExcel(snags, locations) {
   try {
     const sorted = sortSnags(snags, locations)
     const wb = new ExcelJS.Workbook()
-    wb.creator = "Smart Mall OS"
+    wb.creator = "Park St. Mall Management"
+    wb.lastModifiedBy = "Ahmed Rabie"
     wb.created = new Date()
 
-    const ws = wb.addWorksheet("سجل الملاحظات", {
-      views: [{ rightToLeft: true, state: "frozen", ySplit: 1 }],
-    })
+    const THEME = {
+      darkNavy: "FF0A1628",
+      headerBlue: "FF1E3A8A",
+      headerCyan: "FF0891B2",
+      accentYellow: "FFF59E0B",
+      accentGreen: "FF10B981",
+      accentRed: "FFEF4444",
+      white: "FFFFFFFF",
+      grayBorder: "FFCBD5E1",
+      grayDarkBorder: "FF334155",
+      zebraRow: "FFF8FAFC",
+    }
 
-    ws.columns = [
-      { header: "م", key: "idx", width: 6 },
-      { header: "التخصص", key: "trade", width: 18 },
-      { header: "الموقع", key: "location", width: 20 },
-      { header: "الوصف", key: "description", width: 42 },
-      { header: "الأولوية", key: "priority", width: 12 },
-      { header: "النوع", key: "type", width: 12 },
-      { header: "الحالة", key: "status", width: 14 },
-      { header: "المشرف", key: "inspector", width: 18 },
-      { header: "التاريخ", key: "date", width: 20 },
-      { header: "الصور المرفقة", key: "photos", width: 32 },
+    // ──────────────────────────────────────────────────────────────────────────
+    // 1. DASHBOARD & KPIS SHEET
+    // ──────────────────────────────────────────────────────────────────────────
+    const wsDash = wb.addWorksheet("📊 لوحة المؤشرات", {
+      views: [{ rightToLeft: true, showGridLines: true }],
+    })
+    wsDash.properties.defaultRowHeight = 22
+
+    wsDash.mergeCells("B2:I2")
+    const dTitle = wsDash.getCell("B2")
+    dTitle.value = "مول بارك ستريت — منظومة إدارة ومتابعة السناج والصيانة الشاملة (تطبيق الإكسيل البديل)"
+    dTitle.font = { name: "Arial", size: 15, bold: true, color: { argb: THEME.white } }
+    dTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.darkNavy } }
+    dTitle.alignment = { horizontal: "center", vertical: "middle" }
+    wsDash.getRow(2).height = 40
+
+    wsDash.mergeCells("B3:I3")
+    const dSub = wsDash.getCell("B3")
+    dSub.value = `تاريخ التصدير: ${new Date().toLocaleDateString('ar-EG')} | تطبيق إكسيل تفاعلي يحتوي على فلاتر وقوائم منسدلة ومعادلات تلقائية`
+    dSub.font = { name: "Arial", size: 11, bold: true, color: { argb: "FF38BDF8" } }
+    dSub.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } }
+    dSub.alignment = { horizontal: "center", vertical: "middle" }
+    wsDash.getRow(3).height = 24
+
+    const kpis = [
+      { label: "إجمالي الملاحظات المسجلة", formula: "=COUNTA('📋 سجل الملاحظات'!A5:A500)", colStart: "B", colEnd: "C", color: "FF38BDF8" },
+      { label: "ملاحظات مفتوحة 🔴", formula: "=COUNTIF('📋 سجل الملاحظات'!F5:F500, \"مفتوح\")", colStart: "D", colEnd: "E", color: "FFEF4444" },
+      { label: "قيد التنفيذ 🟡", formula: "=COUNTIF('📋 سجل الملاحظات'!F5:F500, \"قيد التنفيذ\")", colStart: "F", colEnd: "G", color: "FFF59E0B" },
+      { label: "ملاحظات معالجة ومغلقة ✅", formula: "=COUNTIF('📋 سجل الملاحظات'!F5:F500, \"مغلق\")", colStart: "H", colEnd: "I", color: "FF10B981" },
     ]
 
-    // Header styling
-    const headerRow = ws.getRow(1)
-    headerRow.height = 28
-    headerRow.eachCell((cell) => {
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } }
-      cell.font = { name: "Arial", size: 11, bold: true, color: { argb: "FFFFFFFF" } }
-      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true }
-      cell.border = {
-        top: { style: "thin", color: { argb: "FF334155" } },
-        bottom: { style: "thin", color: { argb: "FF334155" } },
-        left: { style: "thin", color: { argb: "FF334155" } },
-        right: { style: "thin", color: { argb: "FF334155" } },
-      }
+    kpis.forEach(k => {
+      wsDash.mergeCells(`${k.colStart}5:${k.colEnd}5`)
+      const valCell = wsDash.getCell(`${k.colStart}5`)
+      valCell.value = { formula: k.formula }
+      valCell.font = { name: "Arial", size: 22, bold: true, color: { argb: k.color } }
+      valCell.alignment = { horizontal: "center", vertical: "middle" }
+      valCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } }
+      valCell.border = { top: { style: "medium", color: { argb: k.color } }, left: { style: "thin" }, right: { style: "thin" } }
+
+      wsDash.mergeCells(`${k.colStart}6:${k.colEnd}6`)
+      const lblCell = wsDash.getCell(`${k.colStart}6`)
+      lblCell.value = k.label
+      lblCell.font = { name: "Arial", size: 11, bold: true, color: { argb: "FFCBD5E1" } }
+      lblCell.alignment = { horizontal: "center", vertical: "middle" }
+      lblCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } }
+      lblCell.border = { bottom: { style: "medium" }, left: { style: "thin" }, right: { style: "thin" } }
+    })
+    wsDash.getRow(5).height = 36
+    wsDash.getRow(6).height = 24
+
+    wsDash.mergeCells("B9:E9")
+    const trTitle = wsDash.getCell("B9")
+    trTitle.value = "📊 إحصائيات الملاحظات حسب التخصص / الفئة"
+    trTitle.font = { name: "Arial", size: 12, bold: true, color: { argb: THEME.white } }
+    trTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A8A" } }
+    trTitle.alignment = { horizontal: "center", vertical: "middle" }
+
+    wsDash.getCell("B10").value = "م"
+    wsDash.getCell("C10").value = "التخصص / الفئة"
+    wsDash.getCell("D10").value = "العدد المسجل"
+    wsDash.getCell("E10").value = "النسبة التقريبية"
+    ;["B10", "C10", "D10", "E10"].forEach(c => {
+      const cell = wsDash.getCell(c)
+      cell.font = { name: "Arial", size: 11, bold: true, color: { argb: THEME.white } }
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF334155" } }
+      cell.alignment = { horizontal: "center", vertical: "middle" }
     })
 
-    for (let i = 0; i < sorted.length; i++) {
-      const s = sorted[i]
-      const atts = (s.attachments || []).filter(f => f.type?.startsWith("image/") || f.dataUrl?.startsWith("data:image/"))
-      const excelRowNumber = i + 2
-
-      const row = ws.addRow({
-        idx: i + 1,
-        trade: tradeOf(s.trade)?.label || s.trade,
-        location: getLoc(s.location, locations)?.name || s.location,
-        description: s.description || "",
-        priority: priOf(s.priority)?.label || s.priority,
-        type: typeOf(s.type)?.label || s.type,
-        status: staOf(s.status)?.label || s.status,
-        inspector: s.inspector || "",
-        date: formatDate(s.timestamp),
-        photos: atts.length > 0 ? "" : "—",
+    let trRow = 11
+    TRADES.forEach((tr, idx) => {
+      wsDash.getCell(`B${trRow}`).value = idx + 1
+      wsDash.getCell(`C${trRow}`).value = tr.label
+      wsDash.getCell(`D${trRow}`).value = { formula: `=COUNTIF('📋 سجل الملاحظات'!C$5:C$500, "${tr.label}")` }
+      wsDash.getCell(`E${trRow}`).value = { formula: `=IF(D${trRow}>0, TEXT(D${trRow}/B$5, "0.0%"), "0%")` }
+      ;["B", "C", "D", "E"].forEach(col => {
+        const cell = wsDash.getCell(`${col}${trRow}`)
+        cell.font = { name: "Arial", size: 10, bold: col === "C" || col === "D" }
+        cell.alignment = { horizontal: col === "C" ? "right" : "center", vertical: "middle" }
+        cell.border = { top: { style: "thin", color: { argb: THEME.grayBorder } }, bottom: { style: "thin", color: { argb: THEME.grayBorder } }, left: { style: "thin", color: { argb: THEME.grayBorder } }, right: { style: "thin", color: { argb: THEME.grayBorder } } }
+        if (trRow % 2 === 0) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.zebraRow } }
       })
+      trRow++
+    })
 
-      row.height = atts.length > 0 ? 64 : 24
-      row.eachCell((cell) => {
-        cell.alignment = { vertical: "middle", horizontal: "right", wrapText: true }
-        cell.font = { name: "Arial", size: 10 }
-        cell.border = {
-          top: { style: "thin", color: { argb: "FFE2E8F0" } },
-          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
-          left: { style: "thin", color: { argb: "FFE2E8F0" } },
-          right: { style: "thin", color: { argb: "FFE2E8F0" } },
+    wsDash.mergeCells("G9:I9")
+    const priTitle = wsDash.getCell("G9")
+    priTitle.value = "🚨 توزيع الملاحظات حسب الأولوية"
+    priTitle.font = { name: "Arial", size: 12, bold: true, color: { argb: THEME.white } }
+    priTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF991B1B" } }
+    priTitle.alignment = { horizontal: "center", vertical: "middle" }
+
+    wsDash.getCell("G10").value = "درجة الأولوية"
+    wsDash.getCell("H10").value = "العدد"
+    wsDash.getCell("I10").value = "المعادلة التلقائية"
+    ;["G10", "H10", "I10"].forEach(c => {
+      const cell = wsDash.getCell(c)
+      cell.font = { name: "Arial", size: 11, bold: true, color: { argb: THEME.white } }
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF334155" } }
+      cell.alignment = { horizontal: "center", vertical: "middle" }
+    })
+
+    const priRows = [
+      { label: "عاجل", formula: '=COUNTIF(\'📋 سجل الملاحظات\'!E$5:E$500, "عاجل")', color: "FFEF4444" },
+      { label: "متوسط", formula: '=COUNTIF(\'📋 سجل الملاحظات\'!E$5:E$500, "متوسط")', color: "FFF59E0B" },
+      { label: "عادي", formula: '=COUNTIF(\'📋 سجل الملاحظات\'!E$5:E$500, "عادي")', color: "FF64748B" },
+    ]
+    priRows.forEach((pr, i) => {
+      const r = 11 + i
+      wsDash.getCell(`G${r}`).value = pr.label
+      wsDash.getCell(`H${r}`).value = { formula: pr.formula }
+      wsDash.getCell(`I${r}`).value = { formula: `=IF(H${r}>0, TEXT(H${r}/B$5, "0.0%"), "0%")` }
+      ;["G", "H", "I"].forEach(col => {
+        const cell = wsDash.getCell(`${col}${r}`)
+        cell.font = { name: "Arial", size: 10, bold: true, color: col === "G" ? { argb: pr.color } : undefined }
+        cell.alignment = { horizontal: "center", vertical: "middle" }
+        cell.border = { top: { style: "thin", color: { argb: THEME.grayBorder } }, bottom: { style: "thin", color: { argb: THEME.grayBorder } }, left: { style: "thin", color: { argb: THEME.grayBorder } }, right: { style: "thin", color: { argb: THEME.grayBorder } } }
+      })
+    })
+
+    wsDash.columns = [
+      { width: 3 }, { width: 6 }, { width: 26 }, { width: 14 }, { width: 16 }, { width: 3 }, { width: 18 }, { width: 14 }, { width: 28 },
+    ]
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 2. MASTER SNAG LIST SHEET
+    // ──────────────────────────────────────────────────────────────────────────
+    const wsSnags = wb.addWorksheet("📋 سجل الملاحظات", {
+      views: [{ rightToLeft: true, state: "frozen", ySplit: 4 }],
+    })
+
+    wsSnags.mergeCells("A1:M1")
+    const sTitle = wsSnags.getCell("A1")
+    sTitle.value = "PARK ST. MALL | سجل الملاحظات ومتابعة الصيانة الشامل (Master Snag List)"
+    sTitle.font = { name: "Arial", size: 14, bold: true, color: { argb: THEME.white } }
+    sTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.darkNavy } }
+    sTitle.alignment = { horizontal: "center", vertical: "middle" }
+    wsSnags.getRow(1).height = 32
+
+    wsSnags.mergeCells("A2:M2")
+    const sSub = wsSnags.getCell("A2")
+    sSub.value = "استخدم فلاتر الأعمدة للتصفية والفرز | استخدم القوائم المنسدلة لاختيار الموقع والتخصص والحالة والأولوية | أضف أي ملاحظات جديدة بالأسفل"
+    sSub.font = { name: "Arial", size: 10, bold: true, color: { argb: "FF38BDF8" } }
+    sSub.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } }
+    sSub.alignment = { horizontal: "center", vertical: "middle" }
+    wsSnags.getRow(2).height = 22
+    wsSnags.getRow(3).height = 6
+
+    const snagHeaders = [
+      "كود الملاحظة",
+      "الموقع المحدد",
+      "التخصص / الفئة",
+      "نوع الملاحظة",
+      "درجة الأولوية",
+      "حالة الملاحظة",
+      "وصف المشكلة والملاحظة بالتفصيل",
+      "الإجراء الفني المطلوب / التوصية",
+      "المشرف المسؤول",
+      "تاريخ الرصد والإنشاء",
+      "تاريخ المعالجة / الإغلاق",
+      "ملاحظات المتابعة والتشغيل",
+      "الصورة المدمجة (بدون روابط)",
+    ]
+
+    const headerRow = wsSnags.getRow(4)
+    snagHeaders.forEach((h, i) => {
+      const c = headerRow.getCell(i + 1)
+      c.value = h
+      c.font = { name: "Arial", size: 11, bold: true, color: { argb: THEME.white } }
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A8A" } }
+      c.alignment = { horizontal: "center", vertical: "middle", wrapText: true }
+      c.border = { top: { style: "medium" }, bottom: { style: "medium" }, left: { style: "thin" }, right: { style: "thin" } }
+    })
+    headerRow.height = 30
+    wsSnags.autoFilter = { from: "A4", to: "M4" }
+
+    wsSnags.columns = [
+      { width: 14 }, { width: 22 }, { width: 20 }, { width: 14 }, { width: 14 }, { width: 15 },
+      { width: 42 }, { width: 30 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 25 }, { width: 22 },
+    ]
+
+    const locNamesList = Array.isArray(locations) && locations.length > 0
+      ? locations.map(l => l.name)
+      : LOCATIONS.map(l => l.name)
+    const uniqueLocs = [...new Set(locNamesList)].join(",")
+    const tradesList = TRADES.map(t => t.label).join(",")
+    const prioritiesList = "عاجل,متوسط,عادي"
+    const statusesList = "مفتوح,قيد التنفيذ,مغلق"
+    const typesList = "صيانة,تشغيل,نظافة"
+
+    let curRowIdx = 5
+    for (const s of sorted) {
+      const row = wsSnags.getRow(curRowIdx)
+      const sCode = s.snagId ? String(s.snagId).toUpperCase() : `SNG-${curRowIdx - 4}`
+      const sLoc = getLoc(s.location, locations)?.name || s.location || "—"
+      const sTrade = tradeOf(s.trade)?.label || s.trade || "أعمال عامة"
+      const sType = typeOf(s.type)?.label || s.type || "صيانة"
+      const sPri = priOf(s.priority)?.label || s.priority || "عادي"
+      const sStatus = staOf(s.status)?.label || s.status || "مفتوح"
+      const sDesc = s.description || "—"
+      const sAction = s.action || (sPri === "عاجل" ? "مطلوب فحص ومعالجة فورية" : "متابعة وإصلاح في خطة الصيانة")
+      const sInspector = s.inspector || "مشرف التشغيل"
+      const sDateLogged = formatDate(s.timestamp)
+      const sDateClosed = sStatus === "مغلق" ? formatDate(s.closedAt || s.timestamp) : "—"
+      const sFollowup = s.notes || ""
+
+      row.getCell(1).value = sCode
+      row.getCell(2).value = sLoc
+      row.getCell(3).value = sTrade
+      row.getCell(4).value = sType
+      row.getCell(5).value = sPri
+      row.getCell(6).value = sStatus
+      row.getCell(7).value = sDesc
+      row.getCell(8).value = sAction
+      row.getCell(9).value = sInspector
+      row.getCell(10).value = sDateLogged
+      row.getCell(11).value = sDateClosed
+      row.getCell(12).value = sFollowup
+      row.getCell(13).value = s.attachments?.length ? "" : "لا توجد صورة"
+
+      const statusBg =
+        sStatus === "مفتوح" ? "FFFEE2E2" :
+        sStatus === "قيد التنفيذ" ? "FFFEF3C7" :
+        sStatus === "مغلق" ? "FFD1FAE5" : "FFFFFFFF"
+
+      const priColor = sPri === "عاجل" ? "FFB91C1C" : sPri === "متوسط" ? "FFB45309" : "FF334155"
+
+      for (let c = 1; c <= 13; c++) {
+        const cell = row.getCell(c)
+        cell.font = {
+          name: "Arial",
+          size: 10,
+          bold: c === 1 || c === 5 || c === 6,
+          color: c === 5 ? { argb: priColor } : c === 6 && sStatus === "مفتوح" ? { argb: "FFB91C1C" } : c === 6 && sStatus === "مغلق" ? { argb: "FF047857" } : undefined,
         }
-      })
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: c === 6 ? statusBg : curRowIdx % 2 === 0 ? THEME.zebraRow : THEME.white },
+        }
+        cell.alignment = {
+          horizontal: c === 7 || c === 8 || c === 12 ? "right" : "center",
+          vertical: "middle",
+          wrapText: true,
+        }
+        cell.border = {
+          top: { style: "thin", color: { argb: THEME.grayBorder } },
+          bottom: { style: "thin", color: { argb: THEME.grayBorder } },
+          left: { style: "thin", color: { argb: THEME.grayBorder } },
+          right: { style: "thin", color: { argb: THEME.grayBorder } },
+        }
 
-      // Embed up to 3 images directly inside Column 10 (index 9)
-      for (let pIdx = 0; pIdx < Math.min(atts.length, 3); pIdx++) {
-        const imgData = await resolveImageBase64(atts[pIdx].dataUrl || atts[pIdx].storageUrl)
-        if (imgData) {
-          const imgId = wb.addImage(imgData)
-          ws.addImage(imgId, {
-            tl: { col: 9 + pIdx * 0.32, row: excelRowNumber - 1 + 0.08 },
-            ext: { width: 72, height: 54 },
-          })
+        if (c === 2) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${uniqueLocs.slice(0, 240)}"`] }
+        if (c === 3) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${tradesList.slice(0, 240)}"`] }
+        if (c === 4) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${typesList}"`] }
+        if (c === 5) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${prioritiesList}"`] }
+        if (c === 6) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${statusesList}"`] }
+      }
+
+      const atts = (s.attachments || []).filter(f => f.type?.startsWith("image/") || f.dataUrl?.startsWith("data:image/") || f.storageUrl)
+      if (atts.length > 0) {
+        row.height = 72
+        for (let pIdx = 0; pIdx < Math.min(atts.length, 1); pIdx++) {
+          const imgData = await resolveImageBase64(atts[pIdx].dataUrl || atts[pIdx].storageUrl)
+          if (imgData) {
+            const imgId = wb.addImage(imgData)
+            wsSnags.addImage(imgId, {
+              tl: { col: 12.15, row: curRowIdx - 1 + 0.08 },
+              ext: { width: 90, height: 60 },
+            })
+          }
+        }
+      } else {
+        row.height = 26
+      }
+
+      curRowIdx++
+    }
+
+    // 50 Blank rows for quick entry
+    for (let i = 0; i < 50; i++) {
+      const row = wsSnags.getRow(curRowIdx)
+      row.getCell(1).value = `SNG-NEW-${i + 1}`
+      row.getCell(4).value = "صيانة"
+      row.getCell(5).value = "متوسط"
+      row.getCell(6).value = "مفتوح"
+      row.getCell(9).value = "مشرف التشغيل"
+      row.getCell(10).value = new Date().toLocaleDateString('ar-EG')
+      row.height = 24
+
+      for (let c = 1; c <= 13; c++) {
+        const cell = row.getCell(c)
+        cell.font = { name: "Arial", size: 10, color: { argb: "FF475569" } }
+        cell.alignment = {
+          horizontal: c === 7 || c === 8 || c === 12 ? "right" : "center",
+          vertical: "middle",
+        }
+        cell.border = { top: { style: "thin", color: { argb: "FFE2E8F0" } }, bottom: { style: "thin", color: { argb: "FFE2E8F0" } }, left: { style: "thin", color: { argb: "FFE2E8F0" } }, right: { style: "thin", color: { argb: "FFE2E8F0" } } }
+        if (curRowIdx % 2 === 0) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.zebraRow } }
+
+        if (c === 2) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${uniqueLocs.slice(0, 240)}"`] }
+        if (c === 3) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${tradesList.slice(0, 240)}"`] }
+        if (c === 4) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${typesList}"`] }
+        if (c === 5) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${prioritiesList}"`] }
+        if (c === 6) cell.dataValidation = { type: 'list', allowBlank: true, formulae: [`"${statusesList}"`] }
+      }
+      curRowIdx++
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 3. PARK STREET CHECKLIST SHEET
+    // ──────────────────────────────────────────────────────────────────────────
+    const wsPark = wb.addWorksheet("🌟 فحص بارك ستريت", {
+      views: [{ rightToLeft: true, state: "frozen", ySplit: 4 }],
+    })
+
+    wsPark.mergeCells("A1:I1")
+    const pTitle = wsPark.getCell("A1")
+    pTitle.value = "مول بارك ستريت — فحص القطاعات الشاملة (الأمن • رحلة العميل • الزراعة • مسار السيارات بالبيزمنت)"
+    pTitle.font = { name: "Arial", size: 14, bold: true, color: { argb: THEME.white } }
+    pTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4C1D95" } }
+    pTitle.alignment = { horizontal: "center", vertical: "middle" }
+    wsPark.getRow(1).height = 32
+
+    wsPark.mergeCells("A2:I2")
+    const pSub = wsPark.getCell("A2")
+    pSub.value = "معايير التشغيل والفحص الميداني | تصفية بالقطاع أو المنطقة | اختر الحالة: سليم ✅ / ملاحظة أو عطل 🔴 / يحتاج متابعة 🟡"
+    pSub.font = { name: "Arial", size: 10, bold: true, color: { argb: "FFC4B5FD" } }
+    pSub.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E1065" } }
+    pSub.alignment = { horizontal: "center", vertical: "middle" }
+    wsPark.getRow(2).height = 22
+    wsPark.getRow(3).height = 6
+
+    const parkHeaders = [
+      "القطاع الرئيسي", "كود المنطقة", "المنطقة / المسار الفرعي", "بند الفحص والمعيار التشغيلي",
+      "الفئة الفرعية", "الحالة التشغيلية", "تفاصيل الملاحظة والإجراء المطلوب", "المشرف المسؤول", "تاريخ الفحص"
+    ]
+    const pHeaderRow = wsPark.getRow(4)
+    parkHeaders.forEach((h, i) => {
+      const c = pHeaderRow.getCell(i + 1)
+      c.value = h
+      c.font = { name: "Arial", size: 11, bold: true, color: { argb: THEME.white } }
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF581C87" } }
+      c.alignment = { horizontal: "center", vertical: "middle", wrapText: true }
+      c.border = { top: { style: "medium" }, bottom: { style: "medium" }, left: { style: "thin" }, right: { style: "thin" } }
+    })
+    pHeaderRow.height = 30
+    wsPark.autoFilter = { from: "A4", to: "I4" }
+    wsPark.columns = [
+      { width: 22 }, { width: 14 }, { width: 30 }, { width: 42 }, { width: 18 }, { width: 18 }, { width: 40 }, { width: 18 }, { width: 18 }
+    ]
+
+    let pRowIdx = 5
+    for (const sec of PARK_SECTORS) {
+      for (const zone of sec.zones) {
+        for (const item of zone.items) {
+          const pRow = wsPark.getRow(pRowIdx)
+          pRow.getCell(1).value = sec.name
+          pRow.getCell(2).value = zone.code
+          pRow.getCell(3).value = zone.title
+          pRow.getCell(4).value = item.name
+          pRow.getCell(5).value = item.category
+          pRow.getCell(6).value = "سليم ✅"
+          pRow.getCell(7).value = "—"
+          pRow.getCell(8).value = "مشرف بارك ستريت"
+          pRow.getCell(9).value = new Date().toLocaleDateString('ar-EG')
+
+          for (let c = 1; c <= 9; c++) {
+            const cell = pRow.getCell(c)
+            cell.font = { name: "Arial", size: 10, bold: c === 1 || c === 4 || c === 6 }
+            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: pRowIdx % 2 === 0 ? THEME.zebraRow : THEME.white } }
+            cell.alignment = { horizontal: c === 3 || c === 4 || c === 7 ? "right" : "center", vertical: "middle" }
+            cell.border = { top: { style: "thin", color: { argb: THEME.grayBorder } }, bottom: { style: "thin", color: { argb: THEME.grayBorder } }, left: { style: "thin", color: { argb: THEME.grayBorder } }, right: { style: "thin", color: { argb: THEME.grayBorder } } }
+            if (c === 6) {
+              cell.dataValidation = {
+                type: 'list',
+                allowBlank: true,
+                formulae: ['"سليم ✅,ملاحظة / عطل 🔴,يحتاج متابعة 🟡,لم يُفحص ⚪"'],
+              }
+            }
+          }
+          pRow.height = 24
+          pRowIdx++
         }
       }
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    // 4. RESTROOM MATRIX SHEET
+    // ──────────────────────────────────────────────────────────────────────────
+    const wsRest = wb.addWorksheet("🚽 فحص الحمامات", {
+      views: [{ rightToLeft: true, state: "frozen", ySplit: 4 }],
+    })
+
+    wsRest.mergeCells("A1:N1")
+    const rTitle = wsRest.getCell("A1")
+    rTitle.value = "مول بارك ستريت — مركز متابعة وفحص الحمامات الفني وحصر المكونات (50 حمام × 29 مكون)"
+    rTitle.font = { name: "Arial", size: 14, bold: true, color: { argb: THEME.white } }
+    rTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF065F46" } }
+    rTitle.alignment = { horizontal: "center", vertical: "middle" }
+    wsRest.getRow(1).height = 32
+
+    wsRest.mergeCells("A2:N2")
+    const rSub = wsRest.getCell("A2")
+    rSub.value = "حصر فني ومتابعة للأعطال | فلترة بالمبنى والطابق والنوع والتخصص والحالة"
+    rSub.font = { name: "Arial", size: 10, bold: true, color: { argb: "FFA7F3D0" } }
+    rSub.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF064E3B" } }
+    rSub.alignment = { horizontal: "center", vertical: "middle" }
+    wsRest.getRow(2).height = 22
+    wsRest.getRow(3).height = 6
+
+    const restHeaders = [
+      "المبنى / المنطقة", "الاتجاه", "الطابق", "النوع", "كود الحمام", "اسم المكون / المعيار الفني",
+      "التخصص", "إجمالي العدد", "العدد السليم", "العدد المعطل", "العدد المفقود", "الحالة العامة",
+      "الملاحظات والتفاصيل الفنية", "المشرف وتاريخ الفحص"
+    ]
+    const rHeaderRow = wsRest.getRow(4)
+    restHeaders.forEach((h, i) => {
+      const c = rHeaderRow.getCell(i + 1)
+      c.value = h
+      c.font = { name: "Arial", size: 11, bold: true, color: { argb: THEME.white } }
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF047857" } }
+      c.alignment = { horizontal: "center", vertical: "middle", wrapText: true }
+      c.border = { top: { style: "medium" }, bottom: { style: "medium" }, left: { style: "thin" }, right: { style: "thin" } }
+    })
+    rHeaderRow.height = 30
+    wsRest.autoFilter = { from: "A4", to: "N4" }
+    wsRest.columns = [
+      { width: 16 }, { width: 14 }, { width: 14 }, { width: 12 }, { width: 22 }, { width: 30 },
+      { width: 16 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 16 }, { width: 36 }, { width: 22 }
+    ]
+
+    let rRowIdx = 5
+    for (const loc of RESTROOM_LOCATIONS) {
+      for (const comp of STANDARD_COMPONENTS) {
+        const rRow = wsRest.getRow(rRowIdx)
+        rRow.getCell(1).value = loc.building
+        rRow.getCell(2).value = loc.direction
+        rRow.getCell(3).value = loc.floor
+        rRow.getCell(4).value = loc.gender
+        rRow.getCell(5).value = loc.restroomKey
+        rRow.getCell(6).value = comp.component
+        rRow.getCell(7).value = comp.trade
+        rRow.getCell(8).value = "—"
+        rRow.getCell(9).value = "—"
+        rRow.getCell(10).value = "—"
+        rRow.getCell(11).value = "—"
+        rRow.getCell(12).value = "سليم ومطابق ✅"
+        rRow.getCell(13).value = "—"
+        rRow.getCell(14).value = "مشرف الفحص"
+
+        for (let c = 1; c <= 14; c++) {
+          const cell = rRow.getCell(c)
+          cell.font = { name: "Arial", size: 9.5, bold: c === 5 || c === 6 || c === 12 }
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: rRowIdx % 2 === 0 ? THEME.zebraRow : THEME.white } }
+          cell.alignment = { horizontal: c === 6 || c === 13 ? "right" : "center", vertical: "middle" }
+          cell.border = { top: { style: "thin", color: { argb: THEME.grayBorder } }, bottom: { style: "thin", color: { argb: THEME.grayBorder } }, left: { style: "thin", color: { argb: THEME.grayBorder } }, right: { style: "thin", color: { argb: THEME.grayBorder } } }
+          if (c === 12) {
+            cell.dataValidation = {
+              type: 'list',
+              allowBlank: true,
+              formulae: ['"سليم ومطابق ✅,يوجد عطل / نقص 🔴,لم يُفحص ⚪"'],
+            }
+          }
+        }
+        rRow.height = 22
+        rRowIdx++
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 5. LOOKUPS & SETTINGS SHEET
+    // ──────────────────────────────────────────────────────────────────────────
+    const wsLookups = wb.addWorksheet("⚙️ دليل القوائم والمرجع", {
+      views: [{ rightToLeft: true }],
+    })
+    wsLookups.mergeCells("A1:F1")
+    const lTitle = wsLookups.getCell("A1")
+    lTitle.value = "دليل القوائم المرجعية لتغذية القوائم المنسدلة والخيارات في الإكسيل"
+    lTitle.font = { name: "Arial", size: 13, bold: true, color: { argb: THEME.white } }
+    lTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.darkNavy } }
+    lTitle.alignment = { horizontal: "center", vertical: "middle" }
+    wsLookups.getRow(1).height = 28
+
+    const lHeaders = ["قائمة المواقع", "قائمة التخصصات", "قائمة الأولويات", "قائمة الحالات", "قائمة أنواع الملاحظة", "مشرفو الفحص"]
+    const lHeaderRow = wsLookups.getRow(3)
+    lHeaders.forEach((h, i) => {
+      const c = lHeaderRow.getCell(i + 1)
+      c.value = h
+      c.font = { name: "Arial", size: 11, bold: true, color: { argb: THEME.white } }
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF334155" } }
+      c.alignment = { horizontal: "center", vertical: "middle" }
+    })
+    lHeaderRow.height = 24
+
+    const maxRows = Math.max(locNamesList.length, TRADES.length, 10)
+    for (let i = 0; i < maxRows; i++) {
+      const r = wsLookups.getRow(4 + i)
+      r.getCell(1).value = locNamesList[i] || ""
+      r.getCell(2).value = TRADES[i]?.label || ""
+      r.getCell(3).value = ["عاجل", "متوسط", "عادي"][i] || ""
+      r.getCell(4).value = ["مفتوح", "قيد التنفيذ", "مغلق"][i] || ""
+      r.getCell(5).value = ["صيانة", "تشغيل", "نظافة"][i] || ""
+      r.getCell(6).value = ["احمد ربيع", "مشرف بارك ستريت", "مشرف الكهرباء", "مشرف السباكة", "مشرف التكييف", "مشرف الأمن"][i] || ""
+
+      for (let c = 1; c <= 6; c++) {
+        const cell = r.getCell(c)
+        cell.font = { name: "Arial", size: 10 }
+        cell.alignment = { horizontal: "center", vertical: "middle" }
+        cell.border = { top: { style: "thin", color: { argb: "FFE2E8F0" } }, bottom: { style: "thin", color: { argb: "FFE2E8F0" } }, left: { style: "thin", color: { argb: "FFE2E8F0" } }, right: { style: "thin", color: { argb: "FFE2E8F0" } } }
+      }
+      r.height = 20
+    }
+    wsLookups.columns = [{ width: 28 }, { width: 26 }, { width: 18 }, { width: 18 }, { width: 20 }, { width: 22 }]
+
+    // Trigger download
     const buf = await wb.xlsx.writeBuffer()
     _download(
       new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
-      `snag-report-${Date.now()}.xlsx`
+      `سجل_سناج_بارك_ستريت_التطبيقي_الشامل_${new Date().toISOString().slice(0, 10)}.xlsx`
     )
   } catch (err) {
     console.error("Excel Export Error:", err)
