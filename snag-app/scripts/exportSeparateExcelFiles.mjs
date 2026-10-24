@@ -148,17 +148,23 @@ async function main() {
   // ملف 1: 01_سجل_ملاحظات_المباني_والممرات_التفصيلي.xlsx
   // التقسيم الدقيق زي شيت الحمامات: المبنى، الجهة، الدور، سلم 1 وسلالم 2 وطرقة الخدمات وممر الوحدات وكافة المكونات
   // ══════════════════════════════════════════════════════════════════════════
-  console.log("\n🏢 2/6 جاري بناء ملف 01: سجل ملاحظات المباني والممرات التفصيلي (زي شيت الحمامات)...");
+  console.log("\n🏢 2/6 جاري بناء ملف 01: سجل ملاحظات المباني والممرات التفصيلي + لوحة المؤشرات التفاعلية المدمجة...");
   {
     const wb = new ExcelJS.Workbook();
     wb.creator = "Park St. Mall Management";
     wb.created = new Date();
 
+    // الشيت الأول: لوحة المؤشرات التفاعلية (Dashboard)
+    const wsDash = wb.addWorksheet("لوحة المؤشرات التفاعلية", {
+      views: [{ rightToLeft: true, showGridLines: true }],
+    });
+
+    // الشيت الثاني: فحص المباني والممرات التفصيلي (Inspection Matrix)
     const ws = wb.addWorksheet("فحص المباني والممرات", {
       views: [{ rightToLeft: true, state: "frozen", ySplit: 4 }],
     });
 
-    // Title & Subtitle
+    // Setup ws headers & columns
     ws.mergeCells("A1:N1");
     const tCell = ws.getCell("A1");
     tCell.value = "مول بارك ستريت — سجل الفحص الهندسي وتفاصيل المباني والممرات والسلالم (Architecture & Floor Inspection Matrix)";
@@ -169,14 +175,13 @@ async function main() {
 
     ws.mergeCells("A2:N2");
     const sCell = ws.getCell("A2");
-    sCell.value = "مقسم بالكامل زي شيت الحمامات (المبنى • الجهة • الدور • المكان التفصيلي • المعايير والمكونات) | فلاتر تفاعلية وقوائم منسدلة";
+    sCell.value = "مقسم بالكامل وفق مواقع شيت الحمامات الحقيقية لمول بارك ستريت (المبنى • الجهة • الدور • المكان التفصيلي • المعايير الـ 13) | فلاتر تفاعلية وقوائم منسدلة";
     sCell.font = { name: "Arial", size: 10, bold: true, color: { argb: "FF38BDF8" } };
     sCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
     sCell.alignment = { horizontal: "center", vertical: "middle" };
     ws.getRow(2).height = 22;
     ws.getRow(3).height = 6;
 
-    // Headers
     const headers = [
       "كود البند",
       "المبنى",
@@ -208,12 +213,12 @@ async function main() {
 
     ws.columns = [
       { width: 18 }, // كود
-      { width: 14 }, // المبنى
-      { width: 16 }, // الجهة
+      { width: 16 }, // المبنى
+      { width: 22 }, // الجهة
       { width: 14 }, // الدور
-      { width: 22 }, // المكان التفصيلي
-      { width: 32 }, // المكون
-      { width: 16 }, // التخصص
+      { width: 24 }, // المكان التفصيلي
+      { width: 34 }, // المكون
+      { width: 18 }, // التخصص
       { width: 18 }, // الحالة
       { width: 14 }, // الأولوية
       { width: 14 }, // النوع
@@ -223,14 +228,15 @@ async function main() {
       { width: 22 }, // الصورة
     ];
 
-    // Building Specs exactly as requested by user
+    // Building Specs matching Restroom locations & architecture
     const BUILDING_SPECS = [
       {
         id: "b1",
         name: "مبنى 1",
         wings: [
           {
-            name: "الجهة الشرقية",
+            name: "اتجاه راميدا",
+            floors: ["الدور الأرضي", "الدور الأول", "الدور الثاني", "الدور الثالث", "الدور الرابع", "السطح والخدمات"],
             subLocations: [
               "سلم طوارئ 1",
               "سلم طوارئ 2",
@@ -239,7 +245,8 @@ async function main() {
             ]
           },
           {
-            name: "الجهة الغربية",
+            name: "Sky القديمة / Art of form",
+            floors: ["الدور الأرضي", "الدور الأول", "الدور الثاني", "الدور الثالث", "الدور الرابع", "الدور الخامس", "الدور السادس", "السطح والخدمات"],
             subLocations: [
               "سلم طوارئ 1",
               "سلم طوارئ 2",
@@ -252,10 +259,10 @@ async function main() {
       {
         id: "b2",
         name: "مبنى 2",
-        // "عدا مبنى 2 في كل جهة سلمين"
         wings: [
           {
-            name: "الجهة الشرقية",
+            name: "اتجاه العيادات",
+            floors: ["الدور الأرضي", "الدور الأول", "الدور الثاني", "الدور الثالث", "الدور الرابع", "الدور الخامس", "الدور السادس", "السطح والخدمات"],
             subLocations: [
               "سلم طوارئ 1",
               "سلم طوارئ 2",
@@ -264,7 +271,8 @@ async function main() {
             ]
           },
           {
-            name: "الجهة الغربية",
+            name: "اتجاه المكاتب",
+            floors: ["الدور الأرضي", "الدور الأول", "الدور الثاني", "الدور الثالث", "الدور الرابع", "الدور الخامس", "الدور السادس", "السطح والخدمات"],
             subLocations: [
               "سلم طوارئ 3",
               "سلم طوارئ 4",
@@ -279,7 +287,8 @@ async function main() {
         name: "مبنى 3",
         wings: [
           {
-            name: "الجهة الشرقية",
+            name: "ريتشارد",
+            floors: ["الدور الأرضي", "الدور الأول", "الدور الثاني", "السطح والخدمات"],
             subLocations: [
               "سلم طوارئ 1",
               "سلم طوارئ 2",
@@ -288,12 +297,32 @@ async function main() {
             ]
           },
           {
-            name: "الجهة الغربية",
+            name: "ناحية البنك العربي",
+            floors: ["الدور الأرضي", "الدور الأول", "الدور الثاني", "السطح والخدمات"],
             subLocations: [
               "سلم طوارئ 1",
               "سلم طوارئ 2",
               "طرقة الخدمات",
               "ممر الدور الخاص بالوحدات",
+            ]
+          },
+          {
+            name: "ناحية مستر ايمن",
+            floors: ["الدور الثالث", "الدور الرابع", "الدور الخامس", "الدور السادس", "السطح والخدمات"],
+            subLocations: [
+              "سلم طوارئ 1",
+              "سلم طوارئ 2",
+              "طرقة الخدمات",
+              "ممر الدور الخاص بالوحدات",
+            ]
+          },
+          {
+            name: "المصلى",
+            floors: ["دور المصلى", "السطح والخدمات"],
+            subLocations: [
+              "مدخل المصلى والممر الرئيسي",
+              "طرقة الخدمات والوضوء",
+              "سلم الطوارئ",
             ]
           }
         ]
@@ -303,12 +332,23 @@ async function main() {
         name: "البلازا والمنطقة المركزية",
         wings: [
           {
-            name: "الممشى الرئيسي والبلازا",
+            name: "بلازا 1",
+            floors: ["العام"],
             subLocations: [
-              "الممشى الرئيسي للزوار",
-              "منطقة مقاعد واستراحات الزوار",
-              "مداخل مباني البلازا",
-              "السلالم والمصاعد البانورامية",
+              "الممشى الرئيسي للزوار (بلازا 1)",
+              "منطقة مقاعد واستراحات الزوار (بلازا 1)",
+              "مداخل المباني (بلازا 1)",
+              "السلالم والمصاعد البانورامية (بلازا 1)",
+            ]
+          },
+          {
+            name: "بلازا 3",
+            floors: ["العام"],
+            subLocations: [
+              "الممشى الرئيسي للزوار (بلازا 3)",
+              "منطقة مقاعد واستراحات الزوار (بلازا 3)",
+              "مداخل المباني (بلازا 3)",
+              "السلالم والمصاعد البانورامية (بلازا 3)",
             ]
           }
         ]
@@ -319,6 +359,7 @@ async function main() {
         wings: [
           {
             name: "بيزمنت 1 (B1)",
+            floors: ["العام"],
             subLocations: [
               "مسار السيارات الرئيسي (B1)",
               "منحدر الدخول والخروج (Ramp B1)",
@@ -328,6 +369,7 @@ async function main() {
           },
           {
             name: "بيزمنت 2 (B2)",
+            floors: ["العام"],
             subLocations: [
               "مسار السيارات الرئيسي (B2)",
               "منحدر النزول والصعود (Ramp B2)",
@@ -336,19 +378,41 @@ async function main() {
             ]
           }
         ]
+      },
+      {
+        id: "b_lmd",
+        name: "مبنى LMD",
+        wings: [
+          {
+            name: "مبنى LMD",
+            floors: ["العام"],
+            subLocations: [
+              "المدخل الرئيسي واللوبي",
+              "ممرات الأدوار الخاصة بالوحدات",
+              "طرقة الخدمات ومخارج الهروب",
+              "سلالم الطوارئ",
+            ]
+          }
+        ]
+      },
+      {
+        id: "b_mosque",
+        name: "المسجد",
+        wings: [
+          {
+            name: "مبنى ومحيط المسجد",
+            floors: ["العام"],
+            subLocations: [
+              "قاعة الصلاة والمدخل الرئيسي",
+              "الممرات الخارجية ومحيط المسجد",
+              "أماكن الوضوء والمداخل",
+              "سلالم الطوارئ والخدمات",
+            ]
+          }
+        ]
       }
     ];
 
-    const FLOORS = [
-      "الدور الأرضي",
-      "الدور الأول",
-      "الدور الثاني",
-      "الدور الثالث",
-      "السطح والخدمات",
-    ];
-
-    // The user's exact components:
-    // "حوائط واسبوتات انارة وفيش كربهاء تكييف ابواب علامات ارشادية ارضية كباين حريق الخ الخ"
     const STANDARD_FLOOR_COMPONENTS = [
       { name: "الحوائط والدهانات والتشطيبات", trade: "دهانات", defaultType: "صيانة" },
       { name: "سبوتات الإنارة وكشافات السقف وكشافات الطوارئ", trade: "كهرباء", defaultType: "صيانة" },
@@ -366,37 +430,67 @@ async function main() {
     ];
 
     let rowIdx = 5;
+    const usedSnagIds = new Set();
 
-    // Helper: Map live snags into matching building rows if any
-    const findLiveSnagMatch = (bName, floor, subLoc, compName, compTrade) => {
-      return snags.find(s => {
+    // Map each live snag ONCE to the most appropriate row
+    const findLiveSnagMatch = (bName, wingName, floor, subLoc, compName, compTrade) => {
+      const match = snags.find(s => {
+        if (usedSnagIds.has(s.id)) return false;
         const desc = (s.description || "").toLowerCase();
         const loc = resolveLocationName(s.location).toLowerCase();
-        return (
-          (loc.includes(bName.toLowerCase()) || desc.includes(bName.toLowerCase())) &&
-          (desc.includes(floor.toLowerCase()) || loc.includes(floor.toLowerCase()) || true) &&
-          (desc.includes(compName.slice(0, 6).toLowerCase()) || resolveTradeLabel(s.trade) === compTrade)
-        );
+
+        const bMatch =
+          loc.includes(bName.toLowerCase()) ||
+          desc.includes(bName.toLowerCase()) ||
+          (bName === "مبنى 1" && (loc.includes("واحد") || desc.includes("واحد"))) ||
+          (bName === "مبنى 2" && (loc.includes("اثنين") || desc.includes("اثنين"))) ||
+          (bName === "مبنى 3" && (loc.includes("ثلاثة") || desc.includes("ثلاثة") || loc.includes("ريتشارد") || desc.includes("ريتشارد"))) ||
+          (bName.includes("بيزمنت") && (loc.includes("garage") || desc.includes("بيزمنت") || desc.includes("جراج"))) ||
+          (bName.includes("البلازا") && (loc.includes("plaza") || desc.includes("بلازا") || loc.includes("جزيره") || desc.includes("نافوره"))) ||
+          (bName.includes("LMD") && (loc.includes("lmd") || desc.includes("lmd") || desc.includes("ال ام دي")));
+
+        if (!bMatch) return false;
+
+        const trLabel = resolveTradeLabel(s.trade);
+        const tradeMatch = trLabel === compTrade || desc.includes(compTrade.toLowerCase());
+        const compMatch = desc.includes(compName.slice(0, 5).toLowerCase());
+
+        return tradeMatch || compMatch;
       });
+
+      if (match) {
+        usedSnagIds.add(match.id);
+        return match;
+      }
+      return null;
     };
 
-    for (const bldg of BUILDING_SPECS) {
-      const floorsList = (bldg.id === "b_basement" || bldg.id === "b_plaza") ? ["العام"] : FLOORS;
+    let countSleem = 0;
+    let countSnags = 0;
+    let countFollowup = 0;
+    let countUrgent = 0;
 
-      for (const fl of floorsList) {
-        for (const wing of bldg.wings) {
+    for (const bldg of BUILDING_SPECS) {
+      for (const wing of bldg.wings) {
+        for (const fl of wing.floors) {
           for (const sub of wing.subLocations) {
             for (const comp of STANDARD_FLOOR_COMPONENTS) {
               const row = ws.getRow(rowIdx);
-              const itemCode = `${bldg.id.toUpperCase()}-${fl === 'العام' ? 'GEN' : fl.slice(5, 10)}-${sub.slice(0, 5)}-${comp.name.slice(0, 4)}`.replace(/\s+/g, '');
+              const itemCode = `${bldg.id.toUpperCase()}-${fl === 'العام' ? 'GEN' : fl.slice(5, 10)}-${sub.slice(0, 4)}-${comp.name.slice(0, 4)}`.replace(/\s+/g, '');
 
-              // Check if there is a live snag recorded here
-              const liveSnag = findLiveSnagMatch(bldg.name, fl, sub, comp.name, comp.trade);
+              const liveSnag = findLiveSnagMatch(bldg.name, wing.name, fl, sub, comp.name, comp.trade);
               const statusVal = liveSnag ? "ملاحظة أو عطل 🔴" : "سليم ومطابق ✅";
               const priVal = liveSnag ? resolvePriorityLabel(liveSnag.priority) : "عادي";
               const noteVal = liveSnag ? liveSnag.description : "—";
               const inspVal = liveSnag ? liveSnag.inspector : "مشرف التشغيل";
               const dateVal = liveSnag ? formatDate(liveSnag.timestamp) : new Date().toLocaleDateString('ar-EG');
+
+              if (statusVal.includes("عطل")) {
+                countSnags++;
+                if (priVal === "عاجل") countUrgent++;
+              } else {
+                countSleem++;
+              }
 
               row.getCell(1).value = itemCode;
               row.getCell(2).value = bldg.name;
@@ -446,7 +540,6 @@ async function main() {
                 if (c === 10) cell.dataValidation = { type: 'list', allowBlank: true, formulae: ['"صيانة,تشغيل,نظافة"'] };
               }
 
-              // Embed image if live snag has photo
               if (liveSnag?.attachments?.[0]?.dataUrl?.startsWith("data:image")) {
                 row.height = 70;
                 try {
@@ -467,6 +560,312 @@ async function main() {
         }
       }
     }
+
+    const lastRow = rowIdx - 1;
+    const totalInspectionRows = lastRow - 4;
+
+    // ────────────────────────────────────────────────────────────────────────
+    // بناء لوحة المؤشرات التفاعلية المدمجة في الشيت الأول (wsDash)
+    // ────────────────────────────────────────────────────────────────────────
+    wsDash.columns = [
+      { width: 3 },  // A
+      { width: 6 },  // B (م)
+      { width: 28 }, // C (المبنى / التخصص)
+      { width: 16 }, // D (إجمالي)
+      { width: 16 }, // E (سليم)
+      { width: 16 }, // F (أعطال)
+      { width: 16 }, // G (متابعة / نسبة)
+      { width: 16 }, // H (عاجل)
+      { width: 20 }, // I (نسبة الجاهزية)
+      { width: 14 }, // J
+      { width: 14 }, // K
+      { width: 16 }, // L
+      { width: 16 }, // M
+    ];
+
+    // Main Header
+    wsDash.mergeCells("B2:M2");
+    const dTitle = wsDash.getCell("B2");
+    dTitle.value = "مول بارك ستريت — لوحة المؤشرات التفاعلية لملاحظات وفحص المباني (Live Building Snag Dashboard)";
+    dTitle.font = { name: "Arial", size: 14, bold: true, color: { argb: THEME.white } };
+    dTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.darkNavy } };
+    dTitle.alignment = { horizontal: "center", vertical: "middle" };
+    wsDash.getRow(2).height = 36;
+
+    wsDash.mergeCells("B3:M3");
+    const dSub = wsDash.getCell("B3");
+    dSub.value = "لوحة ديناميكية مربوطة بالكامل بمعادلات إكسيل الذكية — تتحدث المؤشرات والنسب لحظياً وبشكل تلقائي بمجرد تعديل أي حالة في شيت فحص المباني";
+    dSub.font = { name: "Arial", size: 10, bold: true, color: { argb: "FF38BDF8" } };
+    dSub.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
+    dSub.alignment = { horizontal: "center", vertical: "middle" };
+    wsDash.getRow(3).height = 22;
+    wsDash.getRow(4).height = 8;
+
+    // KPI Summary Cards
+    const kpiDefs = [
+      {
+        colS: "B", colE: "C",
+        label: "إجمالي بنود الفحص",
+        color: "FF38BDF8",
+        formula: `COUNTA('فحص المباني والممرات'!$A$5:$A$${lastRow})`,
+        initVal: totalInspectionRows,
+        numFmt: "#,##0"
+      },
+      {
+        colS: "D", colE: "E",
+        label: "سليم ومطابق للمواصفات ✅",
+        color: "FF10B981",
+        formula: `COUNTIF('فحص المباني والممرات'!$H$5:$H$${lastRow}, "*سليم*")`,
+        initVal: countSleem,
+        numFmt: "#,##0"
+      },
+      {
+        colS: "F", colE: "G",
+        label: "ملاحظات وأعطال مرصودة 🔴",
+        color: "FFEF4444",
+        formula: `COUNTIF('فحص المباني والممرات'!$H$5:$H$${lastRow}, "*ملاحظة*") + COUNTIF('فحص المباني والممرات'!$H$5:$H$${lastRow}, "*عطل*")`,
+        initVal: countSnags,
+        numFmt: "#,##0"
+      },
+      {
+        colS: "H", colE: "I",
+        label: "ملاحظات تحتاج متابعة 🟡",
+        color: "FFF59E0B",
+        formula: `COUNTIF('فحص المباني والممرات'!$H$5:$H$${lastRow}, "*متابعة*")`,
+        initVal: countFollowup,
+        numFmt: "#,##0"
+      },
+      {
+        colS: "J", colE: "K",
+        label: "أعطال ذات أولوية عاجلة ⚠️",
+        color: "FFB91C1C",
+        formula: `COUNTIFS('فحص المباني والممرات'!$I$5:$I$${lastRow}, "عاجل", 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*ملاحظة*") + COUNTIFS('فحص المباني والممرات'!$I$5:$I$${lastRow}, "عاجل", 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*عطل*")`,
+        initVal: countUrgent,
+        numFmt: "#,##0"
+      },
+      {
+        colS: "L", colE: "M",
+        label: "نسبة الجاهزية والسلامة العامة %",
+        color: "FF10B981",
+        formula: `IF(B5>0, D5/B5, 1)`,
+        initVal: totalInspectionRows > 0 ? (countSleem / totalInspectionRows) : 1,
+        numFmt: "0.0%"
+      },
+    ];
+
+    kpiDefs.forEach(k => {
+      wsDash.mergeCells(`${k.colS}5:${k.colE}5`);
+      const vCell = wsDash.getCell(`${k.colS}5`);
+      vCell.value = { formula: k.formula, result: k.initVal };
+      vCell.font = { name: "Arial", size: 20, bold: true, color: { argb: k.color } };
+      vCell.alignment = { horizontal: "center", vertical: "middle" };
+      vCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } };
+      vCell.border = { top: { style: "medium", color: { argb: k.color } }, left: { style: "thin" }, right: { style: "thin" } };
+      if (k.numFmt) vCell.numFmt = k.numFmt;
+
+      wsDash.mergeCells(`${k.colS}6:${k.colE}6`);
+      const lCell = wsDash.getCell(`${k.colS}6`);
+      lCell.value = k.label;
+      lCell.font = { name: "Arial", size: 9.5, bold: true, color: { argb: "FFCBD5E1" } };
+      lCell.alignment = { horizontal: "center", vertical: "middle" };
+      lCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } };
+      lCell.border = { bottom: { style: "medium" }, left: { style: "thin" }, right: { style: "thin" } };
+    });
+    wsDash.getRow(5).height = 34;
+    wsDash.getRow(6).height = 22;
+
+    // ── Table 1: المباني والقطاعات ──────────────────────────────────────────
+    wsDash.mergeCells("B8:I8");
+    const t1Header = wsDash.getCell("B8");
+    t1Header.value = "🏢 مؤشرات الفحص الهندسي والسلامة حسب المبنى والقطاع (تفاعلي مباشر)";
+    t1Header.font = { name: "Arial", size: 11.5, bold: true, color: { argb: THEME.white } };
+    t1Header.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A8A" } };
+    t1Header.alignment = { horizontal: "center", vertical: "middle" };
+    wsDash.getRow(8).height = 26;
+
+    const t1Cols = [
+      "م", "المبنى / القطاع", "إجمالي البنود", "سليم ومطابق ✅",
+      "ملاحظات وأعطال 🔴", "تحت المتابعة 🟡", "أعطال عاجلة ⚠️", "نسبة الجاهزية %"
+    ];
+    const r9 = wsDash.getRow(9);
+    t1Cols.forEach((th, i) => {
+      const c = r9.getCell(i + 2);
+      c.value = th;
+      c.font = { name: "Arial", size: 10, bold: true, color: { argb: THEME.white } };
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF334155" } };
+      c.alignment = { horizontal: "center", vertical: "middle" };
+    });
+    r9.height = 24;
+
+    const bldgNamesList = [
+      "مبنى 1",
+      "مبنى 2",
+      "مبنى 3",
+      "البلازا والمنطقة المركزية",
+      "البيزمنت والجراج",
+      "مبنى LMD",
+      "المسجد"
+    ];
+
+    let t1Row = 10;
+    bldgNamesList.forEach((bName, idx) => {
+      const row = wsDash.getRow(t1Row);
+      row.getCell(2).value = idx + 1;
+      row.getCell(3).value = bName;
+
+      row.getCell(4).value = { formula: `COUNTIF('فحص المباني والممرات'!$B$5:$B$${lastRow}, C${t1Row})`, result: 0 };
+      row.getCell(5).value = { formula: `COUNTIFS('فحص المباني والممرات'!$B$5:$B$${lastRow}, C${t1Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*سليم*")`, result: 0 };
+      row.getCell(6).value = { formula: `COUNTIFS('فحص المباني والممرات'!$B$5:$B$${lastRow}, C${t1Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*ملاحظة*") + COUNTIFS('فحص المباني والممرات'!$B$5:$B$${lastRow}, C${t1Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*عطل*")`, result: 0 };
+      row.getCell(7).value = { formula: `COUNTIFS('فحص المباني والممرات'!$B$5:$B$${lastRow}, C${t1Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*متابعة*")`, result: 0 };
+      row.getCell(8).value = { formula: `COUNTIFS('فحص المباني والممرات'!$B$5:$B$${lastRow}, C${t1Row}, 'فحص المباني والممرات'!$I$5:$I$${lastRow}, "عاجل", 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*عطل*") + COUNTIFS('فحص المباني والممرات'!$B$5:$B$${lastRow}, C${t1Row}, 'فحص المباني والممرات'!$I$5:$I$${lastRow}, "عاجل", 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*ملاحظة*")`, result: 0 };
+      row.getCell(9).value = { formula: `IF(D${t1Row}>0, E${t1Row}/D${t1Row}, 1)`, result: 1 };
+      row.getCell(9).numFmt = "0.0%";
+
+      for (let c = 2; c <= 9; c++) {
+        const cell = row.getCell(c);
+        cell.font = { name: "Arial", size: 10, bold: c === 3 || c === 6 || c === 8 || c === 9 };
+        cell.alignment = { horizontal: c === 3 ? "right" : "center", vertical: "middle" };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: t1Row % 2 === 0 ? THEME.zebraRow : THEME.white } };
+        cell.border = { top: { style: "thin", color: { argb: THEME.grayBorder } }, bottom: { style: "thin", color: { argb: THEME.grayBorder } }, left: { style: "thin", color: { argb: THEME.grayBorder } }, right: { style: "thin", color: { argb: THEME.grayBorder } } };
+        if (c === 6) cell.font.color = { argb: "FFB91C1C" };
+        if (c === 5) cell.font.color = { argb: "FF047857" };
+      }
+      row.height = 22;
+      t1Row++;
+    });
+
+    // Total Row for Table 1
+    const totRow1 = wsDash.getRow(t1Row);
+    totRow1.getCell(2).value = "Σ";
+    totRow1.getCell(3).value = "الإجمالي العام لكافة القطاعات";
+    totRow1.getCell(4).value = { formula: `SUM(D10:D${t1Row - 1})`, result: totalInspectionRows };
+    totRow1.getCell(5).value = { formula: `SUM(E10:E${t1Row - 1})`, result: countSleem };
+    totRow1.getCell(6).value = { formula: `SUM(F10:F${t1Row - 1})`, result: countSnags };
+    totRow1.getCell(7).value = { formula: `SUM(G10:G${t1Row - 1})`, result: countFollowup };
+    totRow1.getCell(8).value = { formula: `SUM(H10:H${t1Row - 1})`, result: countUrgent };
+    totRow1.getCell(9).value = { formula: `IF(D${t1Row}>0, E${t1Row}/D${t1Row}, 1)`, result: 1 };
+    totRow1.getCell(9).numFmt = "0.0%";
+
+    for (let c = 2; c <= 9; c++) {
+      const cell = totRow1.getCell(c);
+      cell.font = { name: "Arial", size: 10.5, bold: true, color: { argb: THEME.white } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
+      cell.alignment = { horizontal: c === 3 ? "right" : "center", vertical: "middle" };
+      cell.border = { top: { style: "medium" }, bottom: { style: "medium" }, left: { style: "thin" }, right: { style: "thin" } };
+    }
+    totRow1.height = 24;
+
+    // ── Table 2: التخصصات الفنية ────────────────────────────────────────────
+    const t2Start = t1Row + 2;
+    wsDash.mergeCells(`B${t2Start}:H${t2Start}`);
+    const t2Header = wsDash.getCell(`B${t2Start}`);
+    t2Header.value = "🔧 تحليل وتوزيع الملاحظات والأعطال حسب التخصص الهندسي (تفاعلي مباشر)";
+    t2Header.font = { name: "Arial", size: 11.5, bold: true, color: { argb: THEME.white } };
+    t2Header.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.headerGreen } };
+    t2Header.alignment = { horizontal: "center", vertical: "middle" };
+    wsDash.getRow(t2Start).height = 26;
+
+    const t2Cols = ["م", "التخصص الفني", "إجمالي البنود", "سليم ومطابق ✅", "أعطال وملاحظات 🔴", "عاجل ⚠️", "نسبة الأعطال في التخصص"];
+    const rT2H = wsDash.getRow(t2Start + 1);
+    t2Cols.forEach((th, i) => {
+      const c = rT2H.getCell(i + 2);
+      c.value = th;
+      c.font = { name: "Arial", size: 10, bold: true, color: { argb: THEME.white } };
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF064E3B" } };
+      c.alignment = { horizontal: "center", vertical: "middle" };
+    });
+    rT2H.height = 24;
+
+    const floorTradesList = [
+      "دهانات", "كهرباء", "تكييف وتهوية", "نجارة", "أعمال مدنية",
+      "أعمال عامة", "أنظمة إطفاء", "جبس بورد", "حوائط وبلاط",
+      "الأمن والمراقبة والحراسة", "نظافة ومكافحة حشرات"
+    ];
+
+    let t2Row = t2Start + 2;
+    floorTradesList.forEach((tr, idx) => {
+      const row = wsDash.getRow(t2Row);
+      row.getCell(2).value = idx + 1;
+      row.getCell(3).value = tr;
+
+      row.getCell(4).value = { formula: `COUNTIF('فحص المباني والممرات'!$G$5:$G$${lastRow}, C${t2Row})`, result: 0 };
+      row.getCell(5).value = { formula: `COUNTIFS('فحص المباني والممرات'!$G$5:$G$${lastRow}, C${t2Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*سليم*")`, result: 0 };
+      row.getCell(6).value = { formula: `COUNTIFS('فحص المباني والممرات'!$G$5:$G$${lastRow}, C${t2Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*ملاحظة*") + COUNTIFS('فحص المباني والممرات'!$G$5:$G$${lastRow}, C${t2Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*عطل*")`, result: 0 };
+      row.getCell(7).value = { formula: `COUNTIFS('فحص المباني والممرات'!$G$5:$G$${lastRow}, C${t2Row}, 'فحص المباني والممرات'!$I$5:$I$${lastRow}, "عاجل", 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*عطل*") + COUNTIFS('فحص المباني والممرات'!$G$5:$G$${lastRow}, C${t2Row}, 'فحص المباني والممرات'!$I$5:$I$${lastRow}, "عاجل", 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*ملاحظة*")`, result: 0 };
+      row.getCell(8).value = { formula: `IF(D${t2Row}>0, F${t2Row}/D${t2Row}, 0)`, result: 0 };
+      row.getCell(8).numFmt = "0.0%";
+
+      for (let c = 2; c <= 8; c++) {
+        const cell = row.getCell(c);
+        cell.font = { name: "Arial", size: 10, bold: c === 3 || c === 6 || c === 8 };
+        cell.alignment = { horizontal: c === 3 ? "right" : "center", vertical: "middle" };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: t2Row % 2 === 0 ? THEME.zebraRow : THEME.white } };
+        cell.border = { top: { style: "thin", color: { argb: THEME.grayBorder } }, bottom: { style: "thin", color: { argb: THEME.grayBorder } }, left: { style: "thin", color: { argb: THEME.grayBorder } }, right: { style: "thin", color: { argb: THEME.grayBorder } } };
+        if (c === 6) cell.font.color = { argb: "FFB91C1C" };
+        if (c === 5) cell.font.color = { argb: "FF047857" };
+      }
+      row.height = 22;
+      t2Row++;
+    });
+
+    // ── Table 3: الأدوار والارتفاعات ────────────────────────────────────────
+    const t3Start = t2Row + 2;
+    wsDash.mergeCells(`B${t3Start}:G${t3Start}`);
+    const t3Header = wsDash.getCell(`B${t3Start}`);
+    t3Header.value = "🏢 مؤشرات الفحص الهندسي حسب الدور والارتفاع (تفاعلي مباشر)";
+    t3Header.font = { name: "Arial", size: 11.5, bold: true, color: { argb: THEME.white } };
+    t3Header.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.headerAmber } };
+    t3Header.alignment = { horizontal: "center", vertical: "middle" };
+    wsDash.getRow(t3Start).height = 26;
+
+    const t3Cols = ["م", "الدور / الطابق", "إجمالي البنود", "سليم ومطابق ✅", "أعطال وملاحظات 🔴", "نسبة الجاهزية والسلامة %"];
+    const rT3H = wsDash.getRow(t3Start + 1);
+    t3Cols.forEach((th, i) => {
+      const c = rT3H.getCell(i + 2);
+      c.value = th;
+      c.font = { name: "Arial", size: 10, bold: true, color: { argb: THEME.white } };
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF78350F" } };
+      c.alignment = { horizontal: "center", vertical: "middle" };
+    });
+    rT3H.height = 24;
+
+    const floorLevelsList = [
+      "الدور الأرضي",
+      "الدور الأول",
+      "الدور الثاني",
+      "الدور الثالث",
+      "الدور الرابع",
+      "الدور الخامس",
+      "الدور السادس",
+      "دور المصلى",
+      "السطح والخدمات",
+      "العام"
+    ];
+
+    let t3Row = t3Start + 2;
+    floorLevelsList.forEach((fl, idx) => {
+      const row = wsDash.getRow(t3Row);
+      row.getCell(2).value = idx + 1;
+      row.getCell(3).value = fl;
+
+      row.getCell(4).value = { formula: `COUNTIF('فحص المباني والممرات'!$D$5:$D$${lastRow}, C${t3Row})`, result: 0 };
+      row.getCell(5).value = { formula: `COUNTIFS('فحص المباني والممرات'!$D$5:$D$${lastRow}, C${t3Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*سليم*")`, result: 0 };
+      row.getCell(6).value = { formula: `COUNTIFS('فحص المباني والممرات'!$D$5:$D$${lastRow}, C${t3Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*ملاحظة*") + COUNTIFS('فحص المباني والممرات'!$D$5:$D$${lastRow}, C${t3Row}, 'فحص المباني والممرات'!$H$5:$H$${lastRow}, "*عطل*")`, result: 0 };
+      row.getCell(7).value = { formula: `IF(D${t3Row}>0, E${t3Row}/D${t3Row}, 1)`, result: 1 };
+      row.getCell(7).numFmt = "0.0%";
+
+      for (let c = 2; c <= 7; c++) {
+        const cell = row.getCell(c);
+        cell.font = { name: "Arial", size: 10, bold: c === 3 || c === 6 || c === 7 };
+        cell.alignment = { horizontal: c === 3 ? "right" : "center", vertical: "middle" };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: t3Row % 2 === 0 ? THEME.zebraRow : THEME.white } };
+        cell.border = { top: { style: "thin", color: { argb: THEME.grayBorder } }, bottom: { style: "thin", color: { argb: THEME.grayBorder } }, left: { style: "thin", color: { argb: THEME.grayBorder } }, right: { style: "thin", color: { argb: THEME.grayBorder } } };
+        if (c === 6) cell.font.color = { argb: "FFB91C1C" };
+        if (c === 5) cell.font.color = { argb: "FF047857" };
+      }
+      row.height = 22;
+      t3Row++;
+    });
 
     await saveFile(wb, "01_سجل_ملاحظات_المباني_والممرات_التفصيلي");
   }
