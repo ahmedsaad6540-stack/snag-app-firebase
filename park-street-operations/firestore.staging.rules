@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -----------------------------------------------------------------
+    // 1. ABSOLUTE HARD BLOCK ON PRODUCTION & LEGACY COLLECTIONS
+    // -----------------------------------------------------------------
+    match /users/{userId} {
+      allow read, write: if false;
+    }
+    match /snags/{snagId} {
+      allow read, write: if false;
+    }
+    match /companies/{companyId} {
+      allow read, write: if false;
+    }
+    match /inspections/{docId} {
+      allow read, write: if false;
+    }
+
+    // -----------------------------------------------------------------
+    // 2. HELPER FUNCTIONS FOR RBAC & ATTRIBUTE-BASED ACCESS CONTROL
+    // -----------------------------------------------------------------
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isVerifiedUser() {
+      return isAuthenticated() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'custom');
+    }
+
+    function belongsToWorkspace(teamId) {
+      return isVerifiedUser() && (
+        teamId == 'T0CBGG2QASU' &&
+        (request.auth.token.team_id == teamId || request.auth.token.workspace == teamId || request.auth.token.admin == true)
+      );
+    }
+
+    function isWorkspaceAdmin(teamId) {
+      return belongsToWorkspace(teamId) && (request.auth.token.admin == true || request.auth.token.role == 'operations_manager');
+    }
+
+    function isValidStagingRecord(teamId) {
+      return request.resource.data.teamId == teamId
+          && request.resource.data.isDemo == true
+          && request.resource.data.source == 'slack-staging';
+    }
+
+    function isValidStatusTransition(beforeStatus, nextStatus) {
+      return (beforeStatus == 'open' && nextStatus == 'in-progress')
+          || (beforeStatus == 'in-progress' && nextStatus == 'review')
+          || (beforeStatus == 'review' && (nextStatus == 'closed' || nextStatus == 'in-progress'));
+    }
+
+    // -----------------------------------------------------------------
+    // 3. ISOLATED SLACK STAGING NAMESPACE
+    // -----------------------------------------------------------------
+    match /slack_ops_staging_workspaces/{teamId} {
+      allow read: if belongsToWorkspace(teamId);
+      allow write: if isWorkspaceAdmin(teamId);
+
+      // Work Orders (Tickets)
+      match /tickets/{ticketId} {
+        allow read: if belongsToWorkspace(teamId);
+        
+        allow create: if belongsToWorkspace(teamId)
+                      && isValidStagingRecord(teamId)
+                      && request.resource.data.status == 'open'
+                      && request.resource.data.title is string
+                      && request.resource.data.title.size() > 0
+                      && request.resource.data.title.size() <= 140;
+
+        allow update: if belongsToWorkspace(teamId)
+                      && resource.data.teamId == teamId
+                      && resource.data.isDemo == true
+                      && isValidStagingRecord(teamId)
+                      && (
+                        // Case A: Status transition
+                        request.resource.data.status == resource.data.status
+                        || isValidStatusTransition(resource.data.status, request.resource.data.status)
+                      );
+
+        // Delete is restricted to Workspace Admins only
+        allow delete: if isWorkspaceAdmin(teamId) && resource.data.teamId == teamId;
+      }
+
+      // Operational Modules: Park Street Inspections, Restrooms, Units, Stores, Permits, etc.
+      match /{moduleCollection}/{docId} {
+        allow read: if belongsToWorkspace(teamId);
+
+        allow create: if belongsToWorkspace(teamId)
+                      && isValidStagingRecord(teamId);
+
+        allow update: if belongsToWorkspace(teamId)
+                      && resource.data.teamId == teamId
+                      && resource.data.isDemo == true
+                      && isValidStagingRecord(teamId);
+
+        // Strict deletion policy: only workspace admin
+        allow delete: if isWorkspaceAdmin(teamId) && resource.data.teamId == teamId;
+      }
+    }
+  }
+}

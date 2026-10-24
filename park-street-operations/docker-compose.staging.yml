@@ -1,0 +1,40 @@
+services:
+  park-street-slack-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: park-street-operations-slack
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SLACK_SOCKET_MODE=true
+      - FIREBASE_PROJECT_ID=snag-ops-staging
+      - FIRESTORE_EMULATOR_HOST=firestore-emulator:8080
+      - SLACK_NOTIFICATIONS_MODE=test
+    depends_on:
+      firestore-emulator:
+        condition: service_healthy
+
+  firestore-emulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.emulator
+    container_name: park-street-firestore-emulator
+    restart: unless-stopped
+    working_dir: /emulator
+    volumes:
+      - ./.emulator-data-docker-test:/emulator/data
+      - ./firebase.docker.json:/emulator/firebase.json
+      - ./firestore.staging.rules:/emulator/firestore.staging.rules
+    ports:
+      # Bind exclusively to 127.0.0.1 on the host to prevent outside network exposure
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+    command: >
+      sh -c "firebase emulators:start --only firestore --project snag-ops-staging --config /emulator/firebase.json --import=/emulator/data --export-on-exit=/emulator/data"

@@ -1,0 +1,24 @@
+{
+  "name": "park-street-operations-slack-staging",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Complete Slack application for Park Street Operations: Work Orders (SNAGs), 51 Park Street Inspections, 50x29 Restroom Center with Zone Coverage, 14-Field Units, 83 Stores, Multi-stage Permits, Custom Lists, NCRI v2 AI Command Center, Notifications, ExcelJS Reports, and Companion Web Server.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/app.js",
+    "companion": "node src/companionServer.js",
+    "emulator:start": "npx --yes firebase-tools@13.35.1 emulators:start --only firestore --project snag-ops-staging --import=./.emulator-data --export-on-exit=./.emulator-data",
+    "emulator:verify": "npx --yes firebase-tools@13.35.1 emulators:exec --only firestore --project snag-ops-staging --export-on-exit=./.emulator-data \"node src/verifyFirestoreEmulator.js\"",
+    "test": "node --test test/*.test.js",
+    "check": "node --check src/app.js && node --check src/repository.js && node --check src/views.js && node --check src/domain.js && node --check src/config.js && node --check src/catalog.js && node --check src/restroomCatalog.js && node --check src/storesCatalog.js && node --check src/operationsDomain.js && node --check src/operationsRepo.js && node --check src/operationsViews.js && node --check src/operationsHandlers.js && node --check src/slackNotifications.js && node --check src/reportExporter.js && node --check src/companionServer.js && node --check src/verifyFirestoreEmulator.js && node --check src/preflight.js && node --check src/ai/ncri.js && node --check src/ai/analytics.js && node --check src/ai/patterns.js && node --check src/ai/anomaly.js && node --check src/ai/suggestions.js && node --check src/ai/engine.js",
+    "preview": "node preview/build.js",
+    "doctor": "node src/preflight.js"
+  },
+  "dependencies": {
+    "@slack/bolt": "^4.4.0",
+    "exceljs": "^4.4.0",
+    "firebase-admin": "^13.0.0"
+  }
+}

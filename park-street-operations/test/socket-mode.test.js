@@ -1,0 +1,15 @@
+ 'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const {appConfig}=require('../src/config');
+const {preflight}=require('../src/preflight');
+const manifest=fs.readFileSync(path.join(__dirname,'../app-manifest.socket-mode.yaml'),'utf8');
+const safe={FIREBASE_PROJECT_ID:'snag-ops-staging',FIRESTORE_EMULATOR_HOST:'127.0.0.1:8080',SLACK_ALLOWED_TEAM_ID:'TABC123',SLACK_ALLOWED_USER_IDS:'UABC123',SLACK_BOT_TOKEN:'xoxb-fake-token',SLACK_APP_TOKEN:'xapp-fake-token',SLACK_SOCKET_MODE:'true'};
+test('Socket Mode works without public callback or signing secret',()=>{const x=appConfig(safe);assert.equal(x.socketMode,true);assert.equal(x.signingSecret,'');assert.equal(x.appToken,'xapp-fake-token')});
+test('Socket Mode manifest has no public callback and minimum bot scopes',()=>{assert.equal(/request_url:|STAGING_HOST|\surl:\shttps?:/.test(manifest),false);assert.equal(manifest.includes('socket_mode_enabled: true'),true);assert.equal(manifest.includes('files:read'),false)});
+test('Socket Mode preflight accepts isolated emulator and safe manifest',()=>{const x=preflight(safe,manifest);assert.equal(x.ready,true,JSON.stringify(x.checks));});
+test('Socket Mode rejects missing app token and production Firebase target',()=>{assert.throws(()=>appConfig({...safe,SLACK_APP_TOKEN:''}),/SLACK_APP_TOKEN/);const x=preflight({...safe,FIREBASE_PROJECT_ID:'snag-app-firebase'},manifest);assert.equal(x.ready,false);});
+test('Socket Mode fails closed if HTTP manifest provided accidentally',()=>{const orig=fs.readFileSync(path.join(__dirname,'../app-manifest.yaml'),'utf8');assert.equal(preflight(safe,orig).ready,false);});
+test('Socket Mode preflight never prints either Slack token',()=>{const x=preflight({...safe,SLACK_APP_TOKEN:'xapp-super-private-demo',SLACK_BOT_TOKEN:'xoxb-super-private-demo'},manifest);assert.doesNotMatch(JSON.stringify(x),/super-private/);});

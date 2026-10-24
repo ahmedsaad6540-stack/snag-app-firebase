@@ -1,0 +1,58 @@
+name: Park Street Operations CI
+
+on:
+  push:
+    branches:
+      - feat/park-street-operations-isolated
+      - feat/park-street-operations-slack-complete
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Unit & Security Tests with Live Firestore Emulator
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: park-street-operations
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17 for Firebase Emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: park-street-operations/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify zero tracked secrets / safe configuration
+        run: |
+          test ! -f .env
+          echo "Verified: No .env committed"
+
+      - name: Run code syntax verification
+        run: npm run check
+
+      - name: Execute Test Suite with Live Firebase Firestore Emulator
+        run: |
+          npx --yes firebase-tools@13.35.1 emulators:exec --only firestore --project snag-ops-staging "node --test test/*.test.js"
+        env:
+          NODE_ENV: test
+          FIREBASE_PROJECT_ID: snag-ops-staging
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          SLACK_ALLOWED_TEAM_ID: T0CBGG2QASU
+          SLACK_ALLOWED_USER_IDS: U0CAL6BQX38

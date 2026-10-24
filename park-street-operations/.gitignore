@@ -1,0 +1,34 @@
+# Node dependencies
+node_modules/
+
+# Secrets and local credentials
+.env
+.env.*
+!.env.example
+!.env.socket-mode.example
+
+# Emulator & Staging local storage
+.emulator-data/
+.emulator-data-*/
+.staging-data/
+
+# Backups & Snapshots
+backups/
+*.backup.json
+
+# Exports & Generated Reports
+exports/
+*.xlsx
+*.csv
+
+# Logs & Monitoring
+logs/
+*.log
+*.jsonl
+
+# Temporary and build artifacts
+build-check.txt
+test-results.txt
+*.lock
+.bolt.lock
+.supervisor.lock

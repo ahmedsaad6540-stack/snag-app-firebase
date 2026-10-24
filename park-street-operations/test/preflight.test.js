@@ -1,0 +1,14 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const {preflight}=require('../src/preflight');
+const original=fs.readFileSync(require('node:path').join(__dirname,'../app-manifest.yaml'),'utf8');
+const env={FIREBASE_PROJECT_ID:'snag-ops-staging',FIRESTORE_EMULATOR_HOST:'127.0.0.1:8080',SLACK_ALLOWED_TEAM_ID:'TABC123456',SLACK_ALLOWED_USER_IDS:'UABC123456',SLACK_SIGNING_SECRET:'test-secret-placeholder',SLACK_BOT_TOKEN:'xoxb-not-a-real-token'};
+const configured=original.replaceAll('STAGING_HOST.example.com','demo-staging.example.org');
+test('original manifest is correctly flagged as not live-ready',()=>{const v=preflight(env,original);assert.equal(v.ready,false);assert.equal(v.checks.find(x=>x.key==='slack.manifest.callback').ok,false);});
+test('fully populated safe dev config passes offline preflight',()=>{const v=preflight(env,configured);assert.equal(v.ready,true);});
+test('production project is refused even when emulator is present',()=>{const v=preflight({...env,FIREBASE_PROJECT_ID:'snag-app-firebase'},configured);assert.equal(v.ready,false);assert.equal(v.checks.find(x=>x.key==='backend.config').ok,false);});
+test('only localhost emulator allowed and remote staging requires opt-in',()=>{const v=preflight({...env,FIRESTORE_EMULATOR_HOST:'internet.example.com:8080'},configured);assert.equal(v.ready,false);});
+test('preflight never includes signing secret or bot token',()=>{const v=preflight(env,original);assert.doesNotMatch(JSON.stringify(v),/test-secret-placeholder|xoxb-not-a-real-token/);});
+test('manifest with production callback is rejected',()=>{const v=preflight(env,configured.replaceAll('demo-staging.example.org','snag-app-firebase.web.app'));assert.equal(v.ready,false);});
