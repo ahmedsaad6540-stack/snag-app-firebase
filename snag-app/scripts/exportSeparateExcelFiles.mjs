@@ -19,7 +19,7 @@ const db = getFirestore(app);
 
 // ── App Constants ────────────────────────────────────────────────────────
 import { LOCATIONS, TRADES, PRIORITIES, TYPES, STATUSES } from '../src/constants/index.js';
-import { RESTROOM_LOCATIONS, STANDARD_COMPONENTS } from '../src/constants/restroomsData.js';
+import { RESTROOM_LOCATIONS, STANDARD_COMPONENTS, JANITOR_COMPONENTS } from '../src/constants/restroomsData.js';
 import { PARK_SECTORS } from '../src/constants/parkStreetData.js';
 
 // Global Themes & Styles
@@ -242,6 +242,7 @@ async function main() {
               "سلم طوارئ 2",
               "طرقة الخدمات",
               "ممر الدور الخاص بالوحدات",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           },
           {
@@ -252,6 +253,7 @@ async function main() {
               "سلم طوارئ 2",
               "طرقة الخدمات",
               "ممر الدور الخاص بالوحدات",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           }
         ]
@@ -278,6 +280,7 @@ async function main() {
               "سلم طوارئ 4",
               "طرقة الخدمات",
               "ممر الدور الخاص بالوحدات",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           }
         ]
@@ -294,6 +297,7 @@ async function main() {
               "سلم طوارئ 2",
               "طرقة الخدمات",
               "ممر الدور الخاص بالوحدات",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           },
           {
@@ -304,6 +308,7 @@ async function main() {
               "سلم طوارئ 2",
               "طرقة الخدمات",
               "ممر الدور الخاص بالوحدات",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           },
           {
@@ -314,6 +319,7 @@ async function main() {
               "سلم طوارئ 2",
               "طرقة الخدمات",
               "ممر الدور الخاص بالوحدات",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           },
           {
@@ -323,6 +329,7 @@ async function main() {
               "مدخل المصلى والممر الرئيسي",
               "طرقة الخدمات والوضوء",
               "سلم الطوارئ",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           }
         ]
@@ -339,6 +346,7 @@ async function main() {
               "منطقة مقاعد واستراحات الزوار (بلازا 1)",
               "مداخل المباني (بلازا 1)",
               "السلالم والمصاعد البانورامية (بلازا 1)",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           },
           {
@@ -349,6 +357,7 @@ async function main() {
               "منطقة مقاعد واستراحات الزوار (بلازا 3)",
               "مداخل المباني (بلازا 3)",
               "السلالم والمصاعد البانورامية (بلازا 3)",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           }
         ]
@@ -365,6 +374,7 @@ async function main() {
               "منحدر الدخول والخروج (Ramp B1)",
               "مداخل مصاعد الركاب والخدمات (B1)",
               "سلالم الطوارئ ومخارج الهروب (B1)",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           },
           {
@@ -375,6 +385,7 @@ async function main() {
               "منحدر النزول والصعود (Ramp B2)",
               "مداخل مصاعد الركاب والخدمات (B2)",
               "سلالم الطوارئ ومخارج الهروب (B2)",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           }
         ]
@@ -407,6 +418,7 @@ async function main() {
               "الممرات الخارجية ومحيط المسجد",
               "أماكن الوضوء والمداخل",
               "سلالم الطوارئ والخدمات",
+              "غرفة خدمات عمال النظافة (Janitor Room)",
             ]
           }
         ]
@@ -1145,19 +1157,24 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   // ملف 4: 04_حصر_وفحص_الحمامات_الشامل.xlsx
   // ══════════════════════════════════════════════════════════════════════════
-  console.log("\n🚽 5/6 جاري بناء ملف 04: حصر وفحص الحمامات الشامل (50 حمام × 29 مكون)...");
+  console.log("\n🚽 5/6 جاري بناء ملف 04: حصر وفحص الحمامات وغرف خدمات النظافة الشامل...");
   {
     const wb = new ExcelJS.Workbook();
     wb.creator = "Park St. Mall Management";
     wb.created = new Date();
 
-    const ws = wb.addWorksheet("حصر وفحص الحمامات", {
+    const ws = wb.addWorksheet("حصر وفحص الحمامات وغرف النظافة", {
       views: [{ rightToLeft: true, state: "frozen", ySplit: 4 }],
     });
 
+    const totalRestroomInspectionRows = RESTROOM_LOCATIONS.reduce(
+      (sum, l) => sum + (l.gender === "غرفة خدمات النظافة" ? JANITOR_COMPONENTS.length : STANDARD_COMPONENTS.length),
+      0
+    );
+
     ws.mergeCells("A1:N1");
     const tCell = ws.getCell("A1");
-    tCell.value = "مول بارك ستريت — مركز متابعة وفحص الحمامات الفني وحصر المكونات (50 حمام × 29 مكون = 1,450 سطر فحص)";
+    tCell.value = `مول بارك ستريت — مركز متابعة وفحص الحمامات وغرف خدمات النظافة وحصر الأصول (50 حمام + 13 غرفة خدمات = ${totalRestroomInspectionRows.toLocaleString('ar-EG')} سطر فحص)`;
     tCell.font = { name: "Arial", size: 14, bold: true, color: { argb: THEME.white } };
     tCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.headerGreen } };
     tCell.alignment = { horizontal: "center", vertical: "middle" };
@@ -1165,7 +1182,7 @@ async function main() {
 
     ws.mergeCells("A2:N2");
     const sCell = ws.getCell("A2");
-    sCell.value = "فلاتر كاملة للفرز حسب: المبنى • الاتجاه • الطابق • النوع • المكون الفني • التخصص • وحالة العطل";
+    sCell.value = "فلاتر كاملة للفرز حسب: المبنى • الاتجاه • الطابق • النوع (حريمي / رجالي / ذوي الهمم / غرفة خدمات النظافة) • المكون الفني • التخصص • وحالة العطل";
     sCell.font = { name: "Arial", size: 10, bold: true, color: { argb: "FFA7F3D0" } };
     sCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF064E3B" } };
     sCell.alignment = { horizontal: "center", vertical: "middle" };
@@ -1173,7 +1190,7 @@ async function main() {
     ws.getRow(3).height = 6;
 
     const restHeaders = [
-      "المبنى / المنطقة", "الاتجاه", "الطابق", "النوع", "كود الحمام", "اسم المكون / المعيار الفني",
+      "المبنى / المنطقة", "الاتجاه", "الطابق", "النوع", "كود الحمام / الغرفة", "اسم المكون / المعيار الفني",
       "التخصص", "إجمالي العدد", "العدد السليم", "العدد المعطل", "العدد المفقود", "الحالة العامة",
       "الملاحظات والتفاصيل الفنية", "المشرف وتاريخ الفحص"
     ];
@@ -1190,13 +1207,14 @@ async function main() {
     ws.autoFilter = { from: "A4", to: "N4" };
 
     ws.columns = [
-      { width: 16 }, { width: 14 }, { width: 14 }, { width: 12 }, { width: 22 }, { width: 30 },
+      { width: 16 }, { width: 22 }, { width: 14 }, { width: 18 }, { width: 24 }, { width: 34 },
       { width: 16 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 16 }, { width: 36 }, { width: 22 }
     ];
 
     let rRowIdx = 5;
     for (const loc of RESTROOM_LOCATIONS) {
-      for (const comp of STANDARD_COMPONENTS) {
+      const compList = loc.gender === "غرفة خدمات النظافة" ? JANITOR_COMPONENTS : STANDARD_COMPONENTS;
+      for (const comp of compList) {
         const docKey = `${loc.restroomKey}__${comp.code}`;
         const rec = restroomRecords[docKey] || {};
 
@@ -1227,7 +1245,7 @@ async function main() {
           cell.font = {
             name: "Arial",
             size: 9.5,
-            bold: c === 5 || c === 6 || c === 12,
+            bold: c === 4 || c === 5 || c === 6 || c === 12,
             color: c === 12 && health.includes("عطل") ? { argb: "FFB91C1C" } : c === 12 && health.includes("سليم") ? { argb: "FF047857" } : undefined,
           };
           cell.fill = {
@@ -1238,6 +1256,7 @@ async function main() {
           cell.alignment = { horizontal: c === 6 || c === 13 ? "right" : "center", vertical: "middle" };
           cell.border = { top: { style: "thin", color: { argb: THEME.grayBorder } }, bottom: { style: "thin", color: { argb: THEME.grayBorder } }, left: { style: "thin", color: { argb: THEME.grayBorder } }, right: { style: "thin", color: { argb: THEME.grayBorder } } };
 
+          if (c === 4) cell.dataValidation = { type: 'list', allowBlank: true, formulae: ['"حريمي,رجالي,ذوي الهمم,غرفة خدمات النظافة"'] };
           if (c === 12) cell.dataValidation = { type: 'list', allowBlank: true, formulae: ['"سليم ومطابق ✅,يوجد عطل / نقص 🔴,لم يُفحص ⚪"'] };
         }
         row.height = 22;

@@ -416,7 +416,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
           value={filterGender}
           onChange={e => setFilterGender(e.target.value)}
         >
-          <option value="all">🚻 كل الحمامات (رجالي/حريمي/ذوي الهمم)</option>
+          <option value="all">🚻 كل الفئات (حمامات وغرف عمال النظافة)</option>
           {RESTROOM_GENDERS.map(g => <option key={g.id} value={g.id}>{g.icon} {g.label}</option>)}
         </select>
 
@@ -518,7 +518,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
           {/* Restrooms Cards Grid */}
           <div style={s.card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
-              <h3 style={{ ...s.sectionTitle, margin: 0 }}>🚪 دليل الحمامات ({filteredRestrooms.length}) — اضغط على أي حمام لبدء الفحص</h3>
+              <h3 style={{ ...s.sectionTitle, margin: 0 }}>🚪 دليل الحمامات وغرف خدمات النظافة ({filteredRestrooms.length}) — اضغط على أي موقع لبدء الفحص</h3>
             </div>
             <div style={s.restroomGrid}>
               {filteredRestrooms.map(rr => {
@@ -602,7 +602,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
           {/* Restroom Selector Header */}
           <div style={s.inspectorHeader}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1 }}>
-              <span style={{ fontWeight: 800, color: "#94a3b8", fontSize: 13 }}>اختر الحمام:</span>
+              <span style={{ fontWeight: 800, color: "#94a3b8", fontSize: 13 }}>اختر الموقع للفحص:</span>
               <select
                 style={{ ...s.select, minWidth: 280, fontWeight: 800, fontSize: 14, borderColor: "#3b82f6" }}
                 value={selectedRestroomKey}

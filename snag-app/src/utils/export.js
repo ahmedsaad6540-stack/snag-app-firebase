@@ -1,5 +1,5 @@
 import { tradeOf, locOf, priOf, staOf, typeOf, formatDate, TRADES, LOCATIONS } from "../constants/index.js"
-import { getRowHealth, RESTROOM_LOCATIONS, STANDARD_COMPONENTS } from "../constants/restroomsData.js"
+import { getRowHealth, RESTROOM_LOCATIONS, STANDARD_COMPONENTS, JANITOR_COMPONENTS } from "../constants/restroomsData.js"
 import { PARK_SECTORS } from "../constants/parkStreetData.js"
 import * as XLSX from "xlsx"
 import ExcelJS from "exceljs"
@@ -533,7 +533,8 @@ export async function exportExcel(snags, locations) {
 
     let rRowIdx = 5
     for (const loc of RESTROOM_LOCATIONS) {
-      for (const comp of STANDARD_COMPONENTS) {
+      const compList = loc.gender === "غرفة خدمات النظافة" ? JANITOR_COMPONENTS : STANDARD_COMPONENTS
+      for (const comp of compList) {
         const rRow = wsRest.getRow(rRowIdx)
         rRow.getCell(1).value = loc.building
         rRow.getCell(2).value = loc.direction

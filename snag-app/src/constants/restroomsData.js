@@ -16,6 +16,7 @@ export const RESTROOM_GENDERS = [
   { id: "حريمي", label: "حريمي", icon: "🚺", color: "#ec4899" },
   { id: "رجالي", label: "رجالي", icon: "🚹", color: "#3b82f6" },
   { id: "ذوي الهمم", label: "ذوي الهمم", icon: "♿", color: "#10b981" },
+  { id: "غرفة خدمات النظافة", label: "غرفة عمال النظافة (Janitor)", icon: "🧹", color: "#8b5cf6" },
 ]
 
 export const RESTROOM_TRADES = [
@@ -60,6 +61,27 @@ export const STANDARD_COMPONENTS = [
   { code: "civil_walls",     trade: "الأعمال المدنية",  component: "الحوائط والدهانات",       inspectType: "حالة" },
   { code: "safe_accessible", trade: "السلامة والإتاحة", component: "تجهيزات ذوي الهمم",       inspectType: "حالة" },
   { code: "safe_signs",      trade: "السلامة والإتاحة", component: "لوحات الإرشاد",           inspectType: "عدد" },
+]
+
+/**
+ * بنود فحص وتجهيزات غرفة خدمات عمال النظافة (Janitor Room)
+ * تشمل كافة عناصر الغرفة الفنية: كهرباء، تهوية، سباكة، تشطيبات، تجهيزات وتخزين
+ */
+export const JANITOR_COMPONENTS = [
+  { code: "jan_elec_spots",     trade: "الكهرباء",         component: "سبوتات وكشافات الإنارة وكشاف الطوارئ", inspectType: "عدد" },
+  { code: "jan_elec_switches",  trade: "الكهرباء",         component: "مفاتيح تشغيل الإنارة",                 inspectType: "عدد" },
+  { code: "jan_elec_sockets",   trade: "الكهرباء",         component: "مكابس وأفياش الكهرباء (لماكينات النظافة)", inspectType: "عدد" },
+  { code: "jan_vent_fan",       trade: "التهوية",          component: "التهوية / شفاط سحب الهواء الميكانيكي", inspectType: "عدد" },
+  { code: "jan_ceiling_status", trade: "الأعمال المدنية",  component: "السقف (معلق / خرسانة بدون سقف)",         inspectType: "حالة" },
+  { code: "jan_floor_tiles",    trade: "الأعمال المدنية",  component: "الأرضيات والسيراميك وصفاية الصرف (Drain)",inspectType: "حالة" },
+  { code: "jan_walls_paint",    trade: "الأعمال المدنية",  component: "الحوائط والدهانات ومقاومة الرطوبة والعفن", inspectType: "حالة" },
+  { code: "jan_door_lock",      trade: "الأعمال المدنية",  component: "باب الغرفة والمفصلات والكالون والمقبض",     inspectType: "عدد" },
+  { code: "jan_plumb_mopsink",  trade: "السباكة",          component: "حوض خدمة النظافة الأرضي (Mop Sink)",     inspectType: "عدد" },
+  { code: "jan_plumb_mixer",    trade: "السباكة",          component: "خلاط / حنفية وشطاف حوض الخدمة",          inspectType: "عدد" },
+  { code: "jan_plumb_leaks",    trade: "السباكة",          component: "مواسير التغذية والصرف وخلو التسريب",      inspectType: "حالة" },
+  { code: "jan_storage_shelves",trade: "التجهيزات",        component: "أرفف التخزين وتنظيم أدوات والبراميل",     inspectType: "حالة" },
+  { code: "jan_clean_hygiene",  trade: "التجهيزات",        component: "النظافة العامة وخلو الروائح والحشرات",   inspectType: "حالة" },
+  { code: "jan_fire_safety",    trade: "السلامة والإتاحة", component: "كاشف الحريق وطفاية الحريق بالغرفة",      inspectType: "عدد" },
 ]
 
 /**
@@ -131,15 +153,45 @@ export const RESTROOM_LOCATIONS = [
   // المسجد
   { restroomKey: "mosque_main_m", building: "المسجد", direction: "حمامات المسجد", floor: "غير محدد", gender: "رجالي" },
   { restroomKey: "mosque_main_f", building: "المسجد", direction: "حمامات المسجد", floor: "غير محدد", gender: "حريمي" },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // غرف خدمات عمال النظافة (Janitor Rooms) — تابعة للمنظومة خارج الحمامات
+  // في كل مبنى غرفتان على كل جانب، عدا مبنى 2 ناحية المكاتب فقط
+  // ══════════════════════════════════════════════════════════════════════════
+  // مبنى 1 — اتجاه راميدا (2 غرفة)
+  { restroomKey: "b1_rameda_janitor_1", building: "مبنى 1", direction: "اتجاه راميدا", floor: "الدور 2", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 1" },
+  { restroomKey: "b1_rameda_janitor_2", building: "مبنى 1", direction: "اتجاه راميدا", floor: "الدور 4", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 2" },
+
+  // مبنى 1 — Sky القديمة / Art of form (2 غرفة)
+  { restroomKey: "b1_sky_janitor_1", building: "مبنى 1", direction: "Sky القديمة / Art of form", floor: "الدور 2", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 1" },
+  { restroomKey: "b1_sky_janitor_2", building: "مبنى 1", direction: "Sky القديمة / Art of form", floor: "الدور 4", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 2" },
+
+  // مبنى 2 — اتجاه المكاتب فقط (2 غرفة) [مبنى 2 مستثنى اتجاه العيادات]
+  { restroomKey: "b2_offices_janitor_1", building: "مبنى 2", direction: "اتجاه المكاتب", floor: "الدور 2", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 1" },
+  { restroomKey: "b2_offices_janitor_2", building: "مبنى 2", direction: "اتجاه المكاتب", floor: "الدور 4", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 2" },
+
+  // مبنى 3 — ريتشارد و البنك العربي (2 غرفة)
+  { restroomKey: "b3_richard_janitor_1", building: "مبنى 3", direction: "ريتشارد", floor: "الدور 1", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 1" },
+  { restroomKey: "b3_arabbank_janitor_2", building: "مبنى 3", direction: "ناحية البنك العربي", floor: "الدور 1", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 2" },
+
+  // مبنى 3 — ناحية مستر ايمن و المصلى (2 غرفة)
+  { restroomKey: "b3_ayman_janitor_1", building: "مبنى 3", direction: "ناحية مستر ايمن", floor: "الدور 3", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 1" },
+  { restroomKey: "b3_prayer_janitor_2", building: "مبنى 3", direction: "المصلى", floor: "المصلى", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة 2" },
+
+  // البلازا والمسجد
+  { restroomKey: "plaza_p1_janitor", building: "البلازا", direction: "بلازا 1", floor: "غير محدد", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة" },
+  { restroomKey: "plaza_p3_janitor", building: "البلازا", direction: "بلازا 3", floor: "غير محدد", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة" },
+  { restroomKey: "mosque_janitor", building: "المسجد", direction: "حمامات المسجد", floor: "غير محدد", gender: "غرفة خدمات النظافة", label: "غرفة عمال النظافة" },
 ]
 
 /**
- * توليد الصفوف القياسية الكاملة (1450 صف) مع دمج أي بيانات محفوظة في Firestore
+ * توليد الصفوف القياسية الكاملة مع دمج أي بيانات محفوظة في Firestore
  */
 export function buildRestroomRows(savedMap = {}, customRows = []) {
   const rows = []
   for (const loc of RESTROOM_LOCATIONS) {
-    for (const comp of STANDARD_COMPONENTS) {
+    const compList = loc.gender === "غرفة خدمات النظافة" ? JANITOR_COMPONENTS : STANDARD_COMPONENTS
+    for (const comp of compList) {
       const rowId = `${loc.restroomKey}__${comp.code}`
       const saved = savedMap[rowId] || {}
       rows.push({
@@ -149,6 +201,7 @@ export function buildRestroomRows(savedMap = {}, customRows = []) {
         direction: loc.direction,
         floor: loc.floor,
         gender: loc.gender,
+        isJanitor: loc.gender === "غرفة خدمات النظافة",
         trade: comp.trade,
         component: comp.component,
         inspectType: comp.inspectType,
