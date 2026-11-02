@@ -784,7 +784,7 @@ const st = {
     borderRadius: 14,
     padding: 14,
     cursor: "pointer",
-    textAlign: "right",
+    textAlign: "start",
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-start",

@@ -175,7 +175,7 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
       />
       
       {/* ── Custom Filters ── */}
-      <div style={{ display:"flex", gap:8, marginTop: 10, flexWrap: "wrap" }}>
+      <div style={{ display:"flex", gap:8, marginTop: 10, flexWrap: "wrap" }} className="snag-filters-row">
         <select style={{...s.input, flex:1, minWidth:110}} value={filterTrade} onChange={e => setFilterTrade(e.target.value)}>
           <option value="all">{tr("كل التخصصات", "All Trades")}</option>
           {TRADES.map(t => <option key={t.id} value={t.id}>{t.icon} {trLabel(t.label)}</option>)}
@@ -272,7 +272,7 @@ function SnagCard({ snag: s, currentUser, locations = [], onCycleStatus, onRemov
   // ── Edit mode ──
   if (editing) {
     return (
-      <div style={{ ...cs.item, borderRight: `4px solid #3b82f6`, background: "#0a1628" }}>
+      <div style={{ ...cs.item, borderInlineStart: `4px solid #3b82f6`, background: "#0a1628" }}>
         <div style={{ fontWeight: 800, fontSize: 14, color: "#60a5fa", marginBottom: 12 }}>
           ✏️ {tr("تعديل الملاحظة", "Edit Snag")}
         </div>
@@ -338,13 +338,13 @@ function SnagCard({ snag: s, currentUser, locations = [], onCycleStatus, onRemov
 
   // ── View mode ──
   return (
-    <div id={`snag-${s.id}`} style={{ ...cs.item, borderRight:`4px solid ${pr.color}` }}>
-      <div style={{ display:"flex", justifyContent:"space-between", gap:10, alignItems:"start", flexWrap:"wrap" }}>
-        <div style={{ flex:1 }}>
+    <div id={`snag-${s.id}`} style={{ ...cs.item, borderInlineStart:`4px solid ${pr.color}` }}>
+      <div style={{ display:"flex", justifyContent:"space-between", gap:10, alignItems:"start", flexWrap:"wrap" }} className="snag-card-top">
+        <div style={{ flex:1, minWidth: 0 }}>
           <div style={{ fontWeight:800, fontSize:15 }}>{lo.icon} {trLabel(lo.name)}</div>
-          <div style={{ color:"#94a3b8", marginTop:6, lineHeight:1.7, fontSize:14 }}>{s.description}</div>
+          <div style={{ color:"#94a3b8", marginTop:6, lineHeight:1.7, fontSize:14, wordBreak: "break-word" }}>{s.description}</div>
         </div>
-        <div style={cs.badges}>
+        <div style={cs.badges} className="snag-card-badges">
           <Badge color={trObj.color}>{trObj.icon} {trLabel(trObj.label)}</Badge>
           <Badge color={ty.color}>{trLabel(ty.label)}</Badge>
           <Badge color={st.color}>{trLabel(st.label)}</Badge>
@@ -370,7 +370,7 @@ function SnagCard({ snag: s, currentUser, locations = [], onCycleStatus, onRemov
         </div>
       )}
 
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10, marginTop:12 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10, marginTop:12 }} className="snag-card-bottom">
         <div style={{ display:"flex", alignItems:"center", gap:8, color:"#475569", fontSize:13 }}>
           <div style={{ ...cs.avatar, background: avatarColor(s.inspector) }}>
             {s.inspector?.[0] || "م"}

@@ -153,14 +153,14 @@ export default function App() {
 
   return (
     <div style={s.app}>
-      <div style={s.container}>
+      <div style={s.container} className="app-container">
         {/* User bar */}
         <div style={s.userBar} className="user-bar-wrap">
-          <div style={s.userInfo}>
-            <div style={s.avatar}>{user.displayName?.[0] || user.email?.[0] || "U"}</div>
-            <div>
-              <div style={{ fontWeight:700, fontSize:14, color:"#e2e8f0", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <span>{user.displayName || tr("مشرف", "Inspector")}</span>
+          <div style={s.userInfo} className="user-bar-info">
+            <div style={s.avatar}>{(user.displayName?.[0] || user.email?.[0] || "U").toUpperCase()}</div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontWeight:700, fontSize:14, color:"#e2e8f0", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.displayName || tr("مشرف", "Inspector")}</span>
                 <span style={{
                   background: `${rolePreset.badgeColor}25`,
                   border: `1px solid ${rolePreset.badgeColor}`,
@@ -169,16 +169,17 @@ export default function App() {
                   borderRadius: 999,
                   fontSize: 10,
                   fontWeight: 800,
+                  whiteSpace: "nowrap",
                 }}>
                   {rolePreset.icon} {lang === "ar" ? rolePreset.labelAr : rolePreset.labelEn}
                 </span>
                 {user.jobTitle && (
-                  <span style={{ background: "#0f172a", color: "#38bdf8", padding: "2px 7px", borderRadius: 6, fontSize: 10, border: "1px solid #1e293b" }}>
+                  <span style={{ background: "#0f172a", color: "#38bdf8", padding: "2px 7px", borderRadius: 6, fontSize: 10, border: "1px solid #1e293b", whiteSpace: "nowrap" }}>
                     💼 {user.jobTitle}
                   </span>
                 )}
               </div>
-              <div style={{ fontSize:11, color:"#64748b" }}>{user.email}</div>
+              <div style={{ fontSize:11, color:"#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
             </div>
           </div>
 
@@ -257,7 +258,7 @@ export default function App() {
               style={{ ...s.tab, ...(activeTab === "park-street" ? { ...s.activeTab, background: "linear-gradient(135deg, #0e7490, #4c1d95)", color: "#f0f9ff" } : {}) }}
               onClick={() => setActiveTab("park-street")}
             >
-              🌟 {tr("سناج بارك ستريت (الأمن • العميل • الزراعة • البيزمنت)", "Park St. Snag (Security • Customer • Landscape • Basement)")}
+              🌟 {tr("سناج بارك ستريت (الأمن • العميل • الزراعة • البيزمنت)", "Park St. Snag (4 Sectors)")}
             </button>
           )}
           {canUser(user, "restrooms", "view") && (
@@ -332,7 +333,7 @@ export default function App() {
         {activeTab === "snags" && canUser(user, "snags", "view") && (
           <>
             {/* Quick-access banners to Park St. Inspection & Restroom Snag Center */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12, marginBottom: 16 }}>
+            <div className="quick-banners-grid">
               {canUser(user, "park-street", "view") && (
                 <div
                   onClick={() => setActiveTab("park-street")}

@@ -319,8 +319,8 @@ export default function UsersManager({ onClose, currentUser }) {
   }, [users, searchQuery, filterRole])
 
   return (
-    <div style={s.overlay}>
-      <div style={{ ...s.modal, maxWidth: editingUser ? 1050 : 880 }}>
+    <div style={s.overlay} className="users-modal-overlay">
+      <div style={{ ...s.modal, maxWidth: editingUser ? 1050 : 880 }} className="users-modal-card">
         {/* Header */}
         <div style={s.header}>
           <div>
@@ -781,8 +781,8 @@ export default function UsersManager({ onClose, currentUser }) {
                       const canExportAny = APP_MODULES.some((m) => resolved.matrix[m.id]?.export)
 
                       return (
-                        <div key={u.id} style={{ ...s.userCard, opacity: u.disabled ? 0.6 : 1 }}>
-                          <div style={{ flex: 1, minWidth: 240 }}>
+                        <div key={u.id} style={{ ...s.userCard, opacity: u.disabled ? 0.6 : 1 }} className="users-card-row">
+                          <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ fontWeight: "bold", fontSize: 15, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", color: "#f8fafc" }}>
                               <span>{u.displayName || tr("بدون اسم", "Unnamed")}</span>
                               <span style={{
@@ -827,7 +827,7 @@ export default function UsersManager({ onClose, currentUser }) {
                             </div>
                           </div>
 
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }} className="users-card-actions">
                             <button
                               style={{
                                 ...s.btn,

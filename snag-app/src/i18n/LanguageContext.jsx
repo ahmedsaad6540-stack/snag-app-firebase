@@ -55,13 +55,55 @@ export const AR_TO_EN_MAP = {
   "قيد التنفيذ": "In Progress",
   "مغلق": "Closed",
 
-  // Park Street Tracks
+  // Park Street Tracks & Quick Items
   "الأمن والحراسة": "Security & Guarding",
   "نقاط التمركز • الكاميرات • البوابات • التصاريح": "Guard Posts • CCTV • Gates • Permits",
   "المداخل • اللوحات الإرشادية • الممشى • المقاعد • الأجواء": "Entrances • Wayfinding • Promenade • Seating • Ambience",
   "الأشجار • النخيل • المسطحات الخضراء • شبكات الري • الأحواض": "Trees • Palms • Lawns • Irrigation • Planters",
   "مسار السيارات بالبيزمنت": "Basement Car Path",
   "المنحدرات Ramps • البوابات • التخطيط الأرضي • المرايا • الإيبوكسي": "Ramps • Barrier Gates • Road Markings • Mirrors • Epoxy",
+
+  "غياب فرد الأمن من النقطة": "Security Guard Absent from Post",
+  "عطل كاميرا مراقبة CCTV": "CCTV Camera Malfunction",
+  "عطل بوابة أمنية / تفتيش": "Security / Inspection Gate Fault",
+  "عدم الالتزام بالزي الرسمي": "Uniform Non-Compliance",
+  "باب طوارئ/خدمة غير مؤمن": "Unsecured Emergency / Service Door",
+  "دخول عمال بدون تصريح": "Workers Without Work Permit",
+  "عطل جهاز لاسلكي / إنتركم": "Walkie-Talkie / Intercom Fault",
+  "نقطة عمياء / ضعف إضاءة أمنية": "Blind Spot / Weak Security Lighting",
+  "حواجز التوجيه الأمنية تالفة": "Damaged Security Barriers",
+
+  "لوحة إرشادية (Wayfinding) معطلة": "Defective Wayfinding Signage",
+  "عوائق في مسار المشاة": "Obstacles in Pedestrian Walkway",
+  "مقاعد واستراحات الزوار": "Visitor Seating Needs Maintenance",
+  "اتساخ واجهات زجاجية بالممشى": "Dirty Glass Facades on Promenade",
+  "توقف سلم متحرك / مصعد زوار": "Escalator / Passenger Elevator Stopped",
+  "مشكلة في الصوت / الموسيقى": "Background Music / Audio Issue",
+  "كشافات إنارة الممشى محروقة": "Burnt Out Promenade Spotlights",
+  "امتلاء سلات المهملات بالممشى": "Overflowing Trash Bins on Promenade",
+  "مكتب الاستقبال / خدمة العملاء": "Concierge / Reception Desk Issue",
+  "روائح غير مرغوبة في الممر": "Unpleasant Odor in Corridor",
+  "كسر أو بقع في رخام الممشى": "Broken / Stained Promenade Marble",
+
+  "جفاف أو ذبول الأشجار والنباتات": "Withering / Dry Trees & Plants",
+  "تسريب في شبكة الري / الرشاشات": "Irrigation Network / Sprinkler Leak",
+  "النجيلة تحتاج قص وتهذيب": "Lawn Needs Mowing & Trimming",
+  "تقليم أشجار ونخيل متدلية": "Overhanging Trees / Palms Need Pruning",
+  "مخلفات في أحواض الزرع (Planters)": "Litter in Landscape Planters",
+  "تجمع مياه ري على الممشى": "Irrigation Water Pooling on Walkway",
+  "آفات زراعية / حشرات بالنباتات": "Plant Pests / Insects Detected",
+  "عطل إضاءة اللاند سكيب والأشجار": "Landscape & Tree Lighting Fault",
+  "استبدال شتلات وزهور تالفة": "Replace Damaged Seasonal Flowers",
+
+  "عطل بوابة التذاكر / الذراع الإلكتروني": "Barrier Gate / Ticket Dispenser Fault",
+  "بهتان الأسهم والتخطيط الأرضي": "Faded Road Arrows & Floor Markings",
+  "عطل اللوحات المرورية المعلقة": "Hanging Traffic Signage Fault",
+  "كسر في مطب صناعي (Speed Bump)": "Broken Speed Bump in Car Path",
+  "مرآة عاكسة (Convex Mirror) مكسورة": "Broken / Misaligned Convex Mirror",
+  "خلع مصدات حماية الأعمدة / العجلات": "Damaged Column Guards / Wheel Stoppers",
+  "تقشر إيبوكسي أو بقع زيوت بالمسار": "Peeling Epoxy Floor / Oil Stains",
+  "ضعف إنارة مسار السيارات / الرامب": "Weak Lighting in Car Path / Ramp",
+  "توقف مراوح سحب العادم (Jet Fans)": "Basement Jet Fans Stopped / Noisy",
 
   // Restrooms & Janitor Rooms
   "مبنى 1": "Building 1",
@@ -101,11 +143,17 @@ export function LanguageProvider({ children }) {
   })
 
   useEffect(() => {
+    const dir = lang === "ar" ? "rtl" : "ltr"
     try {
       localStorage.setItem("smart_mall_lang", lang)
     } catch {}
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr"
+    document.documentElement.dir = dir
     document.documentElement.lang = lang
+    if (document.body) {
+      document.body.dir = dir
+      document.body.style.direction = dir
+      document.body.style.textAlign = lang === "ar" ? "right" : "left"
+    }
   }, [lang])
 
   const setLang = useCallback((newLang) => {

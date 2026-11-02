@@ -1455,7 +1455,7 @@ const s = {
     background: "#0f172a",
     color: "#94a3b8",
     padding: "10px 8px",
-    textAlign: "right",
+    textAlign: "start",
     borderBottom: "1px solid #1e293b",
     whiteSpace: "nowrap",
     position: "sticky",

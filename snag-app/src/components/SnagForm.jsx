@@ -201,7 +201,7 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
           </span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div className="quick-tracks-grid">
           {PARK_ST_TRACKS.map(track => {
             const isSelected = activeTrackId === track.id
             return (
@@ -220,9 +220,10 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
                   alignItems: "center",
                   gap: 8,
                   transition: "all .15s",
+                  minWidth: 0,
                 }}
               >
-                <span style={{ fontSize: 20 }}>{track.icon}</span>
+                <span style={{ fontSize: 20, flexShrink: 0 }}>{track.icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 800, color: isSelected ? track.color : "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {trLabel(track.title)}
@@ -274,7 +275,7 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
                       textAlign: lang === "ar" ? "right" : "left",
                     }}
                   >
-                    {item.priority === "urgent" ? "🔴 " : "🟡 "}{item.label}
+                    {item.priority === "urgent" ? "🔴 " : "🟡 "}{trLabel(item.label)}
                   </button>
                 )
               })}
@@ -399,7 +400,7 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
       </Field>
 
       {/* Drop zone + Camera Capture */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }} className="camera-upload-row">
         <button
           type="button"
           onClick={() => setShowCamera(true)}
