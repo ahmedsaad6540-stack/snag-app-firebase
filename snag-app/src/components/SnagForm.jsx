@@ -5,9 +5,12 @@ import { classifyNCRI } from "../ai/ncri.js"
 import { useAttachments } from "../hooks/useAttachments.js"
 import { useLocations } from "../hooks/useLocations.js"
 import CameraModal from "./CameraModal.jsx"
+import { useLanguage } from "../i18n/LanguageContext.jsx"
+import { canUser, hasPrivilege } from "../constants/permissions.js"
 
-export default function SnagForm({ onAdd, userName, userEmail, notify }) {
+export default function SnagForm({ onAdd, userName, userEmail, currentUser, notify }) {
   const { locations, addLocation, removeLocation } = useLocations()
+  const { lang, tr, trLabel } = useLanguage()
   const [form, setForm]   = useState({ ...DEFAULT_FORM, inspector: userName || DEFAULT_FORM.inspector })
   const [dragOn, setDragOn] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -16,6 +19,9 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
   const [activeTrackId, setActiveTrackId] = useState(null)
   const fileRef = useRef(null)
   const { attachments, addFiles, removeFile, clear } = useAttachments()
+
+  const canAddSnag = !currentUser || canUser(currentUser, "snags", "add")
+  const canManageLoc = !currentUser || hasPrivilege(currentUser, "canManageLocations")
 
   const activeTrack = PARK_ST_TRACKS.find(t => t.id === activeTrackId) || null
 
@@ -41,7 +47,7 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
       type: item.type || "maintenance",
       priority: item.priority || "medium",
     }))
-    if (notify) notify("info", `تم اختيار: ${item.label}`)
+    if (notify) notify("info", `${tr("تم اختيار:", "Selected:")} ${item.label}`)
   }
 
   // 🤖 Auto-classify trade + type + priority + validate location (NCRI v2)
@@ -79,42 +85,49 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
   }
 
   async function handleAddLocation() {
-    const name = window.prompt("أدخل اسم الموقع الجديد:")
+    const name = window.prompt(tr("أدخل اسم الموقع الجديد:", "Enter new location name:"))
     if (!name || !name.trim()) return
-    const emoji = window.prompt("أدخل رمز تعبيري (Emoji) للموقع (اختياري، مثلاً: 📍):", "📍") || "📍"
+    const emoji = window.prompt(tr("أدخل رمز تعبيري (Emoji) للموقع (اختياري، مثلاً: 📍):", "Enter location icon emoji (optional, e.g. 📍):"), "📍") || "📍"
     
     try {
       const docRef = await addLocation(name.trim(), emoji)
       if (docRef?.id) {
         set("location", docRef.id)
-        if (notify) notify("add", `تمت إضافة موقع جديد: ${name.trim()}`)
+        if (notify) notify("add", `${tr("تمت إضافة موقع جديد:", "New location added:")} ${name.trim()}`)
       }
     } catch (err) {
-      alert("حدث خطأ أثناء إضافة الموقع")
+      alert(tr("حدث خطأ أثناء إضافة الموقع", "Failed to add location"))
     }
   }
 
   async function handleRemoveLocation() {
     if (!form.location) return
     if (LOCATIONS.some(l => l.id === form.location)) {
-      alert("لا يمكن حذف المواقع الأساسية للنظام")
+      alert(tr("لا يمكن حذف المواقع الأساسية للنظام", "System core locations cannot be deleted"))
       return
     }
     const locName = locations.find(l => l.id === form.location)?.name
-    if (!window.confirm(`هل أنت متأكد من حذف موقع "${locName}"؟`)) return
+    if (!window.confirm(tr(`هل أنت متأكد من حذف موقع "${locName}"؟`, `Are you sure you want to delete location "${locName}"?`))) return
 
     try {
       await removeLocation(form.location)
       set("location", LOCATIONS[0].id)
-      if (notify) notify("delete", `تم حذف الموقع: ${locName}`)
+      if (notify) notify("delete", `${tr("تم حذف الموقع:", "Location deleted:")} ${locName}`)
     } catch (err) {
-      alert("حدث خطأ أثناء حذف الموقع")
+      alert(tr("حدث خطأ أثناء حذف الموقع", "Failed to delete location"))
     }
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.description.trim()) { alert("اكتب وصف الملاحظة أولاً"); return }
+    if (!canAddSnag) {
+      alert(tr("ليس لديك صلاحية إضافة ملاحظات جديدة.", "You do not have permission to add new snags."))
+      return
+    }
+    if (!form.description.trim()) {
+      alert(tr("اكتب وصف الملاحظة أولاً", "Please enter a snag description first"))
+      return
+    }
     if (saving) return
     setSaving(true)
     try {
@@ -146,13 +159,30 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
     await addFiles(e.dataTransfer.files)
   }
 
+  if (!canAddSnag) {
+    return (
+      <div style={{ ...s.card, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: 32, minHeight: 240 }}>
+        <div style={{ fontSize: 42, marginBottom: 12 }}>👁️</div>
+        <div style={{ fontWeight: 800, fontSize: 16, color: "#e2e8f0", marginBottom: 6 }}>
+          {tr("وضع القراءة والاطلاع فقط", "Read-Only Access Mode")}
+        </div>
+        <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.7 }}>
+          {tr(
+            "حسابك الحالي يمتلك صلاحية الرؤية والاطلاع على سجل الملاحظات بدون صلاحية الإدخال. لطلب صلاحية الإضافة، تواصل مع مدير النظام.",
+            "Your account has View permission on the Snags Log without Add/Insert privilege. Contact the System Admin to request data-entry access."
+          )}
+        </div>
+      </div>
+    )
+  }
+
   const detectedTrade = tradeOf(form.trade)
   const detectedType  = typeOf(form.type)
   const detectedPri   = priOf(form.priority)
 
   return (
     <form style={s.card} onSubmit={handleSubmit}>
-      <h3 style={s.heading}>➕ إضافة ملاحظة جديدة</h3>
+      <h3 style={s.heading}>➕ {tr("إضافة ملاحظة جديدة", "Add New Snag")}</h3>
 
       {/* ⚡ Park St. Quick Inspection Tracks */}
       <div style={{
@@ -162,11 +192,13 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
         padding: 12,
         marginBottom: 14,
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 4 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: "#38bdf8" }}>
-            ⚡ الفحص السريع — بارك ستريت (Park St.)
+            ⚡ {tr("الفحص السريع — بارك ستريت (Park St.)", "Quick Inspection — Park St.")}
           </div>
-          <span style={{ fontSize: 10, color: "#64748b" }}>اختر القطاع لتعبئة الملاحظة بضغطة واحدة</span>
+          <span style={{ fontSize: 10, color: "#64748b" }}>
+            {tr("اختر القطاع لتعبئة الملاحظة بضغطة واحدة", "Select a sector for 1-click snag templates")}
+          </span>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -183,7 +215,7 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
                   borderRadius: 10,
                   padding: "9px 10px",
                   cursor: "pointer",
-                  textAlign: "right",
+                  textAlign: lang === "ar" ? "right" : "left",
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
@@ -193,10 +225,10 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
                 <span style={{ fontSize: 20 }}>{track.icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 800, color: isSelected ? track.color : "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {track.title}
+                    {trLabel(track.title)}
                   </div>
                   <div style={{ fontSize: 10, color: "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {track.items.length} بنود جاهزة
+                    {track.items.length} {tr("بنود جاهزة", "ready items")}
                   </div>
                 </div>
               </button>
@@ -212,14 +244,14 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: activeTrack.color }}>
-                {activeTrack.icon} بنود فحص {activeTrack.title}:
+                {activeTrack.icon} {tr("بنود فحص", "Inspection items —")} {trLabel(activeTrack.title)}:
               </span>
               <button
                 type="button"
                 onClick={() => setActiveTrackId(null)}
                 style={{ background: "transparent", border: "none", color: "#64748b", fontSize: 11, cursor: "pointer" }}
               >
-                إخفاء ▲
+                {tr("إخفاء ▲", "Hide ▲")}
               </button>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 195, overflowY: "auto", paddingLeft: 2 }}>
@@ -239,7 +271,7 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
                       fontSize: 11,
                       fontWeight: 700,
                       cursor: "pointer",
-                      textAlign: "right",
+                      textAlign: lang === "ar" ? "right" : "left",
                     }}
                   >
                     {item.priority === "urgent" ? "🔴 " : "🟡 "}{item.label}
@@ -252,42 +284,49 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
       </div>
 
       {/* Inspector */}
-      <Field label="اسم المشرف">
+      <Field label={tr("اسم المشرف", "Inspector Name")}>
         <input style={s.input} value={form.inspector} onChange={(e) => set("inspector", e.target.value)} />
       </Field>
 
       {/* Location */}
-      <Field label="الموقع">
+      <Field label={tr("الموقع", "Location")}>
         <div style={{ display: "flex", gap: 8 }}>
           <select style={{ ...s.input, flex: 1 }} value={form.location} onChange={(e) => set("location", e.target.value)}>
-            {locations.map((l) => <option key={l.id} value={l.id}>{l.icon} {l.name}</option>)}
+            {locations.map((l) => <option key={l.id} value={l.id}>{l.icon} {trLabel(l.name)}</option>)}
           </select>
-          <button 
-            type="button" 
-            style={{ ...s.btn, background: "#1e293b", color: "#38bdf8", border: "1px solid #334155", padding: "0 12px", width: "auto" }}
-            onClick={handleAddLocation}
-            title="إضافة موقع جديد"
-          >
-            ➕
-          </button>
-          <button 
-            type="button" 
-            style={{ ...s.btn, background: "#450a0a", color: "#f87171", border: "1px solid #7f1d1d", padding: "0 12px", width: "auto" }}
-            onClick={handleRemoveLocation}
-            title="حذف الموقع المحدد"
-          >
-            🗑️
-          </button>
+          {canManageLoc && (
+            <>
+              <button
+                type="button"
+                style={{ ...s.btn, background: "#1e293b", color: "#38bdf8", border: "1px solid #334155", padding: "0 12px", width: "auto" }}
+                onClick={handleAddLocation}
+                title={tr("إضافة موقع جديد", "Add new location")}
+              >
+                ➕
+              </button>
+              <button
+                type="button"
+                style={{ ...s.btn, background: "#450a0a", color: "#f87171", border: "1px solid #7f1d1d", padding: "0 12px", width: "auto" }}
+                onClick={handleRemoveLocation}
+                title={tr("حذف الموقع المحدد", "Delete selected location")}
+              >
+                🗑️
+              </button>
+            </>
+          )}
         </div>
       </Field>
 
       {/* Description */}
-      <Field label="وصف المشكلة">
+      <Field label={tr("وصف المشكلة", "Issue / Snag Description")}>
         <textarea
           style={{ ...s.input, minHeight:90, resize:"vertical" }}
           value={form.description}
           onChange={(e) => set("description", e.target.value)}
-          placeholder="مثال: عطل في ذراع البوابة بمسار السيارات بالبيزمنت، أو جفاف أشجار اللاندسكيب، أو غياب فرد الأمن..."
+          placeholder={tr(
+            "مثال: عطل في ذراع البوابة بمسار السيارات بالبيزمنت، أو جفاف أشجار اللاندسكيب، أو غياب فرد الأمن...",
+            "e.g. Barrier gate malfunction in basement car path, irrigation leak, or broken spotlight..."
+          )}
         />
       </Field>
 
@@ -295,52 +334,41 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
       {aiResult && (
         <div style={s.aiBox}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={s.aiTitle}>🧠 NCRI v2 — التصنيف الذكي</div>
+            <div style={s.aiTitle}>🧠 {tr("NCRI v2 — التصنيف الذكي", "NCRI v2 — AI Smart Classification")}</div>
             {aiResult.confidence > 0 && (
               <span style={{ fontSize: 11, fontWeight: 800, color: aiResult.confidence > 70 ? "#10b981" : aiResult.confidence > 40 ? "#f59e0b" : "#94a3b8" }}>
-                ثقة {aiResult.confidence}%
+                {tr("ثقة", "Confidence")} {aiResult.confidence}%
               </span>
             )}
           </div>
           <div style={s.aiChips}>
             <span style={{ ...s.aiChip, background: `${detectedTrade.color}22`, color: detectedTrade.color }}>
-              {detectedTrade.icon} {detectedTrade.label}
+              {detectedTrade.icon} {trLabel(detectedTrade.label)}
             </span>
             <span style={{ ...s.aiChip, background: `${detectedType.color}22`, color: detectedType.color }}>
-              {detectedType.label}
+              {trLabel(detectedType.label)}
             </span>
             <span style={{ ...s.aiChip, background: `${detectedPri.color}22`, color: detectedPri.color }}>
-              {detectedPri.dot} {detectedPri.label}
+              {detectedPri.dot} {trLabel(detectedPri.label)}
             </span>
             {aiResult.riskScore > 0 && (
               <span style={{ ...s.aiChip, background: aiResult.riskScore > 60 ? "#ef444422" : aiResult.riskScore > 30 ? "#f59e0b22" : "#10b98122", color: aiResult.riskScore > 60 ? "#ef4444" : aiResult.riskScore > 30 ? "#f59e0b" : "#10b981" }}>
-                خطورة {aiResult.riskScore}%
+                {tr("خطورة", "Risk")} {aiResult.riskScore}%
               </span>
             )}
           </div>
-          {/* Secondary trades */}
-          {aiResult.secondaryTrades?.length > 0 && (
-            <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 10, color: "#64748b" }}>تخصصات ثانوية:</span>
-              {aiResult.secondaryTrades.map((st, i) => (
-                <span key={i} style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "#1e293b", color: "#94a3b8" }}>
-                  {st.icon} {st.label} ({st.confidence}%)
-                </span>
-              ))}
-            </div>
-          )}
-          {/* 🚨 Danger Alerts */}
           {aiResult.dangerAlerts?.length > 0 && (
             <div style={{ ...s.warningBox, background: "rgba(239,68,68,0.1)", borderColor: "#7f1d1d" }}>
               {aiResult.dangerAlerts.map((d, i) => (
                 <div key={i} style={{ ...s.warningItem, color: "#fca5a5" }}>🚨 {d.reason}</div>
               ))}
               {aiResult.priorityEscalated && (
-                <div style={{ ...s.warningItem, color: "#ef4444", marginTop: 4 }}>⬆️ تم تصعيد الأولوية تلقائياً إلى عاجل</div>
+                <div style={{ ...s.warningItem, color: "#ef4444", marginTop: 4 }}>
+                  ⬆️ {tr("تم تصعيد الأولوية تلقائياً إلى عاجل", "Priority automatically escalated to Urgent")}
+                </div>
               )}
             </div>
           )}
-          {/* ⚠️ Smart Warnings */}
           {aiResult.warnings?.length > 0 && (
             <div style={s.warningBox}>
               {aiResult.warnings.map((w, i) => (
@@ -353,20 +381,20 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
 
       {/* Trade + Type + Priority */}
       <div className="form-row">
-        <Field label="التخصص">
+        <Field label={tr("التخصص", "Trade / Discipline")}>
           <select style={s.input} value={form.trade} onChange={(e) => set("trade", e.target.value)}>
-            {TRADES.map((t) => <option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}
+            {TRADES.map((t) => <option key={t.id} value={t.id}>{t.icon} {trLabel(t.label)}</option>)}
           </select>
         </Field>
-        <Field label="النوع">
+        <Field label={tr("النوع", "Category")}>
           <select style={s.input} value={form.type} onChange={(e) => set("type", e.target.value)}>
-            {TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+            {TYPES.map((t) => <option key={t.id} value={t.id}>{trLabel(t.label)}</option>)}
           </select>
         </Field>
       </div>
-      <Field label="الأولوية">
+      <Field label={tr("الأولوية", "Priority")}>
         <select style={s.input} value={form.priority} onChange={(e) => set("priority", e.target.value)}>
-          {PRIORITIES.map((p) => <option key={p.id} value={p.id}>{p.dot} {p.label}</option>)}
+          {PRIORITIES.map((p) => <option key={p.id} value={p.id}>{p.dot} {trLabel(p.label)}</option>)}
         </select>
       </Field>
 
@@ -393,8 +421,8 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
             gap: 4,
           }}
         >
-          <span>📷 التقاط بالكاميرا</span>
-          <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>تصوير مباشر فوري</span>
+          <span>📷 {tr("التقاط بالكاميرا", "Camera Capture")}</span>
+          <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>{tr("تصوير مباشر فوري", "Instant live photo")}</span>
         </button>
 
         <div
@@ -407,8 +435,8 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
           <input ref={fileRef} type="file" multiple hidden
             accept="image/*,.pdf,.doc,.docx,.xlsx,.xls" onChange={onPickFiles} 
             onClick={(e) => e.stopPropagation()} />
-          <div style={{ fontWeight:800 }}>📎 أرفق صور أو ملفات</div>
-          <div style={{ color:"#475569", fontSize:11, marginTop:4 }}>من الاستوديو أو الجهاز (حد 4)</div>
+          <div style={{ fontWeight:800 }}>📎 {tr("أرفق صور أو ملفات", "Attach Photos / Files")}</div>
+          <div style={{ color:"#475569", fontSize:11, marginTop:4 }}>{tr("من الاستوديو أو الجهاز (حد 4)", "From gallery or device (max 4)")}</div>
         </div>
       </div>
 
@@ -437,9 +465,9 @@ export default function SnagForm({ onAdd, userName, userEmail, notify }) {
       {/* Actions */}
       <div style={{ display:"flex", gap:10, marginTop:16 }}>
         <button type="submit" disabled={saving} style={{ ...s.btn, ...s.primary, flex:1, opacity: saving ? 0.6 : 1 }}>
-          {saving ? "⏳ جاري الحفظ..." : "إضافة الملاحظة"}
+          {saving ? tr("⏳ جاري الحفظ...", "⏳ Saving...") : tr("إضافة الملاحظة", "Submit Snag")}
         </button>
-        <button type="button" style={{ ...s.btn, ...s.ghost }} onClick={reset}>تفريغ</button>
+        <button type="button" style={{ ...s.btn, ...s.ghost }} onClick={reset}>{tr("تفريغ", "Reset")}</button>
       </div>
     </form>
   )

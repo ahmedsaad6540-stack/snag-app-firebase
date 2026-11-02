@@ -1,6 +1,8 @@
 import React, { useState } from "react"
+import { useLanguage } from "../i18n/LanguageContext.jsx"
 
 export default function AuthScreen({ onLogin, onRegister, error }) {
+  const { lang, toggleLang, tr } = useLanguage()
   const [mode, setMode]           = useState("login") // login | register
   const [email, setEmail]         = useState("")
   const [password, setPassword]   = useState("")
@@ -16,7 +18,11 @@ export default function AuthScreen({ onLogin, onRegister, error }) {
       if (mode === "login") {
         await onLogin(email, password, rememberMe)
       } else {
-        if (!name.trim()) { alert("اكتب اسمك أولاً"); setBusy(false); return }
+        if (!name.trim()) {
+          alert(tr("اكتب اسمك أولاً", "Please enter your full name first"))
+          setBusy(false)
+          return
+        }
         await onRegister(email, password, name.trim())
       }
     } catch (err) {
@@ -29,24 +35,51 @@ export default function AuthScreen({ onLogin, onRegister, error }) {
   return (
     <div style={s.page}>
       <div style={s.card}>
+        {/* Top Language Switcher */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <button
+            type="button"
+            onClick={toggleLang}
+            style={{
+              background: "#0f172a",
+              border: "1px solid #334155",
+              color: "#38bdf8",
+              borderRadius: 999,
+              padding: "5px 12px",
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: "pointer",
+            }}
+          >
+            🌐 {lang === "ar" ? "English" : "العربية"}
+          </button>
+        </div>
+
         {/* Logo */}
         <div style={s.logo}>📋</div>
         <h1 style={s.title}>Smart Mall OS</h1>
-        <p style={s.sub}>نظام ذكي لتسجيل ومتابعة ملاحظات التشغيل والصيانة</p>
+        <p style={s.sub}>
+          {tr(
+            "نظام ذكي لتسجيل ومتابعة ملاحظات التشغيل والصيانة",
+            "Smart Operations & Maintenance Snag Management System"
+          )}
+        </p>
 
         {/* Tabs */}
         <div style={s.tabs}>
           <button
+            type="button"
             style={{ ...s.tab, ...(mode === "login" ? s.tabActive : {}) }}
             onClick={() => setMode("login")}
           >
-            تسجيل الدخول
+            {tr("تسجيل الدخول", "Sign In")}
           </button>
           <button
+            type="button"
             style={{ ...s.tab, ...(mode === "register" ? s.tabActive : {}) }}
             onClick={() => setMode("register")}
           >
-            حساب جديد
+            {tr("حساب جديد", "Create Account")}
           </button>
         </div>
 
@@ -58,22 +91,20 @@ export default function AuthScreen({ onLogin, onRegister, error }) {
         {/* Form */}
         <form onSubmit={handleSubmit}>
           {mode === "register" && (
-            <>
-              <div style={s.field}>
-                <label style={s.label}>الاسم الكامل</label>
-                <input
-                  style={s.input}
-                  type="text"
-                  placeholder="مثال: أحمد محمد"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-            </>
+            <div style={s.field}>
+              <label style={s.label}>{tr("الاسم الكامل", "Full Name")}</label>
+              <input
+                style={s.input}
+                type="text"
+                placeholder={tr("مثال: أحمد محمد", "e.g. Ahmed Mohamed")}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
           )}
 
           <div style={s.field}>
-            <label style={s.label}>البريد الإلكتروني</label>
+            <label style={s.label}>{tr("البريد الإلكتروني", "Email Address")}</label>
             <input
               style={s.input}
               type="email"
@@ -85,7 +116,7 @@ export default function AuthScreen({ onLogin, onRegister, error }) {
           </div>
 
           <div style={s.field}>
-            <label style={s.label}>كلمة المرور</label>
+            <label style={s.label}>{tr("كلمة المرور", "Password")}</label>
             <input
               style={s.input}
               type="password"
@@ -104,30 +135,30 @@ export default function AuthScreen({ onLogin, onRegister, error }) {
                 onChange={(e) => setRemember(e.target.checked)}
                 style={s.checkbox}
               />
-              <span style={{ color: "#94a3b8", fontSize: 13 }}>تذكرني</span>
+              <span style={{ color: "#94a3b8", fontSize: 13 }}>{tr("تذكرني", "Remember me")}</span>
             </label>
           )}
 
           <button type="submit" disabled={busy} style={{ ...s.btn, opacity: busy ? 0.6 : 1 }}>
             {busy
-              ? "⏳ جاري المعالجة..."
+              ? tr("⏳ جاري المعالجة...", "⏳ Processing...")
               : mode === "login"
-                ? "🔐 دخول"
-                : "✨ إنشاء حساب"
+                ? tr("🔐 دخول", "🔐 Sign In")
+                : tr("✨ إنشاء حساب", "✨ Create Account")
             }
           </button>
         </form>
 
         <p style={s.footer}>
           {mode === "login"
-            ? "ليس لديك حساب؟ "
-            : "لديك حساب بالفعل؟ "
+            ? tr("ليس لديك حساب؟ ", "Don't have an account? ")
+            : tr("لديك حساب بالفعل؟ ", "Already have an account? ")
           }
           <span
             style={s.link}
             onClick={() => setMode(mode === "login" ? "register" : "login")}
           >
-            {mode === "login" ? "إنشاء حساب جديد" : "تسجيل الدخول"}
+            {mode === "login" ? tr("إنشاء حساب جديد", "Register now") : tr("تسجيل الدخول", "Sign In")}
           </span>
         </p>
       </div>
@@ -150,7 +181,7 @@ const s = {
     background: "rgba(10, 22, 40, 0.9)",
     border: "1px solid #1e293b",
     borderRadius: 24,
-    padding: "36px 28px",
+    padding: "30px 28px",
     backdropFilter: "blur(20px)",
   },
   logo: {

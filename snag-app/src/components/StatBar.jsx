@@ -1,59 +1,68 @@
 import React from "react"
+import { useLanguage } from "../i18n/LanguageContext.jsx"
 
 const CARDS = [
   {
-    key:    "total",
-    label:  "إجمالي الملاحظات",
-    filter: "all",
-    icon:   "📋",
-    color:  "#f1f5f9",
-    accent: "#334155",
-    glow:   "rgba(100,116,139,0.3)",
+    key:     "total",
+    labelAr: "إجمالي الملاحظات",
+    labelEn: "Total Snags",
+    filter:  "all",
+    icon:    "📋",
+    color:   "#f1f5f9",
+    accent:  "#334155",
+    glow:    "rgba(100,116,139,0.3)",
   },
   {
-    key:    "open",
-    label:  "مفتوح",
-    filter: "open",
-    icon:   "🔴",
-    color:  "#f87171",
-    accent: "#ef4444",
-    glow:   "rgba(239,68,68,0.3)",
+    key:     "open",
+    labelAr: "مفتوح",
+    labelEn: "Open",
+    filter:  "open",
+    icon:    "🔴",
+    color:   "#f87171",
+    accent:  "#ef4444",
+    glow:    "rgba(239,68,68,0.3)",
   },
   {
-    key:    "inProgress",
-    label:  "قيد التنفيذ",
-    filter: "in-progress",
-    icon:   "🟡",
-    color:  "#fbbf24",
-    accent: "#f59e0b",
-    glow:   "rgba(245,158,11,0.3)",
+    key:     "inProgress",
+    labelAr: "قيد التنفيذ",
+    labelEn: "In Progress",
+    filter:  "in-progress",
+    icon:    "🟡",
+    color:   "#fbbf24",
+    accent:  "#f59e0b",
+    glow:    "rgba(245,158,11,0.3)",
   },
   {
-    key:    "urgent",
-    label:  "عاجل",
-    filter: "urgent",
-    icon:   "⚡",
-    color:  "#38bdf8",
-    accent: "#0ea5e9",
-    glow:   "rgba(14,165,233,0.3)",
+    key:     "urgent",
+    labelAr: "عاجل",
+    labelEn: "Urgent",
+    filter:  "urgent",
+    icon:    "⚡",
+    color:   "#38bdf8",
+    accent:  "#0ea5e9",
+    glow:    "rgba(14,165,233,0.3)",
   },
   {
-    key:    "closed",
-    label:  "مغلق",
-    filter: "closed",
-    icon:   "✅",
-    color:  "#34d399",
-    accent: "#10b981",
-    glow:   "rgba(16,185,129,0.3)",
+    key:     "closed",
+    labelAr: "مغلق",
+    labelEn: "Closed",
+    filter:  "closed",
+    icon:    "✅",
+    color:   "#34d399",
+    accent:  "#10b981",
+    glow:    "rgba(16,185,129,0.3)",
   },
 ]
 
 export default function StatBar({ stats, activeFilter = "all", onFilter }) {
+  const { lang, tr } = useLanguage()
+
   return (
     <div style={s.grid} className="stat-grid">
       {CARDS.map((c) => {
         const isActive = activeFilter === c.filter
         const value = stats[c.key] ?? 0
+        const label = lang === "ar" ? c.labelAr : c.labelEn
         return (
           <button
             key={c.key}
@@ -72,7 +81,7 @@ export default function StatBar({ stats, activeFilter = "all", onFilter }) {
               transform: isActive ? "translateY(-3px)" : "translateY(0)",
               transition: "all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
             }}
-            title={isActive ? `إلغاء فلتر: ${c.label}` : `عرض: ${c.label}`}
+            title={isActive ? tr(`إلغاء فلتر: ${label}`, `Clear filter: ${label}`) : tr(`عرض: ${label}`, `Filter by: ${label}`)}
           >
             {/* Value with animated number */}
             <div style={{
@@ -95,7 +104,7 @@ export default function StatBar({ stats, activeFilter = "all", onFilter }) {
                 fontWeight: isActive ? 700 : 400,
                 transition: "color 0.2s",
               }}>
-                {c.label}
+                {label}
               </span>
             </div>
 

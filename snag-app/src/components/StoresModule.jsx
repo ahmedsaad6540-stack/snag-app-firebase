@@ -5,8 +5,17 @@ import { exportStoresReport, exportStoresExcel } from "../utils/export.js"
 import ConfirmDialog from "./ConfirmDialog.jsx"
 import CameraModal from "./CameraModal.jsx"
 import * as XLSX from "xlsx"
+import { useLanguage } from "../i18n/LanguageContext.jsx"
+import { canUser, hasPrivilege } from "../constants/permissions.js"
 
 export default function StoresModule({ currentUser, notify }) {
+  const { tr } = useLanguage()
+  const canAdd    = !currentUser || canUser(currentUser, "stores", "add")
+  const canEdit   = !currentUser || canUser(currentUser, "stores", "edit")
+  const canDelete = !currentUser || canUser(currentUser, "stores", "delete")
+  const canExport = !currentUser || canUser(currentUser, "stores", "export")
+  const canImport = !currentUser || (canExport && hasPrivilege(currentUser, "canImport"))
+  const canWipe   = currentUser?.role === "admin" || hasPrivilege(currentUser, "canWipeAll")
   const { stores, addStore, updateStore, removeStore, wipeAllStores } = useStores(notify)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -115,44 +124,54 @@ export default function StoresModule({ currentUser, notify }) {
   return (
     <div style={s.container}>
       <div style={s.header} className="module-header">
-        <h2 style={{ margin: 0, color: "#e2e8f0" }}>📦 بيانات المخازن</h2>
+        <h2 style={{ margin: 0, color: "#e2e8f0" }}>📦 {tr("بيانات المخازن", "Stores Directory")}</h2>
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }} className="module-header-actions">
           <input
             type="text"
-            placeholder="🔍 بحث في المخازن..."
+            placeholder={tr("🔍 بحث في المخازن...", "🔍 Search stores...")}
             style={s.searchInput}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
-          <button style={{ ...s.addBtn, background: "#f59e0b" }} onClick={() => exportStoresReport(filteredStores)}>
-            🖨️ طباعة تقرير
-          </button>
-          <button style={{ ...s.addBtn, background: "#10b981" }} onClick={() => exportStoresExcel(filteredStores)}>
-            📊 تصدير إكسيل
-          </button>
-          <button style={{ ...s.addBtn, background: "#8b5cf6" }} onClick={() => excelInputRef.current?.click()} disabled={importing}>
-            {importing ? "⏳ جاري الاستيراد..." : "📥 استيراد إكسيل"}
-          </button>
-          <input 
-            type="file" 
-            accept=".xlsx, .xls, .csv" 
-            style={{ display: "none" }} 
-            ref={excelInputRef} 
-            onChange={handleImportExcel} 
-          />
-          <button style={s.addBtn} onClick={() => { clearFiles(); setShowForm(true) }}>
-            ➕ إضافة مخزن جديد
-          </button>
-          {currentUser?.role === "admin" && (
+          {canExport && (
+            <>
+              <button style={{ ...s.addBtn, background: "#f59e0b" }} onClick={() => exportStoresReport(filteredStores)}>
+                🖨️ {tr("طباعة تقرير", "Print Report")}
+              </button>
+              <button style={{ ...s.addBtn, background: "#10b981" }} onClick={() => exportStoresExcel(filteredStores)}>
+                📊 {tr("تصدير إكسيل", "Export Excel")}
+              </button>
+            </>
+          )}
+          {canImport && (
+            <>
+              <button style={{ ...s.addBtn, background: "#8b5cf6" }} onClick={() => excelInputRef.current?.click()} disabled={importing}>
+                {importing ? tr("⏳ جاري الاستيراد...", "⏳ Importing...") : tr("📥 استيراد إكسيل", "📥 Import Excel")}
+              </button>
+              <input 
+                type="file" 
+                accept=".xlsx, .xls, .csv" 
+                style={{ display: "none" }} 
+                ref={excelInputRef} 
+                onChange={handleImportExcel} 
+              />
+            </>
+          )}
+          {canAdd && (
+            <button style={s.addBtn} onClick={() => { clearFiles(); setShowForm(true) }}>
+              ➕ {tr("إضافة مخزن جديد", "Add New Store")}
+            </button>
+          )}
+          {canWipe && (
             <button 
               style={{ ...s.addBtn, background: "#dc2626" }} 
               onClick={() => {
-                if (window.confirm("تحذير: هل أنت متأكد من مسح جميع المخازن نهائياً؟ لا يمكن التراجع عن هذا الإجراء.")) {
+                if (window.confirm(tr("تحذير: هل أنت متأكد من مسح جميع المخازن نهائياً؟ لا يمكن التراجع عن هذا الإجراء.", "Warning: Are you sure you want to wipe all stores permanently?"))) {
                   wipeAllStores()
                 }
               }}
             >
-              🗑️ مسح الكل
+              🗑️ {tr("مسح الكل", "Wipe All")}
             </button>
           )}
         </div>
@@ -162,18 +181,18 @@ export default function StoresModule({ currentUser, notify }) {
         <table style={s.table}>
           <thead>
             <tr>
-              <th style={{ ...s.th, width: "12%" }}>رقم المخزن</th>
-              <th style={{ ...s.th, width: "28%" }}>الشركة</th>
-              <th style={{ ...s.th, width: "28%" }}>ملاحظات</th>
-              <th style={{ ...s.th, width: "20%" }}>الصور</th>
-              <th style={{ ...s.th, width: "12%" }}>إجراءات</th>
+              <th style={{ ...s.th, width: "12%" }}>{tr("رقم المخزن", "Store No")}</th>
+              <th style={{ ...s.th, width: "28%" }}>{tr("الشركة", "Company")}</th>
+              <th style={{ ...s.th, width: "28%" }}>{tr("ملاحظات", "Notes")}</th>
+              <th style={{ ...s.th, width: "20%" }}>{tr("الصور", "Photos")}</th>
+              <th style={{ ...s.th, width: "12%" }}>{tr("إجراءات", "Actions")}</th>
             </tr>
           </thead>
           <tbody>
             {filteredStores.length === 0 ? (
               <tr>
                 <td colSpan="5" style={{ padding: 20, textAlign: "center", color: "#64748b" }}>
-                  لا توجد مخازن مطابقة للبحث
+                  {tr("لا توجد مخازن مطابقة للبحث", "No matching stores found")}
                 </td>
               </tr>
             ) : (
@@ -191,7 +210,7 @@ export default function StoresModule({ currentUser, notify }) {
                     <td style={{ ...s.td, color: "#94a3b8", fontSize: 13 }}>{store.notes || "-"}</td>
                     <td style={s.td}>
                       {photos.length === 0 ? (
-                        <span style={{ color: "#475569", fontSize: 12 }}>لا توجد صور</span>
+                        <span style={{ color: "#475569", fontSize: 12 }}>{tr("لا توجد صور", "No photos")}</span>
                       ) : (
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                           {photos.map((p, idx) => (
@@ -202,11 +221,13 @@ export default function StoresModule({ currentUser, notify }) {
                                 style={s.thumb}
                                 onClick={() => setLightbox({ images: photos, index: idx })}
                               />
-                              <button
-                                style={s.thumbDelete}
-                                onClick={() => deletePhoto(store.id, p.id)}
-                                title="حذف الصورة"
-                              >×</button>
+                              {canEdit && (
+                                <button
+                                  style={s.thumbDelete}
+                                  onClick={() => deletePhoto(store.id, p.id)}
+                                  title={tr("حذف الصورة", "Delete photo")}
+                                >×</button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -214,9 +235,9 @@ export default function StoresModule({ currentUser, notify }) {
                     </td>
                     <td style={s.td}>
                       <div style={{ display: "flex", gap: 6 }}>
-                        <button style={{ ...s.actionBtn, background: "#059669", color: "#d1fae5" }} onClick={() => setViewingStore(store)}>تفاصيل</button>
-                        <button style={{ ...s.actionBtn, background: "#1e3a8a", color: "#bfdbfe" }} onClick={() => openEdit(store)}>تعديل</button>
-                        <button style={{ ...s.actionBtn, background: "#7f1d1d", color: "#fca5a5" }} onClick={() => setConfirmDelete(store.id)}>حذف</button>
+                        <button style={{ ...s.actionBtn, background: "#059669", color: "#d1fae5" }} onClick={() => setViewingStore(store)}>{tr("تفاصيل", "Details")}</button>
+                        {canEdit && <button style={{ ...s.actionBtn, background: "#1e3a8a", color: "#bfdbfe" }} onClick={() => openEdit(store)}>{tr("تعديل", "Edit")}</button>}
+                        {canDelete && <button style={{ ...s.actionBtn, background: "#7f1d1d", color: "#fca5a5" }} onClick={() => setConfirmDelete(store.id)}>{tr("حذف", "Delete")}</button>}
                       </div>
                     </td>
                   </tr>

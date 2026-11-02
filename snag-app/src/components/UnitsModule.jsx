@@ -3,8 +3,17 @@ import { useUnits } from "../hooks/useUnits.js"
 import { exportUnitsReport, exportUnitsExcel } from "../utils/export.js"
 import ConfirmDialog from "./ConfirmDialog.jsx"
 import * as XLSX from "xlsx"
+import { useLanguage } from "../i18n/LanguageContext.jsx"
+import { canUser, hasPrivilege } from "../constants/permissions.js"
 
 export default function UnitsModule({ currentUser, notify }) {
+  const { tr } = useLanguage()
+  const canAdd    = !currentUser || canUser(currentUser, "units", "add")
+  const canEdit   = !currentUser || canUser(currentUser, "units", "edit")
+  const canDelete = !currentUser || canUser(currentUser, "units", "delete")
+  const canExport = !currentUser || canUser(currentUser, "units", "export")
+  const canImport = !currentUser || (canExport && hasPrivilege(currentUser, "canImport"))
+  const canWipe   = currentUser?.role === "admin" || hasPrivilege(currentUser, "canWipeAll")
   const { units, addUnit, updateUnit, removeUnit, wipeAllUnits } = useUnits(notify)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -114,44 +123,54 @@ export default function UnitsModule({ currentUser, notify }) {
   return (
     <div style={s.container}>
       <div style={s.header} className="module-header">
-        <h2 style={{ margin: 0, color: "#e2e8f0" }}>🏢 بيانات الوحدات والعملاء</h2>
+        <h2 style={{ margin: 0, color: "#e2e8f0" }}>🏢 {tr("بيانات الوحدات والعملاء", "Units & Tenants Directory")}</h2>
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }} className="module-header-actions">
           <input 
             type="text" 
-            placeholder="🔍 بحث في الوحدات..." 
+            placeholder={tr("🔍 بحث في الوحدات...", "🔍 Search units...")} 
             style={s.searchInput}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button style={{ ...s.addBtn, background: "#f59e0b" }} onClick={() => exportUnitsReport(filteredUnits)}>
-            🖨️ طباعة تقرير
-          </button>
-          <button style={{ ...s.addBtn, background: "#10b981" }} onClick={() => exportUnitsExcel(filteredUnits)}>
-            📊 تصدير إكسيل
-          </button>
-          <button style={{ ...s.addBtn, background: "#8b5cf6" }} onClick={() => fileInputRef.current?.click()} disabled={importing}>
-            {importing ? "⏳ جاري الاستيراد..." : "📥 استيراد إكسيل"}
-          </button>
-          <input 
-            type="file" 
-            accept=".xlsx, .xls, .csv" 
-            style={{ display: "none" }} 
-            ref={fileInputRef} 
-            onChange={handleImportExcel} 
-          />
-          <button style={s.addBtn} onClick={() => setShowForm(true)}>
-            ➕ إضافة وحدة جديدة
-          </button>
-          {currentUser?.role === "admin" && (
+          {canExport && (
+            <>
+              <button style={{ ...s.addBtn, background: "#f59e0b" }} onClick={() => exportUnitsReport(filteredUnits)}>
+                🖨️ {tr("طباعة تقرير", "Print Report")}
+              </button>
+              <button style={{ ...s.addBtn, background: "#10b981" }} onClick={() => exportUnitsExcel(filteredUnits)}>
+                📊 {tr("تصدير إكسيل", "Export Excel")}
+              </button>
+            </>
+          )}
+          {canImport && (
+            <>
+              <button style={{ ...s.addBtn, background: "#8b5cf6" }} onClick={() => fileInputRef.current?.click()} disabled={importing}>
+                {importing ? tr("⏳ جاري الاستيراد...", "⏳ Importing...") : tr("📥 استيراد إكسيل", "📥 Import Excel")}
+              </button>
+              <input 
+                type="file" 
+                accept=".xlsx, .xls, .csv" 
+                style={{ display: "none" }} 
+                ref={fileInputRef} 
+                onChange={handleImportExcel} 
+              />
+            </>
+          )}
+          {canAdd && (
+            <button style={s.addBtn} onClick={() => setShowForm(true)}>
+              ➕ {tr("إضافة وحدة جديدة", "Add New Unit")}
+            </button>
+          )}
+          {canWipe && (
             <button 
               style={{ ...s.addBtn, background: "#dc2626" }} 
               onClick={() => {
-                if (window.confirm("تحذير: هل أنت متأكد من مسح جميع الوحدات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.")) {
+                if (window.confirm(tr("تحذير: هل أنت متأكد من مسح جميع الوحدات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.", "Warning: Are you sure you want to wipe all units permanently?"))) {
                   wipeAllUnits()
                 }
               }}
             >
-              🗑️ مسح الكل
+              🗑️ {tr("مسح الكل", "Wipe All")}
             </button>
           )}
         </div>
@@ -161,19 +180,19 @@ export default function UnitsModule({ currentUser, notify }) {
         <table style={s.table}>
           <thead>
             <tr>
-              <th style={s.th}>المبنى</th>
-              <th style={s.th}>الوحدة</th>
-              <th style={s.th}>الاسم</th>
-              <th style={s.th}>المالك</th>
-              <th style={s.th}>النشاط</th>
-              <th style={s.th}>إجراءات</th>
+              <th style={s.th}>{tr("المبنى", "Building")}</th>
+              <th style={s.th}>{tr("الوحدة", "Unit No")}</th>
+              <th style={s.th}>{tr("الاسم", "Unit / Company Name")}</th>
+              <th style={s.th}>{tr("المالك", "Owner")}</th>
+              <th style={s.th}>{tr("النشاط", "Activity")}</th>
+              <th style={s.th}>{tr("إجراءات", "Actions")}</th>
             </tr>
           </thead>
           <tbody>
             {filteredUnits.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ padding: 20, textAlign: "center", color: "#64748b" }}>
-                  لا توجد وحدات مطابقة للبحث
+                  {tr("لا توجد وحدات مطابقة للبحث", "No matching units found")}
                 </td>
               </tr>
             ) : (
@@ -181,16 +200,16 @@ export default function UnitsModule({ currentUser, notify }) {
                 const isVacant = (u.unitName || "").toLowerCase().includes("vacant") || (u.companyActivity || "").toLowerCase().includes("vacant")
                 return (
                 <tr key={u.id} style={{ ...s.tr, background: isVacant ? "rgba(234,179,8,0.08)" : "transparent" }}>
-                  <td style={s.td}>{u.buildingNo || "-"} (دور {u.floor || "-"})</td>
+                  <td style={s.td}>{u.buildingNo || "-"} ({tr("دور", "Floor")} {u.floor || "-"})</td>
                   <td style={s.td}>{u.unitNo || "-"}</td>
                   <td style={{ ...s.td, fontWeight: isVacant ? "bold" : "normal", color: isVacant ? "#facc15" : "inherit" }}>{u.unitName || "-"}</td>
                   <td style={s.td}>{u.unitOwnerName || "-"}</td>
                   <td style={s.td}>{u.companyActivity || "-"}</td>
                   <td style={s.td}>
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button style={{ ...s.actionBtn, background: "#059669", color: "#d1fae5" }} onClick={() => setViewingUnit(u)}>تفاصيل</button>
-                      <button style={{ ...s.actionBtn, background: "#1e3a8a", color: "#bfdbfe" }} onClick={() => openEdit(u)}>تعديل</button>
-                      <button style={{ ...s.actionBtn, background: "#7f1d1d", color: "#fca5a5" }} onClick={() => setConfirmDelete(u.id)}>حذف</button>
+                      <button style={{ ...s.actionBtn, background: "#059669", color: "#d1fae5" }} onClick={() => setViewingUnit(u)}>{tr("تفاصيل", "Details")}</button>
+                      {canEdit && <button style={{ ...s.actionBtn, background: "#1e3a8a", color: "#bfdbfe" }} onClick={() => openEdit(u)}>{tr("تعديل", "Edit")}</button>}
+                      {canDelete && <button style={{ ...s.actionBtn, background: "#7f1d1d", color: "#fca5a5" }} onClick={() => setConfirmDelete(u.id)}>{tr("حذف", "Delete")}</button>}
                     </div>
                   </td>
                 </tr>

@@ -6,10 +6,15 @@ import {
 import ExcelJS from "exceljs"
 import CameraModal from "./CameraModal.jsx"
 import { PARK_SECTORS, STATUS_META } from "../constants/parkStreetData.js"
+import { useLanguage } from "../i18n/LanguageContext.jsx"
+import { canUser } from "../constants/permissions.js"
 
 export { PARK_SECTORS, STATUS_META }
 
 export default function ParkStreetModule({ currentUser, notify, onAddSnag }) {
+  const { lang, tr } = useLanguage()
+  const canModify = !currentUser || canUser(currentUser, "park-street", "edit") || canUser(currentUser, "park-street", "status") || canUser(currentUser, "park-street", "add")
+  const canExport = !currentUser || canUser(currentUser, "park-street", "export")
   const [activeSectorId, setActiveSectorId] = useState("security")
   const [records, setRecords] = useState({})
   const [filterStatus, setFilterStatus] = useState("all")
@@ -74,6 +79,10 @@ export default function ParkStreetModule({ currentUser, notify, onAddSnag }) {
   }, [records])
 
   async function saveRecord(key, patch) {
+    if (!canModify) {
+      alert(tr("ليس لديك صلاحية التعديل أو الإدخال في سناج بارك ستريت (وضع القراءة فقط).", "You do not have permission to edit or add records in Park St. Snag (Read-Only mode)."))
+      return
+    }
     const existing = records[key] || {}
     const updated = {
       ...existing,
@@ -355,40 +364,45 @@ export default function ParkStreetModule({ currentUser, notify, onAddSnag }) {
               PARK ST. MALL — INTEGRATED SNAG & OPERATIONS SYSTEM
             </div>
             <h2 style={{ margin: "4px 0 6px", fontSize: 22, fontWeight: 900, color: "#fff" }}>
-              🌟 منظومة سناج بارك ستريت الشاملة
+              🌟 {tr("منظومة سناج بارك ستريت الشاملة", "Park St. Comprehensive Snag System")}
             </h2>
             <div style={{ fontSize: 13, color: "#e2e8f0" }}>
-              الأمن والحراسة • رحلة العميل داخل بارك ستريت • الزراعة واللاند سكيب • مسار السيارات بالبيزمنت
+              {tr(
+                "الأمن والحراسة • رحلة العميل داخل بارك ستريت • الزراعة واللاند سكيب • مسار السيارات بالبيزمنت",
+                "Security & Guarding • Customer Journey • Landscape & Irrigation • Basement Car Path"
+              )}
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              disabled={exporting}
-              onClick={() => exportExcelWithImages(true)}
-              style={{ ...st.exportBtn, background: "#0ea5e9" }}
-            >
-              {exporting ? "⏳ جاري التصدير..." : `📥 إكسيل ${activeSector.name} (بالصور)`}
-            </button>
-            <button
-              type="button"
-              disabled={exporting}
-              onClick={() => exportExcelWithImages(false)}
-              style={{ ...st.exportBtn, background: "#10b981" }}
-            >
-              {exporting ? "⏳ جاري التصدير..." : "📊 تصدير الشيت الشامل (4 قطاعات بالصور بدون روابط)"}
-            </button>
-          </div>
+          {canExport && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                disabled={exporting}
+                onClick={() => exportExcelWithImages(true)}
+                style={{ ...st.exportBtn, background: "#0ea5e9" }}
+              >
+                {exporting ? tr("⏳ جاري التصدير...", "⏳ Exporting...") : `📥 ${tr(`إكسيل ${activeSector.name} (بالصور)`, `Export ${activeSector.enName} Excel`)}`}
+              </button>
+              <button
+                type="button"
+                disabled={exporting}
+                onClick={() => exportExcelWithImages(false)}
+                style={{ ...st.exportBtn, background: "#10b981" }}
+              >
+                {exporting ? tr("⏳ جاري التصدير...", "⏳ Exporting...") : tr("📊 تصدير الشيت الشامل (4 قطاعات بالصور بدون روابط)", "📊 Export Full 4-Sector Excel (With Photos)")}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Summary KPIs */}
         <div style={st.kpiGrid}>
-          <KpiCard label="إجمالي نقاط الفحص" value={stats.totalItems} color="#38bdf8" />
-          <KpiCard label="سليم ومطابق ✅" value={stats.okCount} color="#10b981" />
-          <KpiCard label="ملاحظات وأعطال 🔴" value={stats.snagCount} color="#ef4444" />
-          <KpiCard label="يحتاج متابعة 🟡" value={stats.followupCount} color="#f59e0b" />
-          <KpiCard label="صور الفحص الموثقة 📸" value={stats.photosCount} color="#c084fc" />
+          <KpiCard label={tr("إجمالي نقاط الفحص", "Total Checkpoints")} value={stats.totalItems} color="#38bdf8" />
+          <KpiCard label={tr("سليم ومطابق ✅", "Intact / OK ✅")} value={stats.okCount} color="#10b981" />
+          <KpiCard label={tr("ملاحظات وأعطال 🔴", "Defects / Snags 🔴")} value={stats.snagCount} color="#ef4444" />
+          <KpiCard label={tr("يحتاج متابعة 🟡", "Needs Follow-up 🟡")} value={stats.followupCount} color="#f59e0b" />
+          <KpiCard label={tr("صور الفحص الموثقة 📸", "Documented Photos 📸")} value={stats.photosCount} color="#c084fc" />
         </div>
       </div>
 

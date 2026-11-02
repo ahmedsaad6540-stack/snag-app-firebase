@@ -14,10 +14,17 @@ import { processFile } from "../utils/compress.js"
 import { exportRestroomsExcel, exportRestroomsReport } from "../utils/export.js"
 import ConfirmDialog from "./ConfirmDialog.jsx"
 import CameraModal from "./CameraModal.jsx"
+import { useLanguage } from "../i18n/LanguageContext.jsx"
+import { canUser, hasPrivilege } from "../constants/permissions.js"
 
 export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
+  const { tr } = useLanguage()
   const userName = currentUser?.displayName || currentUser?.email || "مشرف الفحص"
   const isAdmin = currentUser?.role === "admin"
+  const canModify = !currentUser || canUser(currentUser, "restrooms", "edit") || canUser(currentUser, "restrooms", "add") || canUser(currentUser, "restrooms", "status")
+  const canExport = !currentUser || canUser(currentUser, "restrooms", "export")
+  const canImport = !currentUser || (canExport && hasPrivilege(currentUser, "canImport"))
+  const canWipe   = isAdmin || hasPrivilege(currentUser, "canWipeAll")
 
   const {
     rows,
@@ -289,62 +296,75 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
       {/* ── Top Banner (Matching Sheet Header) ── */}
       <div style={s.heroBanner}>
         <div style={{ flex: 1 }}>
-          <div style={s.heroBadge}>RESTROOM SNAG SYSTEM</div>
-          <h2 style={s.heroTitle}>🚽 مركز متابعة وفحص الحمامات</h2>
+          <div style={s.heroBadge}>RESTROOM & JANITOR SNAG SYSTEM</div>
+          <h2 style={s.heroTitle}>🚽 {tr("مركز متابعة وفحص الحمامات وغرف النظافة", "Restrooms & Janitor Rooms Inspection Center")}</h2>
           <p style={s.heroSub}>
-            تشغيل وصيانة • فحص الأصول • حصر فني • بلاغات • إغلاق ومتابعة
+            {tr(
+              "تشغيل وصيانة • فحص الأصول • حصر فني • غرف خدمات النظافة (Janitor Rooms) • إغلاق ومتابعة",
+              "Operations & Maintenance • Asset Inspection • Technical Inventory • Janitor Rooms • Follow-up"
+            )}
           </p>
           <div style={s.guideBox}>
-            <span>💡 <strong>دليل العمل:</strong> ابدأ من «دليل المواقع»، ثم «جولة الفحص» أو «الجدول الشامل»، وسجل الأعطال لترحيلها لسجل السناج.</span>
+            <span>💡 <strong>{tr("دليل العمل:", "Workflow Guide:")}</strong> {tr("ابدأ من «دليل المواقع»، ثم «جولة الفحص» أو «الجدول الشامل»، وسجل الأعطال لترحيلها لسجل السناج.", "Start from Locations Directory, then Inspection Tour or Master Sheet, and record defects.")}</span>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
-              <span style={{ ...s.legendPill, background: "rgba(234,179,8,0.18)", color: "#fde047", borderColor: "#ca8a04" }}>🟡 الأصفر: إدخال مطلوب</span>
-              <span style={{ ...s.legendPill, background: "rgba(16,185,129,0.18)", color: "#6ee7b7", borderColor: "#059669" }}>🟢 الأخضر: سليم</span>
-              <span style={{ ...s.legendPill, background: "rgba(239,68,68,0.18)", color: "#fca5a5", borderColor: "#dc2626" }}>🔴 الأحمر: عطل / نقص</span>
+              <span style={{ ...s.legendPill, background: "rgba(234,179,8,0.18)", color: "#fde047", borderColor: "#ca8a04" }}>🟡 {tr("الأصفر: إدخال مطلوب", "Yellow: Pending Input")}</span>
+              <span style={{ ...s.legendPill, background: "rgba(16,185,129,0.18)", color: "#6ee7b7", borderColor: "#059669" }}>🟢 {tr("الأخضر: سليم", "Green: Intact / OK")}</span>
+              <span style={{ ...s.legendPill, background: "rgba(239,68,68,0.18)", color: "#fca5a5", borderColor: "#dc2626" }}>🔴 {tr("الأحمر: عطل / نقص", "Red: Defect / Missing")}</span>
             </div>
           </div>
         </div>
 
         {/* Export / Import Actions */}
         <div style={s.heroActions}>
-          <button
-            style={{ ...s.actionBtn, background: "linear-gradient(135deg, #059669, #10b981)" }}
-            onClick={handleExportExcel}
-            disabled={exportingExcel}
-          >
-            {exportingExcel ? "⏳ جاري دمج الصور..." : "📊 تصدير إكسيل (بالصور المدمجة)"}
-          </button>
-          <button
-            style={{ ...s.actionBtn, background: "linear-gradient(135deg, #d97706, #f59e0b)" }}
-            onClick={() => exportRestroomsReport(filteredRows, dashboard)}
-          >
-            🖨️ تقرير PDF / طباعة
-          </button>
-          <button
-            style={{ ...s.actionBtn, background: "#1e293b", border: "1px solid #334155" }}
-            onClick={() => importInputRef.current?.click()}
-            disabled={importingExcel}
-          >
-            {importingExcel ? "⏳ جاري الاستيراد..." : "📥 استيراد شيت إكسيل / CSV"}
-          </button>
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            hidden
-            onChange={handleImportSheet}
-          />
-          <button
-            style={{ ...s.actionBtn, background: "linear-gradient(135deg, #4f46e5, #7c3aed)" }}
-            onClick={handleSyncAllDefectsToSnags}
-          >
-            🚨 ترحيل الأعطال لسجل السناج ({dashboard.defectComponents})
-          </button>
-          {isAdmin && (
+          {canExport && (
+            <>
+              <button
+                style={{ ...s.actionBtn, background: "linear-gradient(135deg, #059669, #10b981)" }}
+                onClick={handleExportExcel}
+                disabled={exportingExcel}
+              >
+                {exportingExcel ? tr("⏳ جاري دمج الصور...", "⏳ Embedding photos...") : tr("📊 تصدير إكسيل (بالصور المدمجة)", "📊 Export Excel (With Photos)")}
+              </button>
+              <button
+                style={{ ...s.actionBtn, background: "linear-gradient(135deg, #d97706, #f59e0b)" }}
+                onClick={() => exportRestroomsReport(filteredRows, dashboard)}
+              >
+                🖨️ {tr("تقرير PDF / طباعة", "PDF Report / Print")}
+              </button>
+            </>
+          )}
+          {canImport && (
+            <>
+              <button
+                style={{ ...s.actionBtn, background: "#1e293b", border: "1px solid #334155" }}
+                onClick={() => importInputRef.current?.click()}
+                disabled={importingExcel}
+              >
+                {importingExcel ? tr("⏳ جاري الاستيراد...", "⏳ Importing...") : tr("📥 استيراد شيت إكسيل / CSV", "📥 Import Excel / CSV")}
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                hidden
+                onChange={handleImportSheet}
+              />
+            </>
+          )}
+          {canModify && (
+            <button
+              style={{ ...s.actionBtn, background: "linear-gradient(135deg, #4f46e5, #7c3aed)" }}
+              onClick={handleSyncAllDefectsToSnags}
+            >
+              🚨 {tr(`ترحيل الأعطال لسجل السناج (${dashboard.defectComponents})`, `Push Defects to Snags Log (${dashboard.defectComponents})`)}
+            </button>
+          )}
+          {canWipe && (
             <button
               style={{ ...s.actionBtn, background: "#450a0a", color: "#fca5a5", border: "1px solid #7f1d1d" }}
               onClick={() => setShowConfirmReset(true)}
             >
-              🗑️ تصفير الفحوصات
+              🗑️ {tr("تصفير الفحوصات", "Reset All Inspections")}
             </button>
           )}
         </div>
@@ -352,12 +372,12 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
 
       {/* ── Top 6 KPI Cards (Matching Sheet Summary) ── */}
       <div style={s.kpiGrid}>
-        <KpiCard label="الحمامات المؤكدة" value={dashboard.confirmedRestrooms} sub={`من إجمالي ${dashboard.totalRestrooms} حمام`} color="#10b981" icon="✅" />
-        <KpiCard label="الحمامات قيد التأكيد" value={dashboard.pendingRestrooms} sub="بانتظار استكمال الفحص" color="#f59e0b" icon="⏳" />
-        <KpiCard label="الجولات المسجلة" value={dashboard.totalRounds} sub="جولة فحص ميدانية" color="#3b82f6" icon="📋" />
-        <KpiCard label="مكونات تم فحصها" value={dashboard.inspectedComponents} sub={`من أصل ${dashboard.totalComponents} مكون`} color="#06b6d4" icon="🔍" />
-        <KpiCard label="سناج مفتوح / أعطال" value={dashboard.defectComponents} sub="مكونات بها عطل أو نقص" color="#ef4444" icon="🚨" />
-        <KpiCard label="مؤشر السلامة الفنية" value={`${healthPct}%`} sub={`${dashboard.okComponents} مكون سليم`} color="#8b5cf6" icon="🛡️" />
+        <KpiCard label={tr("المواقع المؤكدة", "Confirmed Locations")} value={dashboard.confirmedRestrooms} sub={tr(`من إجمالي ${dashboard.totalRestrooms} موقع`, `Out of ${dashboard.totalRestrooms} locations`)} color="#10b981" icon="✅" />
+        <KpiCard label={tr("قيد التأكيد", "Pending Confirmation")} value={dashboard.pendingRestrooms} sub={tr("بانتظار استكمال الفحص", "Awaiting inspection completion")} color="#f59e0b" icon="⏳" />
+        <KpiCard label={tr("الجولات المسجلة", "Recorded Rounds")} value={dashboard.totalRounds} sub={tr("جولة فحص ميدانية", "Field inspection rounds")} color="#3b82f6" icon="📋" />
+        <KpiCard label={tr("مكونات تم فحصها", "Inspected Components")} value={dashboard.inspectedComponents} sub={tr(`من أصل ${dashboard.totalComponents} مكون`, `Out of ${dashboard.totalComponents} components`)} color="#06b6d4" icon="🔍" />
+        <KpiCard label={tr("سناج مفتوح / أعطال", "Open Snags / Defects")} value={dashboard.defectComponents} sub={tr("مكونات بها عطل أو نقص", "Defective or missing items")} color="#ef4444" icon="🚨" />
+        <KpiCard label={tr("مؤشر السلامة الفنية", "Technical Health Index")} value={`${healthPct}%`} sub={tr(`${dashboard.okComponents} مكون سليم`, `${dashboard.okComponents} intact items`)} color="#8b5cf6" icon="🛡️" />
       </div>
 
       {/* ── Sub-navigation Tabs ── */}
