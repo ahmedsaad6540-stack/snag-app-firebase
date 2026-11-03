@@ -10,6 +10,7 @@ import UnitsModule  from "./components/UnitsModule.jsx"
 import StoresModule from "./components/StoresModule.jsx"
 import RestroomsModule from "./components/RestroomsModule.jsx"
 import ParkStreetModule from "./components/ParkStreetModule.jsx"
+import OperationsPlansModule from "./components/OperationsPlansModule.jsx"
 import AICommandCenter from "./components/AICommandCenter.jsx"
 import { useSnags } from "./hooks/useSnags.js"
 import { useAuth }  from "./hooks/useAuth.js"
@@ -253,6 +254,14 @@ export default function App() {
               📋 {tr("سجل الملاحظات", "Snags Log")}
             </button>
           )}
+          {canUser(user, "operations-plans", "view") && (
+            <button 
+              style={{ ...s.tab, ...(activeTab === "operations-plans" ? { ...s.activeTab, background: "linear-gradient(135deg, #16a34a, #0e7490)", color: "#f0fdf4" } : {}) }}
+              onClick={() => setActiveTab("operations-plans")}
+            >
+              📅 {tr("خطط التشغيل والتقارير (اللاندسكيب • السبايدر • المكافحة • النظافة)", "Operations Plans & Reports (Daily • Weekly • Monthly)")}
+            </button>
+          )}
           {canUser(user, "park-street", "view") && (
             <button 
               style={{ ...s.tab, ...(activeTab === "park-street" ? { ...s.activeTab, background: "linear-gradient(135deg, #0e7490, #4c1d95)", color: "#f0f9ff" } : {}) }}
@@ -332,8 +341,52 @@ export default function App() {
 
         {activeTab === "snags" && canUser(user, "snags", "view") && (
           <>
-            {/* Quick-access banners to Park St. Inspection & Restroom Snag Center */}
+            {/* Quick-access banners to Operations Plans, Park St. Inspection & Restroom Snag Center */}
             <div className="quick-banners-grid">
+              {canUser(user, "operations-plans", "view") && (
+                <div
+                  onClick={() => setActiveTab("operations-plans")}
+                  style={{
+                    background: "linear-gradient(135deg, rgba(22,163,74,0.32), rgba(14,116,144,0.45))",
+                    border: "1px solid #10b981",
+                    borderRadius: 14,
+                    padding: "12px 16px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 24 }}>📅</span>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: "#ecfdf5" }}>
+                        {tr("OPERATIONS ACTION PLANS | خطط التشغيل والتقارير (يومي • أسبوعي • شهري)", "OPERATIONS ACTION PLANS | Daily, Weekly & Monthly Reports")}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#a7f3d0" }}>
+                        {tr(
+                          "🌿 اللاندسكيب • 🧗 السبايدر والواجهات • 🦟 البيست كنترول • 🧹 الهاوس كيبنج والـ 3 ورديات (عملوا إيه وما عملوش إيه وبناءً على إيه)",
+                          "🌿 Landscape • 🧗 Spider & Facades • 🦟 Pest Control • 🧹 Housekeeping & 3 Shifts"
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{
+                    background: "#10b981",
+                    color: "#fff",
+                    fontWeight: 800,
+                    fontSize: 11,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    whiteSpace: "nowrap",
+                  }}>
+                    {tr("فتح خطط التشغيل والتقارير ←", "Open Action Plans →")}
+                  </span>
+                </div>
+              )}
+
               {canUser(user, "park-street", "view") && (
                 <div
                   onClick={() => setActiveTab("park-street")}
@@ -450,6 +503,7 @@ export default function App() {
           </>
         )}
         
+        {activeTab === "operations-plans" && canUser(user, "operations-plans", "view") && <OperationsPlansModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "park-street" && canUser(user, "park-street", "view") && <ParkStreetModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "restrooms" && canUser(user, "restrooms", "view") && <RestroomsModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "units" && canUser(user, "units", "view") && <UnitsModule currentUser={user} notify={notify} />}
