@@ -1,8 +1,79 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+    // Protect the new module and the user profiles that authorize access to it.
+    // Other legacy collections retain their policy for a separate migration.
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function approved() {
+      return request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && profile().get('approved', true) == true && !profile().get('disabled', false) && !profile().get('deleted', false);
+    }
+    function role() { return profile().get('rolePreset', profile().get('role', 'supervisor')); }
+    function isAdmin() { return profile().get('role', '') == 'admin'; }
+    function opPermission(action) {
+      let p = profile();
+      let roleId = p.get('rolePreset', p.get('role', 'supervisor'));
+      let defaults = roleId in ['admin', 'operations_manager', 'supervisor', 'user'] || (roleId == 'viewer' && action in ['view', 'export']);
+      return p.get('role', '') == 'admin' || p.get('permissions', {}).get('matrix', {}).get('operations', {}).get(action, defaults);
+    }
+    function privilege(name) {
+      return isAdmin() || profile().get('permissions', {}).get('privileges', {}).get(name, role() == 'admin' || (role() == 'operations_manager' && name != 'canManageUsers'));
+    }
+    function planManager() { return approved() && opPermission('view') && opPermission('edit') && privilege('canManageLocations'); }
+    match /users/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || (approved() && privilege('canManageUsers')));
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.uid == uid && request.resource.data.approved == false
+        && request.resource.data.role == 'user' && request.resource.data.rolePreset == 'supervisor';
+      allow update, delete: if approved() && privilege('canManageUsers');
+    }
+    function validPlan(p) {
+      return p.department in ['landscape', 'spider', 'pest', 'housekeeping', 'standards']
+        && p.title is string && p.title.size() > 0 && p.location is string && p.standard is string
+        && p.frequency in ['daily', 'weekly', 'monthly'] && p.shift in ['صباحية', 'مسائية', 'ليلية']
+        && (!(p.department in ['landscape', 'spider', 'pest']) || p.shift == 'صباحية')
+        && p.enabled == true && p.review == '' && p.start is string
+        && p.updatedBy.uid == request.auth.uid && p.updatedAt == request.time;
+    }
+    match /operations_plans/{planId} {
+      allow read: if approved() && opPermission('view');
+      allow create: if planManager() && validPlan(request.resource.data);
+      allow update: if planManager()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['end', 'updatedBy', 'updatedAt'])
+        && request.resource.data.end is string && request.resource.data.end >= resource.data.start
+        && request.resource.data.updatedBy.uid == request.auth.uid && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    function validExecution(d) {
+      return d.status in ['done', 'partial', 'blocked', 'na']
+        && d.owner is string && d.owner.size() > 0
+        && d.date is string && d.actualDate is string && d.photos is list && d.photos.size() <= 2
+        && d.reason is string && (!(d.status in ['partial', 'blocked', 'na']) || d.reason.size() > 0)
+        && (!(d.status in ['partial', 'blocked']) || (d.action.size() > 0 && d.followup.size() == 10))
+        && d.quality in ['unreviewed', 'accepted', 'rejected']
+        && (d.quality != 'accepted' || d.status == 'done')
+        && (d.quality == 'unreviewed' || (opPermission('edit') && privilege('canEditAll')))
+        && d.updatedBy.uid == request.auth.uid && d.updatedAt == request.time;
+    }
+    match /operations_execution/{executionId} {
+      allow read: if approved() && opPermission('view');
+      allow create: if approved() && opPermission('view') && opPermission('add') && validExecution(request.resource.data)
+        && executionId == request.resource.data.planId + '__' + request.resource.data.date
+        && request.resource.data.createdBy.uid == request.auth.uid && request.resource.data.revision == 1
+        && request.resource.data.history is list && request.resource.data.history.size() == 1
+        && request.resource.data.plan == get(/databases/$(database)/documents/operations_plans/$(request.resource.data.planId)).data
+        && request.resource.data.date >= request.resource.data.plan.start;
+      allow update: if approved() && opPermission('view') && opPermission('status') && validExecution(request.resource.data)
+        && (resource.data.createdBy.uid == request.auth.uid || privilege('canEditAll'))
+        && request.resource.data.plan == resource.data.plan && request.resource.data.date == resource.data.date
+        && request.resource.data.planId == resource.data.planId && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.history is list && request.resource.data.history.size() == resource.data.history.size() + 1
+        && request.resource.data.history.hasAll(resource.data.history);
+      allow delete: if false;
+    }
+    match /{collectionId}/{document=**} {
+      allow read, write: if !(collectionId in ['users', 'operations_plans', 'operations_execution']);
     }
   }
 }

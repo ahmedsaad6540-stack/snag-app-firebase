@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, lazy, Suspense } from "react"
 import Header       from "./components/Header.jsx"
 import StatBar      from "./components/StatBar.jsx"
 import SnagForm     from "./components/SnagForm.jsx"
@@ -11,6 +11,7 @@ import StoresModule from "./components/StoresModule.jsx"
 import RestroomsModule from "./components/RestroomsModule.jsx"
 import ParkStreetModule from "./components/ParkStreetModule.jsx"
 import AICommandCenter from "./components/AICommandCenter.jsx"
+const OperationsModule = lazy(() => import("./operations/OperationsModule.jsx"))
 import { useSnags } from "./hooks/useSnags.js"
 import { useAuth }  from "./hooks/useAuth.js"
 import { useNotifications } from "./hooks/useNotifications.js"
@@ -234,17 +235,22 @@ export default function App() {
         <Toaster />
 
         {/* Header receives filtered snags for reports */}
-        <Header 
+        {activeTab !== "operations" && <Header
           snags={displaySnags} 
           onImport={mergeImported} 
           isAdmin={user.role === "admin"}
           currentUser={user}
           activeModule={activeTab}
           onWipeAll={wipeAll}
-        />
+        />}
 
         {/* Tab Navigation (Filtered by User's View Permissions) */}
         <div style={s.tabs} className="tabs-row">
+          {canUser(user, "operations", "view") && (
+            <button style={{ ...s.tab, ...(activeTab === "operations" ? s.activeTab : {}) }} onClick={() => setActiveTab("operations")}>
+              🗓️ {tr("متابعة أعمال اليوم", "Daily Operations")}
+            </button>
+          )}
           {canUser(user, "snags", "view") && (
             <button 
               style={{ ...s.tab, ...(activeTab === "snags" ? s.activeTab : {}) }}
@@ -450,6 +456,7 @@ export default function App() {
           </>
         )}
         
+        {activeTab === "operations" && canUser(user, "operations", "view") && <Suspense fallback={<p>جاري تحميل متابعة التشغيل…</p>}><OperationsModule currentUser={user} /></Suspense>}
         {activeTab === "park-street" && canUser(user, "park-street", "view") && <ParkStreetModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "restrooms" && canUser(user, "restrooms", "view") && <RestroomsModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "units" && canUser(user, "units", "view") && <UnitsModule currentUser={user} notify={notify} />}
