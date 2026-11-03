@@ -3,6 +3,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const APP_MODULES = [
+  { id: "operations", icon: "🗓️", labelAr: "خطط ومتابعة التشغيل", labelEn: "Operations Plans & Reports", descAr: "خطط متكررة ومتابعة يومية وتقارير أسبوعية وشهرية", descEn: "Recurring plans, daily execution and period reports" },
   {
     id: "snags",
     icon: "📋",
@@ -212,6 +213,7 @@ export const ROLE_PRESETS = {
       canManageUsers: false,
     },
     matrix: buildMatrix({
+      "operations":  { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "snags":       { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "park-street": { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "restrooms":   { view: true, add: true, edit: true, status: true, delete: false, export: true },
