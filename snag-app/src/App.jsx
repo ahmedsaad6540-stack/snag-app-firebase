@@ -367,7 +367,7 @@ export default function App() {
                       </div>
                       <div style={{ fontSize: 11, color: "#a7f3d0" }}>
                         {tr(
-                          "🌿 اللاندسكيب • 🧗 السبايدر والواجهات • 🦟 البيست كنترول • 🧹 الهاوس كيبنج والـ 3 ورديات (عملوا إيه وما عملوش إيه وبناءً على إيه)",
+                          "🌿 اللاندسكيب • 🧗 السبايدر والواجهات • 🦟 البيست كنترول • 🧹 الهاوس كيبنج والـ 3 ورديات",
                           "🌿 Landscape • 🧗 Spider & Facades • 🦟 Pest Control • 🧹 Housekeeping & 3 Shifts"
                         )}
                       </div>

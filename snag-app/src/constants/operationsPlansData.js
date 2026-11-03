@@ -186,12 +186,12 @@ export const SPIDER_PLAN_INFO = {
   notesAr: [
     "1. مبنى 1 ومبنى 3: 5 أيام عمل أسبوعياً من السبت إلى الأربعاء (نظافة المبنى + البوابة الرئيسية والمداخل).",
     "2. مبنى 2: أعمال Spider لمدة 9 أيام عمل، مع وجود عامل نظافة أرضية منفصل عن فريق Spider، واستكمال أعمال الواجهة في الأسبوع التالي.",
-    "3. يوم الخميس (5 عمال + مشرف): لا يتم العمل على واجهات، ويتم العمل على المسطحات والمداخل وسلالم الكهرباء والهندريلات بالكامل وما يخص شغل الأرضي.",
+    "3. يوم الخميس: لا يتم العمل على واجهات، ويتم العمل على المسطحات والمداخل وسلالم الكهرباء والهندريلات بالكامل وما يخص شغل الأرضي (يتم تسجيل عدد العمالة الفعلي المتواجد يومياً).",
   ],
   notesEn: [
     "1. Building 1 & Building 3: 5 working days/week from Saturday to Wednesday (Building facade + Main Gate & Entrances).",
     "2. Building 2: Spider rope-access works for 9 working days, with a dedicated ground cleaner separate from the Spider team.",
-    "3. Thursday (5 workers + supervisor): No high facade work; full focus on flat surfaces, entrances, escalators, handrails & ground level works.",
+    "3. Thursday: No high facade work; full focus on flat surfaces, entrances, escalators, handrails & ground level works (actual workforce count is recorded daily).",
   ],
 }
 
@@ -202,14 +202,14 @@ export function getSpiderDayPlan(dateStr) {
     return {
       isOffDay: true,
       dayName,
-      manpowerAr: "إجازة أسبوعية",
-      manpowerEn: "Weekly Rest (Off)",
+      scopeAr: "إجازة أسبوعية",
+      scopeEn: "Weekly Rest (Off)",
       tasks: [
         {
           id: "spider_fri_off",
           buildingAr: "جميع المباني (1، 2، 3)",
           buildingEn: "All Buildings (1, 2, 3)",
-          manpowerAr: "إجازة",
+          scopeAr: "إجازة أسبوعية",
           taskAr: "إجازة أسبوعية لفريق السبايدر والواجهات",
           taskEn: "Weekly rest day for Spider & Facade crew",
           defaultStatus: "na",
@@ -222,22 +222,22 @@ export function getSpiderDayPlan(dateStr) {
     return {
       isOffDay: false,
       dayName,
-      manpowerAr: "5 عمال + مشرف",
-      manpowerEn: "5 Workers + 1 Supervisor",
+      scopeAr: "أعمال المسطحات والمداخل والأرضي (الخميس)",
+      scopeEn: "Thursday Flat Surfaces, Entrances & Ground Works",
       tasks: [
         {
           id: "spider_thu_b2",
           buildingAr: "مبنى رقم 2 (خطة الواجهة)",
           buildingEn: "Building 2 (Facade Plan)",
-          manpowerAr: "5 عمال + مشرف",
-          taskAr: "استكمال أعمال الواجهة (حسب خطة التنفيذ)",
-          taskEn: "Complete facade works (per execution plan)",
+          scopeAr: "خطة يوم الخميس",
+          taskAr: "استكمال أعمال الواجهة بمبنى 2 (حسب خطة التنفيذ)",
+          taskEn: "Complete facade works on Building 2 (per execution plan)",
         },
         {
           id: "spider_thu_ground",
-          buildingAr: "المسطحات والمداخل وسلالم الكهرباء (B1/B2/B3)",
+          buildingAr: "المسطحات والمداخل وسلالم الكهرباء والهندريلات (B1/B2/B3)",
           buildingEn: "Flat Surfaces, Entrances, Escalators & Handrails",
-          manpowerAr: "5 عمال + مشرف",
+          scopeAr: "خطة يوم الخميس (بدون واجهات علوية)",
           taskAr: "لا يتم العمل على واجهات — يتم العمل على المسطحات والمداخل وسلالم الكهرباء والهندريلات بالكامل وما يخص شغل الأرضي",
           taskEn: "No high facades — Full cleaning of canopies/flat surfaces, entrances, escalators, handrails & ground-level works",
         },
@@ -249,14 +249,14 @@ export function getSpiderDayPlan(dateStr) {
   return {
     isOffDay: false,
     dayName,
-    manpowerAr: "4 عمال واجهة + عامل المدخل الرئيسي + مشرف",
-    manpowerEn: "4 Facade Workers + 1 Main Entrance Worker + 1 Supervisor",
+    scopeAr: "أعمال الواجهات والمداخل والسبايدر (السبت - الأربعاء)",
+    scopeEn: "Facade, Main Gate & Spider Works (Sat – Wed)",
     tasks: [
       {
         id: "spider_b1",
         buildingAr: "مبنى رقم 1",
         buildingEn: "Building 1",
-        manpowerAr: "فريق الواجهة + عامل المدخل",
+        scopeAr: "الواجهة + البوابة الرئيسية والمداخل",
         taskAr: "نظافة واجهة المبنى رقم 1 + البوابة الرئيسية والمداخل",
         taskEn: "Building 1 Facade Cleaning + Main Gate & Entrances",
       },
@@ -264,7 +264,7 @@ export function getSpiderDayPlan(dateStr) {
         id: "spider_b2",
         buildingAr: "مبنى رقم 2 (Spider + أرضي)",
         buildingEn: "Building 2 (Spider + Ground)",
-        manpowerAr: "فريق Spider + عامل نظافة أرضية منفصل",
+        scopeAr: "أعمال Spider + نظافة أرضية",
         taskAr: "عامل نظافة أرضية + أعمال Spider لواجهة مبنى 2 (ضمن دورة الـ 9 أيام عمل)",
         taskEn: "Ground-level cleaner + Spider rope-access facade cleaning on Building 2 (9-day cycle)",
       },
@@ -272,17 +272,17 @@ export function getSpiderDayPlan(dateStr) {
         id: "spider_b3",
         buildingAr: "مبنى رقم 3",
         buildingEn: "Building 3",
-        manpowerAr: "فريق الواجهة + عامل المدخل",
+        scopeAr: "الواجهة + البوابة الرئيسية والمداخل",
         taskAr: "نظافة واجهة المبنى رقم 3 + البوابة الرئيسية والمداخل",
         taskEn: "Building 3 Facade Cleaning + Main Gate & Entrances",
       },
       {
         id: "spider_manpower_check",
-        buildingAr: "التزام العمالة والإشراف",
-        buildingEn: "Manpower & Supervision Attendance",
-        manpowerAr: "4 عمال واجهة + عامل مدخل رئيسي + مشرف",
-        taskAr: "التحقق من اكتمال عدد فريق السبايدر (4 عمال واجهة + عامل مدخل رئيسي + مشرف) ومهمات السلامة",
-        taskEn: "Verify full crew attendance (4 facade workers + 1 entrance worker + 1 supervisor) & safety harnesses",
+        buildingAr: "متابعة العمالة والإشراف والسلامة",
+        buildingEn: "Crew Attendance & Safety Check",
+        scopeAr: "حصر العمالة الفعلية ومهمات السلامة",
+        taskAr: "حصر عدد عمال الواجهة والمدخل والمشرف المتواجدين فعلياً وفحص مهمات السلامة والأحزمة",
+        taskEn: "Record actual crew attendance & inspect safety harnesses and equipment",
       },
     ],
   }
@@ -561,8 +561,70 @@ export const HK_MONTHLY_DAYS = [
   { day: 31, main: "مراجعة شاملة للتند والكانوبي والأسطح", joints: "غسيل تكميلي لفواصل المطاعم والمداخل", side: "جرد شامل للإنترلوك والدواسات", garage: "مراجعة نظافة جراج B1 و B2", loading: "تنظيف منطقة التحميل (يومياً)" },
 ]
 
-// 4B. Dynamic Generator for the 3-Shift Weekly Checklists (Morning, Evening, Night)
-// Exactly matching the 222 Morning, 246 Evening, and 119 Night items per week!
+// 4B. Housekeeping Granular Area / Element Filters (فلتر بنود وأماكن الهاوس كيبنج)
+export const HK_ITEM_FILTERS = [
+  { id: "all",                icon: "🧹", labelAr: "الكل (جميع البنود)",                 labelEn: "All HK Items" },
+  { id: "reception",          icon: "🏢", labelAr: "نظافة الرسبشن والمداخل",            labelEn: "Reception & Entrances" },
+  { id: "stairs",             icon: "🪜", labelAr: "السلالم (طوارئ • ريتشارد • مظلوم • LMD)", labelEn: "Stairs & Escalators" },
+  { id: "emergency_doors",    icon: "🚪", labelAr: "أبواب الطوارئ وأبواب الخدمات",       labelEn: "Emergency & Service Doors" },
+  { id: "fire_safety",        icon: "🧯", labelAr: "كبائن ومواسير الحريق والطفايات",     labelEn: "Fire Cabinets, Pipes & Extinguishers" },
+  { id: "elevators",          icon: "🛗", labelAr: "المصاعد ومصاعد الخدمة",             labelEn: "Elevators & Service Lifts" },
+  { id: "floors_corridors",   icon: "🚶‍♂️", labelAr: "الأدوار والممرات والحوائط والأسقف",  labelEn: "Floors, Corridors, Walls & Ceilings" },
+  { id: "service_corridors",  icon: "🛠️", labelAr: "طرق الخدمات (Service Corridors)",   labelEn: "Service Corridors" },
+  { id: "restrooms",          icon: "🚽", labelAr: "الحمامات والمصليات",                labelEn: "Restrooms & Prayer Rooms" },
+  { id: "glass_mirrors",      icon: "🪟", labelAr: "الزجاج والمرايات وفريمات الوحدات",   labelEn: "Glass, Mirrors & Unit Frames" },
+  { id: "plaza_wings",        icon: "⛲", labelAr: "البلازا والأضلاع والوحدات الفارغة",  labelEn: "Plaza, Wings & Vacant Units" },
+  { id: "canopies_tents",     icon: "⛺", labelAr: "التند والكانوبي والأسطح",           labelEn: "Awnings, Canopies & Roofs" },
+  { id: "restaurant_joints",  icon: "🍽️", labelAr: "فواصل المطاعم",                     labelEn: "Restaurant Floor Joints" },
+  { id: "interlock_sidewalks",icon: "🧱", labelAr: "الإنترلوك والأرصفة والرامب والدواسات", labelEn: "Interlock, Ramps, Sidewalks & Mats" },
+  { id: "garage_basement",    icon: "🚗", labelAr: "الجراج والبيزمنت (B1 / B2)",        labelEn: "Garage & Basement (B1 / B2)" },
+  { id: "loading_back",       icon: "🚛", labelAr: "منطقة التحميل واللوكرز والقمامة",    labelEn: "Loading Dock, Lockers & Rubbish Room" },
+]
+
+/**
+ * Checks whether a Housekeeping task matches a selected HK_ITEM_FILTERS id
+ */
+export function matchesHkItemFilter(taskItem, filterId) {
+  if (!filterId || filterId === "all") return true
+  if (Array.isArray(taskItem.hkTags) && taskItem.hkTags.includes(filterId)) return true
+  const text = `${taskItem.categoryAr || ""} ${taskItem.requiredTaskAr || ""}`
+  switch (filterId) {
+    case "reception":
+      return /رسبشن|ريسبشن|الأثاث|الكنب|البوابة الرئيسية/i.test(text)
+    case "stairs":
+      return /سلالم|سلم|ريتشارد|مظلوم|LMD|هندريلات/i.test(text)
+    case "emergency_doors":
+      return /أبواب الطوارئ|الأبواب|باب/i.test(text)
+    case "fire_safety":
+      return /كبائن الحريق|كابينة الحريق|مواسير الحريق|الطفايات/i.test(text)
+    case "elevators":
+      return /المصاعد|مصاعد|مصعد/i.test(text)
+    case "floors_corridors":
+      return /المباني|تأسيس الدور|نظافة الدور|الأدوار|الحوائط|الأسقف|عالي السقف|الكاربت|فيش الكهرباء/i.test(text)
+    case "service_corridors":
+      return /طرق الخدمات|طرقة خدمات/i.test(text)
+    case "restrooms":
+      return /حمامات|الحمامات|المصلى|الأحواض|القواعد|الكبائن/i.test(text)
+    case "glass_mirrors":
+      return /الزجاج|المرايات|فريمات|الفريم/i.test(text)
+    case "plaza_wings":
+      return /البلازا|الأضلاع|ضلع|الوحدات الفارغة|التراسات|أعمدة الإنارة|اللايت بوكس|أحواض الزرع/i.test(text)
+    case "canopies_tents":
+      return /تندة|التند|كانوبي|الكانوبي|الأسطح/i.test(text)
+    case "restaurant_joints":
+      return /فواصل المطاعم/i.test(text)
+    case "interlock_sidewalks":
+      return /الإنترلوك|انترلوك|الدواسات|الأقماع|الأرصفة|الرامب/i.test(text)
+    case "garage_basement":
+      return /جراج|الجراج|بيزمنت|الإيبوكسي|الحواجز الصفراء|اللوفر|المواسير العلوية/i.test(text)
+    case "loading_back":
+      return /منطقة التحميل|اللوكر|Lockers|الكافيتريا|القمامة|الشيلر|Chiller/i.test(text)
+    default:
+      return true
+  }
+}
+
+// 4C. Dynamic Generator for the 3-Shift Weekly Checklists (Morning, Evening, Night)
 export function getHousekeepingShiftChecklistForDay(dayName) {
   // Morning Shift (الوردية الصباحية)
   const morningStairsZone =
@@ -585,71 +647,74 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
 
   const morning = [
     // الرسبشن (6 بنود)
-    { id: "m_rec_1", shift: "morning", area: "الرسبشن", zone: "—", task: "متابعة نظافة الرسبشن — تنظيف الأتربة من الأسطح" },
-    { id: "m_rec_2", shift: "morning", area: "الرسبشن", zone: "—", task: "متابعة نظافة الرسبشن — تنظيف المرايات" },
-    { id: "m_rec_3", shift: "morning", area: "الرسبشن", zone: "—", task: "متابعة نظافة الرسبشن — تنظيف الأثاث" },
-    { id: "m_rec_4", shift: "morning", area: "الرسبشن", zone: "—", task: "متابعة نظافة الرسبشن — تنظيف الطفايات" },
-    { id: "m_rec_5", shift: "morning", area: "الرسبشن", zone: "—", task: "متابعة نظافة الرسبشن — تنظيف الأرضية" },
-    { id: "m_rec_6", shift: "morning", area: "الرسبشن", zone: "—", task: "متابعة نظافة الرسبشن — تنظيف المصاعد" },
-    // سلالم الطوارئ (5 بنود)
+    { id: "m_rec_1", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception"], task: "متابعة نظافة الرسبشن — تنظيف الأتربة من الأسطح" },
+    { id: "m_rec_2", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "glass_mirrors"], task: "متابعة نظافة الرسبشن — تنظيف المرايات والزجاج" },
+    { id: "m_rec_3", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception"], task: "متابعة نظافة الرسبشن — تنظيف الأثاث والكنب" },
+    { id: "m_rec_4", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "fire_safety"], task: "متابعة نظافة الرسبشن — تنظيف الطفايات" },
+    { id: "m_rec_5", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "متابعة نظافة الرسبشن — تنظيف الأرضية" },
+    { id: "m_rec_6", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "elevators"], task: "متابعة نظافة الرسبشن — تنظيف المصاعد" },
+    // سلالم الطوارئ وأبواب الطوارئ (5 بنود)
     ...(dayName === "الجمعة"
-      ? [{ id: "m_st_fri", shift: "morning", area: "سلالم الطوارئ", zone: "A", task: "التشييك على سلالم المباني" }]
+      ? [
+          { id: "m_st_fri", shift: "morning", area: "سلالم الطوارئ", zone: "A", tags: ["stairs"], task: "التشييك على سلالم المباني" },
+          { id: "m_st_fri_doors", shift: "morning", area: "أبواب الطوارئ", zone: "A", tags: ["emergency_doors", "stairs"], task: "التشييك على نظافة أبواب الطوارئ" },
+        ]
       : [
-          { id: "m_st_1", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, task: morningStairsZone.taskPrefix },
-          { id: "m_st_2", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, task: "تنظيف كبائن الحريق بسلالم الطوارئ" },
-          { id: "m_st_3", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, task: "تنظيف الحوائط بسلالم الطوارئ" },
-          { id: "m_st_4", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, task: "تنظيف مواسير الحريق" },
-          { id: "m_st_5", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, task: "تنظيف أبواب الطوارئ من الداخل" },
+          { id: "m_st_1", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, tags: ["stairs"], task: morningStairsZone.taskPrefix },
+          { id: "m_st_2", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, tags: ["stairs", "fire_safety"], task: "تنظيف كبائن الحريق بسلالم الطوارئ" },
+          { id: "m_st_3", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, tags: ["stairs", "floors_corridors"], task: "تنظيف الحوائط بسلالم الطوارئ" },
+          { id: "m_st_4", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, tags: ["stairs", "fire_safety"], task: "تنظيف مواسير الحريق بسلالم الطوارئ" },
+          { id: "m_st_5", shift: "morning", area: "أبواب الطوارئ", zone: morningStairsZone.zone, tags: ["emergency_doors", "stairs"], task: "تنظيف أبواب الطوارئ من الداخل" },
         ]),
     // المباني وريتشارد
     ...(dayName === "السبت"
-      ? [{ id: "m_bld_sat", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 1 / 2 / 3", task: "التشييك على كل الأدوار" }]
+      ? [{ id: "m_bld_sat", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 1 / 2 / 3", tags: ["floors_corridors"], task: "التشييك على كل الأدوار والممرات" }]
       : dayName === "الجمعة"
       ? [
-          { id: "m_bld_fri_1", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد + المصلى الرجالي", task: "تأسيس الدور — عالي السقف + غسيل الكاربت بعد الغلق" },
-          { id: "m_bld_fri_2", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", task: "تأسيس الدور — إزالة البقع من الحوائط" },
-          { id: "m_bld_fri_3", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", task: "تأسيس الدور — تنظيف مجر وأبواب المصاعد" },
-          { id: "m_bld_fri_4", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", task: "تأسيس الدور — تنظيف فيش الكهرباء" },
-          { id: "m_bld_fri_5", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", task: "تأسيس الدور — غسيل الزجاج والفريم وفريمات الوحدات" },
-          { id: "m_bld_fri_6", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", task: "تأسيس الدور — غسيل الأرضية" },
+          { id: "m_bld_fri_1", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد + المصلى الرجالي", tags: ["floors_corridors", "restrooms"], task: "تأسيس الدور — عالي السقف + غسيل الكاربت بعد الغلق" },
+          { id: "m_bld_fri_2", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["floors_corridors"], task: "تأسيس الدور — إزالة البقع من الحوائط" },
+          { id: "m_bld_fri_3", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["elevators", "floors_corridors"], task: "تأسيس الدور — تنظيف مجر وأبواب المصاعد" },
+          { id: "m_bld_fri_4", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["floors_corridors"], task: "تأسيس الدور — تنظيف فيش الكهرباء" },
+          { id: "m_bld_fri_5", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["glass_mirrors", "floors_corridors"], task: "تأسيس الدور — غسيل الزجاج والفريم وفريمات الوحدات" },
+          { id: "m_bld_fri_6", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["floors_corridors"], task: "تأسيس الدور — غسيل الأرضية" },
         ]
       : [
-          { id: "m_bld_1", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", task: "متابعة نظافة الدور — تنظيف الحمامات" },
-          { id: "m_bld_2", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", task: "متابعة نظافة الدور — تنظيف الأتربة من الأسطح" },
-          { id: "m_bld_3", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", task: "متابعة نظافة الدور — تنظيف الأرضية" },
-          { id: "m_bld_4", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", task: "متابعة نظافة الدور — متابعة نظافة المصاعد" },
+          { id: "m_bld_1", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", tags: ["restrooms", "floors_corridors"], task: "متابعة نظافة الدور — تنظيف الحمامات" },
+          { id: "m_bld_2", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", tags: ["floors_corridors"], task: "متابعة نظافة الدور — تنظيف الأتربة من الأسطح" },
+          { id: "m_bld_3", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", tags: ["floors_corridors"], task: "متابعة نظافة الدور — تنظيف الأرضية" },
+          { id: "m_bld_4", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", tags: ["elevators", "floors_corridors"], task: "متابعة نظافة الدور — متابعة نظافة المصاعد" },
         ]),
     // طرق الخدمات (6 بنود)
     ...(dayName === "الجمعة"
-      ? [{ id: "m_srv_fri", shift: "morning", area: "طرق الخدمات", zone: "مبنى 1 و 3", task: "التشييك على جميع طرق الخدمات" }]
+      ? [{ id: "m_srv_fri", shift: "morning", area: "طرق الخدمات", zone: "مبنى 1 و 3", tags: ["service_corridors"], task: "التشييك على جميع طرق الخدمات" }]
       : [
-          { id: "m_srv_1", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, task: "طرق الخدمات — تنظيف أسقف" },
-          { id: "m_srv_2", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, task: "طرق الخدمات — تنظيف حوائط" },
-          { id: "m_srv_3", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, task: "طرق الخدمات — تنظيف كابينة الحريق" },
-          { id: "m_srv_4", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, task: "طرق الخدمات — تنظيف الأبواب" },
-          { id: "m_srv_5", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, task: "طرق الخدمات — تنظيف الأرضية" },
-          { id: "m_srv_6", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, task: "طرق الخدمات — تنظيف مصاعد الخدمة" },
+          { id: "m_srv_1", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "floors_corridors"], task: "طرق الخدمات — تنظيف أسقف" },
+          { id: "m_srv_2", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "floors_corridors"], task: "طرق الخدمات — تنظيف حوائط" },
+          { id: "m_srv_3", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "fire_safety"], task: "طرق الخدمات — تنظيف كابينة الحريق" },
+          { id: "m_srv_4", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "emergency_doors"], task: "طرق الخدمات — تنظيف الأبواب وأبواب الخدمة" },
+          { id: "m_srv_5", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "floors_corridors"], task: "طرق الخدمات — تنظيف الأرضية" },
+          { id: "m_srv_6", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "elevators"], task: "طرق الخدمات — تنظيف مصاعد الخدمة" },
         ]),
     // حمامات
     ...(dayName === "الجمعة"
       ? [
-          { id: "m_wc_fri_1", shift: "morning", area: "حمامات", zone: "حمامات المصلى", task: "تأسيس الحمامات — تزعيف الهوايات وتنظيف الحوائط بالبلة" },
-          { id: "m_wc_fri_2", shift: "morning", area: "حمامات", zone: "حمامات المصلى", task: "تأسيس الحمامات — تنظيف الكبائن والأبواب والقواعد من الداخل والخارج" },
-          { id: "m_wc_fri_3", shift: "morning", area: "حمامات", zone: "حمامات المصلى", task: "تأسيس الحمامات — تنظيف الأحواض والمرايات وأسفل الأحواض وغسيل الأرضية" },
+          { id: "m_wc_fri_1", shift: "morning", area: "الحمامات", zone: "حمامات المصلى", tags: ["restrooms"], task: "تأسيس الحمامات — تزعيف الهوايات وتنظيف الحوائط بالبلة" },
+          { id: "m_wc_fri_2", shift: "morning", area: "الحمامات", zone: "حمامات المصلى", tags: ["restrooms"], task: "تأسيس الحمامات — تنظيف الكبائن والأبواب والقواعد من الداخل والخارج" },
+          { id: "m_wc_fri_3", shift: "morning", area: "الحمامات", zone: "حمامات المصلى", tags: ["restrooms", "glass_mirrors"], task: "تأسيس الحمامات — تنظيف الأحواض والمرايات وأسفل الأحواض وغسيل الأرضية" },
         ]
-      : [{ id: "m_wc_1", shift: "morning", area: "حمامات", zone: "جميع المباني", task: "متابعة نظافة الحمامات الدورية" }]),
+      : [{ id: "m_wc_1", shift: "morning", area: "الحمامات", zone: "جميع المباني", tags: ["restrooms"], task: "متابعة نظافة الحمامات الدورية" }]),
     // البلازا (5 بنود)
-    { id: "m_plz_1", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", task: "متابعة نظافة البلازا — تنظيف الداست (Dust)" },
-    { id: "m_plz_2", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", task: "متابعة نظافة البلازا — تنظيف البوابة الرئيسية" },
-    { id: "m_plz_3", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", task: "متابعة نظافة البلازا — تنظيف الوحدات الفارغة" },
-    { id: "m_plz_4", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", task: "متابعة نظافة البلازا — تنظيف الحمامات" },
-    { id: "m_plz_5", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", task: "متابعة نظافة البلازا — تنظيف الأضلاع" },
+    { id: "m_plz_1", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الداست (Dust)" },
+    { id: "m_plz_2", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings", "reception"], task: "متابعة نظافة البلازا — تنظيف البوابة الرئيسية" },
+    { id: "m_plz_3", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الوحدات الفارغة" },
+    { id: "m_plz_4", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings", "restrooms"], task: "متابعة نظافة البلازا — تنظيف الحمامات" },
+    { id: "m_plz_5", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الأضلاع" },
     // منطقة التحميل (5 بنود)
-    { id: "m_ld_1", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", task: "تنظيف منطقة التحميل الخارجية" },
-    { id: "m_ld_2", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", task: "تنظيف اللوكرز (Lockers)" },
-    { id: "m_ld_3", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", task: "تنظيف الكافيتريا" },
-    { id: "m_ld_4", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", task: "تنظيف غرفة تجميع القمامة" },
-    { id: "m_ld_5", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", task: "تنظيف منطقة الشيلر (Chiller)" },
+    { id: "m_ld_1", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف منطقة التحميل الخارجية" },
+    { id: "m_ld_2", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف اللوكرز (Lockers)" },
+    { id: "m_ld_3", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف الكافيتريا" },
+    { id: "m_ld_4", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة" },
+    { id: "m_ld_5", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف منطقة الشيلر (Chiller)" },
   ]
 
   // Evening Shift (الوردية المسائية)
@@ -684,26 +749,29 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
       : "تأسيس طرقة خدمات مصاعد ني (سقف + حوائط + مصعد + باب + أرضية)"
 
   const evening = [
-    // الرسبشن (6 بنود)
-    { id: "e_rec_1", shift: "evening", area: "الرسبشن", zone: "—", task: "تنظيف جزء من العالي بالرسبشن" },
-    { id: "e_rec_2", shift: "evening", area: "الرسبشن", zone: "—", task: "إزالة البقع من الحوائط" },
-    { id: "e_rec_3", shift: "evening", area: "الرسبشن", zone: "—", task: "تنظيف فيش الكهرباء" },
-    { id: "e_rec_4", shift: "evening", area: "الرسبشن", zone: "—", task: "تنظيف المرايات والطفايات" },
-    { id: "e_rec_5", shift: "evening", area: "الرسبشن", zone: "—", task: "تأسيس المصاعد من الداخل والخارج" },
-    // سلالم الطوارئ (B)
-    { id: "e_st_1", shift: "evening", area: "سلالم الطوارئ", zone: "اتجاه B", task: "سحب سلالم الطوارئ (B) وتنظيف كبائن ومواسير الحريق والحوائط والأبواب" },
+    // الرسبشن (5 بنود)
+    { id: "e_rec_1", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception"], task: "تنظيف جزء من العالي بالرسبشن" },
+    { id: "e_rec_2", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "إزالة البقع من الحوائط بالرسبشن" },
+    { id: "e_rec_3", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "تنظيف فيش الكهرباء بالرسبشن" },
+    { id: "e_rec_4", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "glass_mirrors", "fire_safety"], task: "تنظيف المرايات والطفايات بالرسبشن" },
+    { id: "e_rec_5", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "elevators"], task: "تأسيس المصاعد من الداخل والخارج" },
+    // سلالم الطوارئ وأبواب الطوارئ (B)
+    { id: "e_st_1", shift: "evening", area: "سلالم الطوارئ", zone: "اتجاه B", tags: ["stairs"], task: "سحب سلالم الطوارئ (B) وتنظيف الحوائط والدرج" },
+    { id: "e_st_2", shift: "evening", area: "سلالم الطوارئ", zone: "اتجاه B", tags: ["stairs", "fire_safety"], task: "تنظيف كبائن ومواسير الحريق بسلالم الطوارئ (B)" },
+    { id: "e_st_3", shift: "evening", area: "أبواب الطوارئ", zone: "اتجاه B", tags: ["emergency_doors", "stairs"], task: "تنظيف أبواب الطوارئ من الداخل والخارج (B)" },
     // المباني وريتشارد (تأسيس الأدوار)
-    { id: "e_bld_1", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, task: "تأسيس الدور — عالي السقف وإزالة البقع من الحوائط" },
-    { id: "e_bld_2", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, task: "تأسيس الدور — تنظيف مجر وأبواب المصاعد وفيش الكهرباء" },
-    { id: "e_bld_3", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, task: "تأسيس الدور — غسيل الزجاج والفريم وفريمات الوحدات وغسيل الأرضية" },
+    { id: "e_bld_1", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, tags: ["floors_corridors"], task: "تأسيس الدور — عالي السقف وإزالة البقع من الحوائط" },
+    { id: "e_bld_2", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, tags: ["elevators", "floors_corridors"], task: "تأسيس الدور — تنظيف مجر وأبواب المصاعد وفيش الكهرباء" },
+    { id: "e_bld_3", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, tags: ["glass_mirrors", "floors_corridors"], task: "تأسيس الدور — غسيل الزجاج والفريم وفريمات الوحدات وغسيل الأرضية" },
     // طرق الخدمات (B)
-    { id: "e_srv_1", shift: "evening", area: "طرق الخدمات", zone: "اتجاه B", task: "طرق الخدمات (B) — تنظيف أسقف وحوائط وكابينة الحريق والأبواب والأرضية ومصاعد الخدمة" },
+    { id: "e_srv_1", shift: "evening", area: "طرق الخدمات", zone: "اتجاه B", tags: ["service_corridors", "floors_corridors", "fire_safety"], task: "طرق الخدمات (B) — تنظيف أسقف وحوائط وكابينة الحريق والأرضية" },
+    { id: "e_srv_2", shift: "evening", area: "طرق الخدمات", zone: "اتجاه B", tags: ["service_corridors", "emergency_doors", "elevators"], task: "طرق الخدمات (B) — تنظيف الأبواب ومصاعد الخدمة" },
     // تأسيس الحمامات
-    { id: "e_wc_1", shift: "evening", area: "حمامات", zone: eveningFloorTarget, task: "تأسيس الحمامات — تزعيف الهوايات وتنظيف الحوائط بالبلة والكبائن والقواعد والأحواض وغسيل الأرضية" },
+    { id: "e_wc_1", shift: "evening", area: "الحمامات", zone: eveningFloorTarget, tags: ["restrooms", "glass_mirrors"], task: "تأسيس الحمامات — تزعيف الهوايات وتنظيف الحوائط بالبلة والكبائن والقواعد والأحواض وغسيل الأرضية" },
     // البلازا
-    { id: "e_plz_1", shift: "evening", area: "البلازا", zone: "البلازا", task: "متابعة نظافة البلازا — تنظيف الداست والبوابة الرئيسية والوحدات الفارغة والحمامات والأضلاع" },
+    { id: "e_plz_1", shift: "evening", area: "البلازا", zone: "البلازا", tags: ["plaza_wings", "restrooms"], task: "متابعة نظافة البلازا — تنظيف الداست والبوابة الرئيسية والوحدات الفارغة والحمامات والأضلاع" },
     // منطقة التحميل
-    { id: "e_ld_1", shift: "evening", area: "منطقة التحميل", zone: "Loading Area", task: eveningLoadingTask },
+    { id: "e_ld_1", shift: "evening", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back", "interlock_sidewalks", "garage_basement"], task: eveningLoadingTask },
   ]
 
   // Night Shift (الوردية الليلية)
@@ -734,20 +802,32 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
       : "غسيل الأرضية + تنظيف اللوكرات والكافيتريا"
 
   const night = [
-    { id: "n_rec_1", shift: "night", area: "الرسبشن", zone: "—", task: "غسيل أرضية الرسبشن بالماكينة" },
+    { id: "n_rec_1", shift: "night", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "غسيل أرضية الرسبشن بالماكينة" },
     ...(dayName === "السبت"
-      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", task: "تنظيف عالي الدور الأول بريتشارد" }]
+      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "stairs"], task: "تنظيف عالي الدور الأول بريتشارد" }]
       : dayName === "الأحد"
-      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", task: "تنظيف عالي الدور الأرضي بريتشارد" }]
+      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "stairs"], task: "تنظيف عالي الدور الأرضي بريتشارد" }]
       : dayName === "الاثنين"
-      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", task: "تنظيف عالي دور بيزمنت 1 بريتشارد" }]
+      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "garage_basement"], task: "تنظيف عالي دور بيزمنت 1 بريتشارد" }]
       : dayName === "الثلاثاء"
-      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", task: "تنظيف عالي دور بيزمنت 2 بريتشارد" }]
+      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "garage_basement"], task: "تنظيف عالي دور بيزمنت 2 بريتشارد" }]
       : []),
-    { id: "n_wc_1", shift: "night", area: "حمامات البلازا", zone: "البلازا", task: "تأسيس حمامات البلازا ليلاً (هوايات + حوائط بالبلة + كبائن + قواعد + أحواض ومرايات + غسيل أرضية)" },
-    { id: "n_plz_1", shift: "night", area: "البلازا", zone: "البلازا", task: "غسيل أرضية البلازا + غسيل التراسات للوحدات الفارغة" },
-    { id: "n_plz_2", shift: "night", area: "البلازا", zone: "البلازا", task: `تنظيف أحواض الزرع والطفايات ونظافة المشايات + ${nightPlazaExtra}` },
-    { id: "n_ld_1", shift: "night", area: "منطقة التحميل", zone: "Loading Area", task: nightLoadingExtra },
+    { id: "n_wc_1", shift: "night", area: "حمامات البلازا", zone: "البلازا", tags: ["restrooms", "plaza_wings", "glass_mirrors"], task: "تأسيس حمامات البلازا ليلاً (هوايات + حوائط بالبلة + كبائن + قواعد + أحواض ومرايات + غسيل أرضية)" },
+    { id: "n_plz_1", shift: "night", area: "البلازا", zone: "البلازا", tags: ["plaza_wings"], task: "غسيل أرضية البلازا + غسيل التراسات للوحدات الفارغة" },
+    {
+      id: "n_plz_2",
+      shift: "night",
+      area: "البلازا والأضلاع",
+      zone: "البلازا",
+      tags: [
+        "plaza_wings",
+        "fire_safety",
+        ...(dayName === "الاثنين" ? ["emergency_doors"] : []),
+        ...(dayName === "الأربعاء" || dayName === "الخميس" || dayName === "الجمعة" ? ["interlock_sidewalks"] : []),
+      ],
+      task: `تنظيف أحواض الزرع والطفايات ونظافة المشايات + ${nightPlazaExtra}`,
+    },
+    { id: "n_ld_1", shift: "night", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back", "interlock_sidewalks", "garage_basement"], task: nightLoadingExtra },
   ]
 
   return { morning, evening, night }
@@ -764,30 +844,35 @@ export function getHousekeepingDayPlan(dateStr) {
       id: "hk_spec_main",
       categoryAr: "أعمال التنظيف الرئيسية (التند والكانوبي والسلالم)",
       categoryEn: "Main Cleaning (Awnings, Canopies & Stairs)",
+      tags: ["canopies_tents", "stairs", "reception"],
       taskAr: monthlyEntry.main,
     },
     {
       id: "hk_spec_joints",
       categoryAr: "غسيل أرضية فواصل المطاعم",
       categoryEn: "Restaurant Floor Joints Washing",
+      tags: ["restaurant_joints", "plaza_wings"],
       taskAr: monthlyEntry.joints,
     },
     {
       id: "hk_spec_side",
       categoryAr: "الأعمال الجانبية والإنترلوك",
       categoryEn: "Side Works & Interlock",
+      tags: ["interlock_sidewalks", "plaza_wings", "reception"],
       taskAr: monthlyEntry.side,
     },
     {
       id: "hk_spec_garage",
       categoryAr: "أعمال الجراج (كات B1 / B2)",
       categoryEn: "Garage CAT Works (B1 / B2)",
+      tags: ["garage_basement"],
       taskAr: monthlyEntry.garage,
     },
     {
       id: "hk_spec_loading",
       categoryAr: "منطقة التحميل والأسطح",
       categoryEn: "Loading Dock & Roofs",
+      tags: ["loading_back", "canopies_tents", "emergency_doors"],
       taskAr:
         [1, 2, 3, 15, 16, 17].includes(dayOfMonth)
           ? `${monthlyEntry.loading} + 🔥 موعد نظافة الأسطح الشهري (إزالة المخلفات وتنظيف الأبواب والأرضية)`

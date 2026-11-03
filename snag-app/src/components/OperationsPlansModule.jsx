@@ -16,6 +16,8 @@ import {
   PEST_CONTROL_INFO,
   getPestControlDayPlan,
   HK_MONTHLY_DAYS,
+  HK_ITEM_FILTERS,
+  matchesHkItemFilter,
   getHousekeepingDayPlan,
 } from "../constants/operationsPlansData.js"
 
@@ -134,9 +136,9 @@ function buildAllTasksForDate(dateStr) {
       sectorId: "spider",
       sectorLabelAr: "السبايدر والواجهات (Spider)",
       categoryAr: t.buildingAr,
-      shiftOrSlotAr: `العمالة: ${t.manpowerAr}`,
+      shiftOrSlotAr: t.scopeAr || spiderPlan.scopeAr || "أعمال الواجهات والمداخل",
       requiredTaskAr: t.taskAr,
-      extraMetaAr: spiderPlan.manpowerAr,
+      extraMetaAr: spiderPlan.scopeAr || "",
       defaultStatus: t.defaultStatus || "pending",
     })
   }
@@ -168,6 +170,7 @@ function buildAllTasksForDate(dateStr) {
       sectorId: "housekeeping",
       sectorLabelAr: "الهاوس كيبنج — الخطة الشهرية التخصصية",
       hkSubGroup: "specialized",
+      hkTags: st.tags || [],
       categoryAr: st.categoryAr,
       shiftOrSlotAr: "خطة الشهر التخصصية",
       requiredTaskAr: st.taskAr,
@@ -191,6 +194,7 @@ function buildAllTasksForDate(dateStr) {
         sectorId: "housekeeping",
         sectorLabelAr: "الهاوس كيبنج — متابعة الورديات",
         hkSubGroup: shiftKey,
+        hkTags: chk.tags || [],
         categoryAr: `${chk.area} (${chk.zone})`,
         shiftOrSlotAr: shiftLabels[shiftKey],
         requiredTaskAr: chk.task,
@@ -215,6 +219,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
   const [selectedDate, setSelectedDate] = useState(getTodayIso)
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0) // 0=Current 7 days around date, 1=Days 1-7, 2=Days 8-14, 3=Days 15-21, 4=Days 22-28, 5=Days 29-31
   const [hkFilterShift, setHkFilterShift] = useState("all") // "all" | "specialized" | "morning" | "evening" | "night"
+  const [hkFilterItem, setHkFilterItem] = useState("all") // "all" | "reception" | "stairs" | "emergency_doors" | ...
   const [statusFilter, setStatusFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [records, setRecords] = useState({})
@@ -246,6 +251,30 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
     return () => unsub()
   }, [])
 
+  async function saveSectorWorkforce(dateStr, sectorId, workforceText) {
+    if (!canModify) return
+    const wfUid = `${dateStr}__workforce__${sectorId}`
+    const updated = {
+      uid: wfUid,
+      date: dateStr,
+      sectorId,
+      isWorkforceSummary: true,
+      workforceCount: workforceText,
+      inspector: userName,
+      updatedAt: new Date().toISOString(),
+    }
+    setRecords((prev) => ({ ...prev, [wfUid]: updated }))
+    try {
+      await setDoc(
+        doc(db, "operations_action_logs", wfUid),
+        { ...updated, serverTimestamp: serverTimestamp() },
+        { merge: true }
+      )
+    } catch (err) {
+      console.error("Failed saving workforce log:", err)
+    }
+  }
+
   async function saveTaskRecord(taskItem, patch) {
     if (!canModify) {
       toast.error(tr("ليس لديك صلاحية التعديل (وضع القراءة فقط)", "Read-only mode: cannot modify records"))
@@ -260,6 +289,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
       categoryAr: taskItem.categoryAr,
       shiftOrSlotAr: taskItem.shiftOrSlotAr,
       status: existing.status || taskItem.defaultStatus || "pending",
+      workforceCount: existing.workforceCount ?? "",
       whatWasDone: existing.whatWasDone ?? "",
       reasonOrBasis: existing.reasonOrBasis ?? "",
       inspector: existing.inspector || userName,
@@ -350,8 +380,9 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
       `المهمة المطلوبة: ${taskItem.requiredTaskAr}`,
       `الموقع/النطاق: ${taskItem.categoryAr}`,
     ]
-    if (rec.whatWasDone) descParts.push(`ما تم فعلياً: ${rec.whatWasDone}`)
-    if (rec.reasonOrBasis) descParts.push(`السبب / بناءً على: ${rec.reasonOrBasis}`)
+    if (rec.workforceCount) descParts.push(`عدد العمالة: ${rec.workforceCount}`)
+    if (rec.whatWasDone) descParts.push(`ملاحظات التنفيذ: ${rec.whatWasDone}`)
+    if (rec.reasonOrBasis) descParts.push(`سبب عدم التنفيذ: ${rec.reasonOrBasis}`)
 
     await onAddSnag(
       {
@@ -402,12 +433,18 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
       const dayTasks = buildAllTasksForDate(dStr)
       for (const t of dayTasks) {
         if (activeSector !== "all" && t.sectorId !== activeSector) continue
-        if (t.sectorId === "housekeeping" && hkFilterShift !== "all" && t.hkSubGroup !== hkFilterShift) continue
+        if (t.sectorId === "housekeeping") {
+          if (hkFilterShift !== "all" && t.hkSubGroup !== hkFilterShift) continue
+          if (hkFilterItem !== "all" && !matchesHkItemFilter(t, hkFilterItem)) continue
+        }
         const rec = records[t.uid]
+        const sectorDailyWf = records[`${dStr}__workforce__${t.sectorId}`]?.workforceCount || ""
         const effectiveStatus = rec?.status || t.defaultStatus || "pending"
         list.push({
           ...t,
           status: effectiveStatus,
+          workforceCount: rec?.workforceCount !== undefined && rec?.workforceCount !== "" ? rec.workforceCount : sectorDailyWf,
+          rawWorkforceCount: rec?.workforceCount ?? "",
           whatWasDone: rec?.whatWasDone || "",
           reasonOrBasis: rec?.reasonOrBasis || "",
           inspector: rec?.inspector || "",
@@ -417,14 +454,14 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
       }
     }
     return list
-  }, [activeDatesList, activeSector, hkFilterShift, records])
+  }, [activeDatesList, activeSector, hkFilterShift, hkFilterItem, records])
 
   const filteredDailyTasks = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     return allPeriodTasks.filter((t) => {
       if (statusFilter !== "all" && t.status !== statusFilter) return false
       if (q) {
-        const hay = `${t.sectorLabelAr} ${t.categoryAr} ${t.shiftOrSlotAr} ${t.requiredTaskAr} ${t.whatWasDone} ${t.reasonOrBasis} ${t.inspector}`.toLowerCase()
+        const hay = `${t.sectorLabelAr} ${t.categoryAr} ${t.shiftOrSlotAr} ${t.requiredTaskAr} ${t.workforceCount} ${t.whatWasDone} ${t.reasonOrBasis} ${t.inspector}`.toLowerCase()
         if (!hay.includes(q)) return false
       }
       return true
@@ -546,7 +583,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         })
       }
 
-      // Sheet 2: Detailed Tasks Log (What was required vs What was done & Why)
+      // Sheet 2: Detailed Tasks Log
       const wsDet = wb.addWorksheet("تفاصيل المهام والمنفذ والملاحظات", {
         views: [{ rightToLeft: true, state: "frozen", ySplit: 3 }],
       })
@@ -559,13 +596,14 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         { width: 24 },
         { width: 44 },
         { width: 18 },
+        { width: 22 },
         { width: 34 },
         { width: 34 },
         { width: 18 },
       ]
 
-      const dTitle = wsDet.addRow([`سجل المتابعة التفصيلي (المطلوب مقابل المنفذ فعلياً) — ${periodTitleAr}`])
-      wsDet.mergeCells("A1:K1")
+      const dTitle = wsDet.addRow([`سجل المتابعة التفصيلي للأعمال الميدانية — ${periodTitleAr}`])
+      wsDet.mergeCells("A1:L1")
       dTitle.height = 32
       dTitle.eachCell((c) => {
         c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } }
@@ -574,9 +612,9 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
       })
 
       const dSub = wsDet.addRow([
-        "يوضح هذا الجدول الأعمال المطلوب تنفيذها حسب الخطة المعتمدة، وما تم تنفيذه فعلياً، وما لم يتم تنفيذه مع بيان السبب وملاحظات المشرف",
+        "يوضح هذا الجدول الأعمال المطلوب تنفيذها حسب الخطة المعتمدة، وحالة التنفيذ، وعدد العمالة الفعلي، وملاحظات المشرف",
       ])
-      wsDet.mergeCells("A2:K2")
+      wsDet.mergeCells("A2:L2")
       dSub.height = 22
       dSub.eachCell((c) => {
         c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } }
@@ -593,8 +631,9 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         "الموعد / الوردية / البيان",
         "الأعمال المطلوبة حسب الخطة",
         "حالة التنفيذ",
-        "ما تم تنفيذه فعلياً (ملاحظات التنفيذ)",
-        "بناءً على إيه / سبب عدم التنفيذ أو التوجيه",
+        "عدد العمالة الفعلي",
+        "البيان المنفذ / ملاحظات التنفيذ",
+        "سبب عدم التنفيذ / الملاحظات",
         "المشرف المسؤول",
       ])
       dHdr.height = 28
@@ -604,7 +643,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         c.alignment = { horizontal: "center", vertical: "middle", wrapText: true }
       })
 
-      wsDet.autoFilter = { from: "A3", to: "K3" }
+      wsDet.autoFilter = { from: "A3", to: "L3" }
 
       filteredDailyTasks.forEach((t, idx) => {
         const stObj = EXEC_STATUSES.find((s) => s.id === t.status) || EXEC_STATUSES[0]
@@ -617,6 +656,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           t.shiftOrSlotAr,
           t.requiredTaskAr,
           stObj.labelAr,
+          t.workforceCount || "-",
           t.whatWasDone || (t.status === "done" ? "تم التنفيذ بالكامل وفق الخطة" : "-"),
           t.reasonOrBasis || "-",
           t.inspector || userName,
@@ -700,6 +740,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           <td>${t.categoryAr}<br/><small style="color:#475569">${t.shiftOrSlotAr}</small></td>
           <td><strong>${t.requiredTaskAr}</strong></td>
           <td style="text-align:center;font-weight:bold;color:${stObj.color}">${stObj.labelAr}</td>
+          <td style="text-align:center">${t.workforceCount || "-"}</td>
           <td>${t.whatWasDone || (t.status === "done" ? "تم التنفيذ وفق الخطة" : "-")}</td>
           <td>${t.reasonOrBasis || "-"}</td>
           <td style="text-align:center">${t.inspector || userName}</td>
@@ -751,8 +792,9 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             <th>الموقع / الوردية</th>
             <th>الأعمال المطلوبة حسب الخطة</th>
             <th>الحالة</th>
-            <th>ما تم تنفيذه فعلياً</th>
-            <th>بناءً على إيه / سبب عدم التنفيذ</th>
+            <th>عدد العمالة</th>
+            <th>البيان المنفذ / ملاحظات التنفيذ</th>
+            <th>سبب عدم التنفيذ / الملاحظات</th>
             <th>المشرف</th>
           </tr>
         </thead>
@@ -803,8 +845,8 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             </h2>
             <p style={s.heroSub}>
               {tr(
-                "اعرف المطلوب تنفيذه النهارده تلقائياً، وسجّل ما تم وما لم يتم وبناءً على إيه، واستخرج تقارير يومية وأسبوعية وشهرية بجميع الصيغ",
-                "Automatically view today's required tasks, record what was executed vs. not executed & why, and generate Daily, Weekly & Monthly reports"
+                "متابعة خطط العمل اليومية والأسبوعية والشهرية تلقائياً، وتسجيل عدد العمالة الفعلي وحالة التنفيذ والملاحظات الميدانية واستخراج التقارير بجميع الصيغ",
+                "Track daily, weekly & monthly action plans, record actual workforce count, execution status & field notes, and export multi-format reports"
               )}
             </p>
           </div>
@@ -990,42 +1032,135 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         })}
       </div>
 
-      {/* ── Housekeeping Shift Sub-Filter (When Housekeeping or All is active) ── */}
+      {/* ── Daily Workforce Attendance Bar (عدد العمالة غير ثابت ويُسجل يومياً) ── */}
+      <div style={{
+        background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.85))",
+        border: "1px solid #334155",
+        borderRadius: 14,
+        padding: "12px 16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#38bdf8" }}>
+            👷 {tr(
+              `تسجيل عدد العمالة الفعلي المتواجد يوم (${selectedDate} — ${getArabicDayName(selectedDate)}):`,
+              `Actual Workforce Count on Site (${selectedDate}):`
+            )}
+          </div>
+          <span style={{ fontSize: 11, color: "#94a3b8" }}>
+            {tr("عدد العمالة غير ثابت ويتم تسجيل العدد الفعلي المتواجد على أرض الواقع يومياً لكل قطاع أو لكل بند", "Workforce count is dynamic and recorded daily per sector or task")}
+          </span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 8 }}>
+          {SECTORS.filter((sc) => sc.id !== "all").map((sc) => {
+            const wfVal = records[`${selectedDate}__workforce__${sc.id}`]?.workforceCount || ""
+            return (
+              <div
+                key={sc.id}
+                style={{
+                  background: "#060d1a",
+                  border: `1px solid ${sc.color}44`,
+                  borderRadius: 10,
+                  padding: "8px 10px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                }}
+              >
+                <label style={{ fontSize: 11.5, fontWeight: 800, color: sc.color }}>
+                  {sc.icon} {lang === "ar" ? sc.labelAr : sc.labelEn}
+                </label>
+                <input
+                  style={s.miniInput}
+                  placeholder={tr("اكتب عدد العمالة والمشرفين الفعلي اليوم...", "Enter actual workers & supervisors...")}
+                  value={wfVal}
+                  onChange={(e) => saveSectorWorkforce(selectedDate, sc.id, e.target.value)}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── Housekeeping Shift & Granular Item/Area Filters (When Housekeeping or All is active) ── */}
       {(activeSector === "housekeeping" || activeSector === "all") && (
         <div style={{
           display: "flex",
-          gap: 8,
-          flexWrap: "wrap",
-          alignItems: "center",
+          flexDirection: "column",
+          gap: 10,
           background: "#0a1628",
-          border: "1px solid #1e293b",
-          borderRadius: 12,
-          padding: "10px 14px",
+          border: "1px solid #a855f755",
+          borderRadius: 14,
+          padding: "12px 16px",
         }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: "#c084fc" }}>
-            🧹 {tr("فلتر أقسام الهاوس كيبنج:", "Housekeeping Sections Filter:")}
-          </span>
-          {[
-            { id: "all",         label: tr("الكل (خطة الشهر + الـ 3 ورديات)", "All (Monthly Plan + 3 Shifts)") },
-            { id: "specialized", label: tr("📅 خطة الشهر التخصصية (التند • الفواصل • الجراج)", "📅 Monthly Specialized Plan") },
-            { id: "morning",     label: tr("🌅 الوردية الصباحية (222 بند/أسبوع)", "🌅 Morning Shift") },
-            { id: "evening",     label: tr("🌇 الوردية المسائية (246 بند/أسبوع)", "🌇 Evening Shift") },
-            { id: "night",       label: tr("🌙 الوردية الليلية (119 بند/أسبوع)", "🌙 Night Shift") },
-          ].map((sh) => (
-            <button
-              key={sh.id}
-              type="button"
-              onClick={() => setHkFilterShift(sh.id)}
-              style={{
-                ...s.filterPill,
-                background: hkFilterShift === sh.id ? "#a855f7" : "#060d1a",
-                color: hkFilterShift === sh.id ? "#fff" : "#cbd5e1",
-                borderColor: hkFilterShift === sh.id ? "#a855f7" : "#334155",
-              }}
-            >
-              {sh.label}
-            </button>
-          ))}
+          {/* Row 1: Shift / Schedule Filter */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#c084fc" }}>
+              🕐 {tr("فلتر ورديات الهاوس كيبنج:", "Housekeeping Shifts Filter:")}
+            </span>
+            {[
+              { id: "all",         label: tr("الكل (خطة الشهر + الـ 3 ورديات)", "All (Monthly Plan + 3 Shifts)") },
+              { id: "specialized", label: tr("📅 خطة الشهر التخصصية (التند • الفواصل • الجراج)", "📅 Monthly Specialized Plan") },
+              { id: "morning",     label: tr("🌅 الوردية الصباحية", "🌅 Morning Shift") },
+              { id: "evening",     label: tr("🌇 الوردية المسائية", "🌇 Evening Shift") },
+              { id: "night",       label: tr("🌙 الوردية الليلية", "🌙 Night Shift") },
+            ].map((sh) => (
+              <button
+                key={sh.id}
+                type="button"
+                onClick={() => setHkFilterShift(sh.id)}
+                style={{
+                  ...s.filterPill,
+                  background: hkFilterShift === sh.id ? "#a855f7" : "#060d1a",
+                  color: hkFilterShift === sh.id ? "#fff" : "#cbd5e1",
+                  borderColor: hkFilterShift === sh.id ? "#a855f7" : "#334155",
+                }}
+              >
+                {sh.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Row 2: Granular Housekeeping Area / Item Filter (نظافة الرسبشن - سلالم - أبواب الطوارئ الخ...) */}
+          <div style={{
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+            alignItems: "center",
+            paddingTop: 8,
+            borderTop: "1px solid #1e293b",
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#38bdf8" }}>
+              🧹 {tr("فلتر بنود وأماكن الهاوس كيبنج:", "Housekeeping Area / Item Filter:")}
+            </span>
+            {HK_ITEM_FILTERS.map((flt) => {
+              const isSelected = hkFilterItem === flt.id
+              return (
+                <button
+                  key={flt.id}
+                  type="button"
+                  onClick={() => {
+                    setHkFilterItem(flt.id)
+                    if (flt.id !== "all" && activeSector === "all") {
+                      setActiveSector("housekeeping")
+                    }
+                  }}
+                  style={{
+                    ...s.filterPill,
+                    background: isSelected ? "linear-gradient(135deg, #0284c7, #7c3aed)" : "#060d1a",
+                    color: isSelected ? "#fff" : "#e2e8f0",
+                    borderColor: isSelected ? "#38bdf8" : "#334155",
+                    fontSize: 11.5,
+                    padding: "6px 11px",
+                  }}
+                >
+                  {flt.icon} {lang === "ar" ? flt.labelAr : flt.labelEn}
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 
@@ -1160,7 +1295,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                         <td style={s.td}>
                           {isFri
                             ? "إجازة أسبوعية"
-                            : `${spider.manpowerAr} — ${spider.tasks.map((t) => t.taskAr).join(" | ")}`}
+                            : spider.tasks.map((t) => t.taskAr).join(" | ")}
                         </td>
                       )}
 
@@ -1223,8 +1358,8 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             </h3>
             <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
               {tr(
-                `إجمالي المهام المعروضة: ${filteredDailyTasks.length} مهمة | حدد حالة كل مهمة (تم / لم يتم / جاري) واكتب ما تم فعلياً وسبب عدم التنفيذ`,
-                `Showing ${filteredDailyTasks.length} scheduled tasks | Select execution status and record actual work & reasons`
+                `إجمالي المهام المعروضة: ${filteredDailyTasks.length} مهمة | حدد حالة كل مهمة وسجّل عدد العمالة وملاحظات التنفيذ`,
+                `Showing ${filteredDailyTasks.length} scheduled tasks | Select execution status and record workforce & notes`
               )}
             </div>
           </div>
@@ -1324,10 +1459,10 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                     </div>
                   </div>
 
-                  {/* Bottom Row: What was done + Based on what / Reason + Photo / Snag Actions */}
+                  {/* Bottom Row: Workforce Count + Execution Notes + Non-execution Reason + Photo / Snag Actions */}
                   <div style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                     gap: 8,
                     marginTop: 10,
                     paddingTop: 10,
@@ -1335,11 +1470,23 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                   }}>
                     <div>
                       <label style={s.miniLabel}>
-                        🛠️ {tr("عملوا إيه فعلياً؟ (ما تم تنفيذه / ملاحظة التنفيذ):", "What was actually executed?")}
+                        👷 {tr("عدد العمالة الفعلي:", "Actual Workforce Count:")}
                       </label>
                       <input
                         style={s.miniInput}
-                        placeholder={tr("اكتب ما تم تنفيذه فعلياً على الأرض...", "Describe actual work performed...")}
+                        placeholder={tr("اكتب عدد العمال والمشرفين...", "e.g. 4 workers + 1 supervisor...")}
+                        value={task.workforceCount || ""}
+                        onChange={(e) => saveTaskRecord(task, { workforceCount: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={s.miniLabel}>
+                        📝 {tr("ملاحظات التنفيذ / البيان المنفذ:", "Execution Notes / Details:")}
+                      </label>
+                      <input
+                        style={s.miniInput}
+                        placeholder={tr("اكتب تفاصيل التنفيذ أو ملاحظات المشرف...", "Enter execution details or supervisor notes...")}
                         value={task.whatWasDone}
                         onChange={(e) => saveTaskRecord(task, { whatWasDone: e.target.value })}
                       />
@@ -1347,14 +1494,14 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
 
                     <div>
                       <label style={s.miniLabel}>
-                        📌 {tr("بناءً على إيه / سبب عدم التنفيذ أو التوجيه:", "Basis / Reason if not executed:")}
+                        ⚠️ {tr("سبب عدم التنفيذ / الملاحظات الإضافية:", "Reason for Non-Execution / Remarks:")}
                       </label>
                       <input
                         style={{
                           ...s.miniInput,
                           borderColor: task.status === "not_done" ? "#ef4444" : "#1e293b",
                         }}
-                        placeholder={tr("مثال: بناءً على توجيه التشغيل / نقص عمالة / عطل معدة...", "e.g. Operations directive / manpower shortage...")}
+                        placeholder={tr("في حالة عدم التنفيذ اكتب السبب أو المعوقات...", "If not executed, specify reason or obstacle...")}
                         value={task.reasonOrBasis}
                         onChange={(e) => saveTaskRecord(task, { reasonOrBasis: e.target.value })}
                       />

@@ -16,7 +16,7 @@ export const APP_MODULES = [
     icon: "📅",
     labelAr: "خطط التشغيل والتقارير (اللاندسكيب • السبايدر • المكافحة • النظافة)",
     labelEn: "Operations Action Plans & Reports (Landscape • Spider • Pest • HK)",
-    descAr: "خطط العمل اليومية والأسبوعية والشهرية وتقارير التنفيذ (عملوا إيه وما عملوش إيه وبناءً على إيه)",
+    descAr: "خطط العمل اليومية والأسبوعية والشهرية وتقارير التنفيذ الميداني",
     descEn: "Daily, weekly & monthly action plans, shift checklists & execution reports",
   },
   {
