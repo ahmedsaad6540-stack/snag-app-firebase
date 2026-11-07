@@ -16,7 +16,6 @@ import {
 } from "../constants/nightReportDefaults.js"
 import {
   getArabicDayName,
-  HK_WEEKLY_FOUNDATION_SCHEDULE,
 } from "../constants/operationsPlansData.js"
 
 function shiftDateIso(dateStr, deltaDays) {
@@ -1453,8 +1452,8 @@ export default function NightShiftReportModule({
               </h3>
               <div style={st.sectionSub}>
                 {tr(
-                  `تاريخ الوردية: ${formatArabicDateDisplay(selectedDate)} (${getArabicDayName(selectedDate)}) • شاملة تأسيس غرفة تجميع القمامة (نظافة - تطهير) والجدول التأسيسي الأسبوعي`,
-                  `Shift Date: ${formatArabicDateDisplay(selectedDate)} • Includes Garbage Room Sanitization & Weekly Foundation Plan`
+                  `تاريخ الوردية: ${formatArabicDateDisplay(selectedDate)} (${getArabicDayName(selectedDate)}) • شاملة تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)`,
+                  `Shift Date: ${formatArabicDateDisplay(selectedDate)} • Includes Garbage Collection Room Deep Cleaning & Sanitization`
                 )}
               </div>
             </div>
@@ -1462,102 +1461,6 @@ export default function NightShiftReportModule({
               {execSummary.hkDone} / {execSummary.hkTotal} ({execSummary.hkPct}%)
             </span>
           </div>
-
-          {/* Weekly Foundational Night Schedule Banner for Selected Day */}
-          {(() => {
-            const dayAr = getArabicDayName(selectedDate)
-            const wkRow =
-              HK_WEEKLY_FOUNDATION_SCHEDULE.find((w) => w.dayName === dayAr) ||
-              HK_WEEKLY_FOUNDATION_SCHEDULE[0]
-            return (
-              <div
-                style={{
-                  background: "linear-gradient(135deg, rgba(88,28,135,0.28), rgba(6,78,59,0.28))",
-                  border: "1px solid #a855f7",
-                  borderRadius: 12,
-                  padding: "10px 14px",
-                  marginBottom: 12,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: 10,
-                }}
-              >
-                <div style={{ fontSize: 12.5, lineHeight: 1.65, minWidth: 0, flex: "1 1 240px" }}>
-                  <div style={{ fontWeight: 900, color: "#e9d5ff" }}>
-                    📌 {tr(`الأعمال التأسيسية الأسبوعية المقررة لوردية ليلة (${dayAr}):`, `Scheduled Weekly Night Foundation for (${dayAr}):`)}
-                  </div>
-                  <div style={{ color: "#f8fafc" }}>
-                    • <strong>{tr("التأسيس الليلي:", "Night Foundation:")}</strong> {wkRow.night}
-                  </div>
-                  <div style={{ color: "#6ee7b7" }}>
-                    • <strong>{tr("الكانوبي والتند الليلي:", "Night Canopy & Awnings:")}</strong> {wkRow.canopyNight} | 🗑️ <strong>غرفة تجميع القمامة:</strong> تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)
-                  </div>
-                </div>
-                {(canAdd || canEdit) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const existing = currentReport.housekeepingWorks || []
-                      const additions = []
-                      if (!existing.some((x) => x.work === wkRow.night)) {
-                        additions.push({
-                          id: `nhk-wk-${Date.now()}-1`,
-                          location: `تأسيس ليلة ${dayAr}`,
-                          work: wkRow.night,
-                          status: "done",
-                          notes: "",
-                        })
-                      }
-                      if (!existing.some((x) => x.work === wkRow.canopyNight)) {
-                        additions.push({
-                          id: `nhk-wk-${Date.now()}-2`,
-                          location: "الكانوبي والتند",
-                          work: wkRow.canopyNight,
-                          status: "done",
-                          notes: "",
-                        })
-                      }
-                      if (
-                        !existing.some((x) =>
-                          /غرفة تجميع القمامة.*تطهير/i.test(`${x.location} ${x.work}`)
-                        )
-                      ) {
-                        additions.push({
-                          id: `nhk-wk-${Date.now()}-3`,
-                          location: "غرفة تجميع القمامة",
-                          work: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)",
-                          status: "done",
-                          notes: "",
-                        })
-                      }
-                      if (additions.length === 0) {
-                        toast.success(tr("بنود التأسيس الليلي لهذا اليوم مضافة بالفعل في الجدول ✅", "Already in table ✅"))
-                        return
-                      }
-                      saveReportPatch(
-                        { housekeepingWorks: [...existing, ...additions] },
-                        tr(`تم إدراج (${additions.length}) بنود تأسيس ليلي وكانوبي في الجدول ✅`, "Added weekly night foundation tasks ✅")
-                      )
-                    }}
-                    style={{
-                      background: "#9333ea",
-                      color: "#fff",
-                      border: "1px solid #c084fc",
-                      borderRadius: 9,
-                      padding: "8px 12px",
-                      fontSize: 12,
-                      fontWeight: 800,
-                      cursor: "pointer",
-                    }}
-                  >
-                    ⚡ {tr(`إدراج تأسيس ليلة (${dayAr}) بالجدول`, `Insert ${dayAr} Night Foundation`)}
-                  </button>
-                )}
-              </div>
-            )
-          })()}
 
           {/* Desktop Table View */}
           <div className="desktop-table-view" style={{ overflowX: "auto" }}>

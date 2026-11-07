@@ -17,8 +17,6 @@ import {
   getPestControlDayPlan,
   HK_MONTHLY_DAYS,
   HK_ITEM_FILTERS,
-  HK_WEEKLY_FOUNDATION_SCHEDULE,
-  HK_SPECIAL_FOUNDATION_ITEMS,
   matchesHkItemFilter,
   getHousekeepingDayPlan,
 } from "../constants/operationsPlansData.js"
@@ -222,7 +220,6 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0) // 0=Current 7 days around date, 1=Days 1-7, 2=Days 8-14, 3=Days 15-21, 4=Days 22-28, 5=Days 29-31
   const [hkFilterShift, setHkFilterShift] = useState("all") // "all" | "specialized" | "morning" | "evening" | "night"
   const [hkFilterItem, setHkFilterItem] = useState("all") // "all" | "reception" | "stairs" | "emergency_doors" | ...
-  const [foundationDayFilter, setFoundationDayFilter] = useState("all") // "all" | "current" | dayName
   const [statusFilter, setStatusFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [records, setRecords] = useState({})
@@ -1230,189 +1227,6 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           </button>
         )}
       </div>
-
-      {/* ════════════════════════════════════════════════════════════════════════ */}
-      {/* VIEW 0: WEEKLY FOUNDATIONAL SCHEDULE (جدول الأعمال التأسيسية الأسبوعية) */}
-      {/* ════════════════════════════════════════════════════════════════════════ */}
-      {(activeSector === "all" || activeSector === "housekeeping") && (
-        <div
-          className="mobile-section-card"
-          style={{
-            ...s.card,
-            border: "1px solid #a855f7",
-            background: "linear-gradient(135deg, rgba(88,28,135,0.22), rgba(15,23,42,0.92))",
-            minWidth: 0,
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 900, color: "#c084fc", letterSpacing: 0.6 }}>
-                WEEKLY DEEP-CLEANING & FOUNDATION MASTER SCHEDULE
-              </div>
-              <h3 style={{ margin: "2px 0 0 0", fontSize: 15.5, fontWeight: 900, color: "#f8fafc", lineHeight: 1.4 }}>
-                🧹 {tr("جدول الأعمال التأسيسية الأسبوعية والكانوبي والنافورة وغرفة القمامة", "Weekly Foundational Schedule, Canopies, Fountain & Garbage Room")}
-              </h3>
-            </div>
-            <span style={{ background: "rgba(168,85,247,0.2)", border: "1px solid #a855f7", color: "#e9d5ff", borderRadius: 999, padding: "4px 12px", fontSize: 11.5, fontWeight: 800, whiteSpace: "nowrap" }}>
-              📌 {tr(`اليوم المحدد: ${getArabicDayName(selectedDate)}`, `Selected Day: ${getArabicDayName(selectedDate)}`)}
-            </span>
-          </div>
-
-          {/* Day Filter Pills (Touch-Scrollable on Mobile) */}
-          <div className="mobile-scroll-pills" style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-            <button
-              type="button"
-              onClick={() => setFoundationDayFilter("all")}
-              style={{
-                ...s.filterPill,
-                background: foundationDayFilter === "all" ? "#a855f7" : "#060d1a",
-                color: foundationDayFilter === "all" ? "#fff" : "#cbd5e1",
-                borderColor: foundationDayFilter === "all" ? "#a855f7" : "#334155",
-              }}
-            >
-              📅 {tr("كل أيام الأسبوع (7)", "All 7 Days")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setFoundationDayFilter("current")}
-              style={{
-                ...s.filterPill,
-                background: foundationDayFilter === "current" ? "#10b981" : "#060d1a",
-                color: foundationDayFilter === "current" ? "#022c22" : "#6ee7b7",
-                borderColor: "#10b981",
-              }}
-            >
-              🔥 {tr(`يوم التاريخ فقط (${getArabicDayName(selectedDate)})`, `Current Day (${getArabicDayName(selectedDate)})`)}
-            </button>
-            {HK_WEEKLY_FOUNDATION_SCHEDULE.map((dRow) => (
-              <button
-                key={dRow.dayName}
-                type="button"
-                onClick={() => setFoundationDayFilter(dRow.dayName)}
-                style={{
-                  ...s.filterPill,
-                  background: foundationDayFilter === dRow.dayName ? "#38bdf8" : "#060d1a",
-                  color: foundationDayFilter === dRow.dayName ? "#0f172a" : "#94a3b8",
-                  borderColor: foundationDayFilter === dRow.dayName ? "#38bdf8" : "#334155",
-                }}
-              >
-                {dRow.dayName}
-              </button>
-            ))}
-          </div>
-
-          {/* Desktop Table View (> 768px) */}
-          <div className="desktop-table-view" style={{ border: "1px solid #334155", borderRadius: 12, marginBottom: 12 }}>
-            <table style={s.table}>
-              <thead>
-                <tr>
-                  <th style={{ ...s.th, width: 95 }}>{tr("اليوم", "Day")}</th>
-                  <th style={{ ...s.th, color: "#fcd34d" }}>🌅 {tr("الوردية الصباحية (تأسيس)", "Morning Shift")}</th>
-                  <th style={{ ...s.th, color: "#fb923c" }}>🌇 {tr("الوردية المسائية (تأسيس)", "Evening Shift")}</th>
-                  <th style={{ ...s.th, color: "#38bdf8" }}>🌙 {tr("الوردية الليلية (تأسيس)", "Night Shift")}</th>
-                  <th style={{ ...s.th, color: "#c084fc" }}>⛺ {tr("الكانوبي والتند (الليلية)", "Canopies & Awnings (Night)")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {HK_WEEKLY_FOUNDATION_SCHEDULE.filter((row) => {
-                  if (foundationDayFilter === "all") return true
-                  if (foundationDayFilter === "current") return row.dayName === getArabicDayName(selectedDate)
-                  return row.dayName === foundationDayFilter
-                }).map((row) => {
-                  const isCurrentDay = row.dayName === getArabicDayName(selectedDate)
-                  return (
-                    <tr
-                      key={row.dayName}
-                      style={{
-                        background: isCurrentDay ? "rgba(168,85,247,0.18)" : "transparent",
-                      }}
-                    >
-                      <td style={{ ...s.td, fontWeight: 900, color: isCurrentDay ? "#e9d5ff" : "#f8fafc" }}>
-                        {isCurrentDay ? `🔥 ${row.dayName}` : row.dayName}
-                      </td>
-                      <td style={{ ...s.td, fontSize: 12.5, lineHeight: 1.6 }}>{row.morning}</td>
-                      <td style={{ ...s.td, fontSize: 12.5, lineHeight: 1.6 }}>{row.evening}</td>
-                      <td style={{ ...s.td, fontSize: 12.5, lineHeight: 1.6 }}>{row.night}</td>
-                      <td style={{ ...s.td, fontSize: 12.5, fontWeight: 800, color: "#d8b4fe" }}>{row.canopyNight}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards View (≤ 768px — Native Phone Layout) */}
-          <div className="mobile-cards-view" style={{ marginBottom: 12 }}>
-            {HK_WEEKLY_FOUNDATION_SCHEDULE.filter((row) => {
-              if (foundationDayFilter === "all") return true
-              if (foundationDayFilter === "current") return row.dayName === getArabicDayName(selectedDate)
-              return row.dayName === foundationDayFilter
-            }).map((row) => {
-              const isCurrentDay = row.dayName === getArabicDayName(selectedDate)
-              return (
-                <div
-                  key={row.dayName}
-                  style={{
-                    background: isCurrentDay ? "rgba(168,85,247,0.18)" : "rgba(6,13,26,0.85)",
-                    border: `1.5px solid ${isCurrentDay ? "#a855f7" : "#334155"}`,
-                    borderRadius: 12,
-                    padding: 12,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
-                    <span style={{ fontWeight: 900, fontSize: 15, color: isCurrentDay ? "#e9d5ff" : "#f8fafc" }}>
-                      {isCurrentDay ? `🔥 يوم ${row.dayName} (اليوم المحدد)` : `📅 يوم ${row.dayName}`}
-                    </span>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#d8b4fe", background: "rgba(168,85,247,0.2)", padding: "2px 8px", borderRadius: 999 }}>
-                      ⛺ {row.canopyNight}
-                    </span>
-                  </div>
-
-                  <div style={{ fontSize: 12.5, lineHeight: 1.6, color: "#f8fafc" }}>
-                    <span style={{ color: "#fcd34d", fontWeight: 800 }}>🌅 الصباحية: </span>
-                    {row.morning}
-                  </div>
-                  <div style={{ fontSize: 12.5, lineHeight: 1.6, color: "#f8fafc" }}>
-                    <span style={{ color: "#fb923c", fontWeight: 800 }}>🌇 المسائية: </span>
-                    {row.evening}
-                  </div>
-                  <div style={{ fontSize: 12.5, lineHeight: 1.6, color: "#f8fafc" }}>
-                    <span style={{ color: "#38bdf8", fontWeight: 800 }}>🌙 الليلية: </span>
-                    {row.night}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Special Foundational Items Bar (غرفة تجميع القمامة تأسيس نظافة وتطهير + النافورة + التند) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
-            {HK_SPECIAL_FOUNDATION_ITEMS.map((sp) => (
-              <div
-                key={sp.id}
-                style={{
-                  background: "rgba(15,23,42,0.8)",
-                  border: "1px solid #334155",
-                  borderRight: "3px solid #10b981",
-                  borderRadius: 10,
-                  padding: "8px 12px",
-                  minWidth: 0,
-                }}
-              >
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#34d399" }}>
-                  📍 {sp.locationAr} • <span style={{ color: "#94a3b8" }}>{sp.shiftAr}</span>
-                </div>
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: "#f8fafc", marginTop: 2 }}>
-                  {sp.taskAr}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* VIEW A: MONTHLY MASTER SCHEDULE TABLES (When periodMode === "monthly") */}
