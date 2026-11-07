@@ -16,6 +16,8 @@ import {
   PEST_CONTROL_INFO,
   getPestControlDayPlan,
   HK_MONTHLY_DAYS,
+  HK_NIGHT_SHIFT_MONTHLY_DAYS,
+  HK_NIGHT_PLAN_NOTE,
   HK_ITEM_FILTERS,
   matchesHkItemFilter,
   getHousekeepingDayPlan,
@@ -1105,11 +1107,10 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               🕐 {tr("فلتر ورديات الهاوس كيبنج:", "Housekeeping Shifts Filter:")}
             </span>
             {[
-              { id: "all",         label: tr("الكل (خطة الشهر + الـ 3 ورديات)", "All (Monthly Plan + 3 Shifts)") },
-              { id: "specialized", label: tr("📅 خطة الشهر التخصصية (التند • الفواصل • الجراج)", "📅 Monthly Specialized Plan") },
-              { id: "morning",     label: tr("🌅 الوردية الصباحية", "🌅 Morning Shift") },
-              { id: "evening",     label: tr("🌇 الوردية المسائية", "🌇 Evening Shift") },
-              { id: "night",       label: tr("🌙 الوردية الليلية", "🌙 Night Shift") },
+              { id: "all",     label: tr("الكل (الـ 3 ورديات)", "All (3 Shifts)") },
+              { id: "night",   label: tr("🌙 الوردية الليلية (جدول نوفمبر 2026 — 30 يوم)", "🌙 Night Shift (Nov 2026 — 30 Days)") },
+              { id: "morning", label: tr("🌅 الوردية الصباحية (بانتظار الجدول)", "🌅 Morning Shift (Pending Table)") },
+              { id: "evening", label: tr("🌇 الوردية المسائية (بانتظار الجدول)", "🌇 Evening Shift (Pending Table)") },
             ].map((sh) => (
               <button
                 key={sh.id}
@@ -1127,7 +1128,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             ))}
           </div>
 
-          {/* Row 2: Granular Housekeeping Area / Item Filter (نظافة الرسبشن - سلالم - أبواب الطوارئ الخ...) */}
+          {/* Row 2: Granular Housekeeping Area / Item Filter */}
           <div
             className="mobile-scroll-pills"
             style={{
@@ -1140,7 +1141,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             }}
           >
             <span style={{ fontSize: 12, fontWeight: 800, color: "#38bdf8" }}>
-              🧹 {tr("فلتر بنود وأماكن الهاوس كيبنج:", "Housekeeping Area / Item Filter:")}
+              🧹 {tr("فلتر أعمدة جدول النظافة:", "Housekeeping Columns Filter:")}
             </span>
             {HK_ITEM_FILTERS.map((flt) => {
               const isSelected = hkFilterItem === flt.id
@@ -1229,6 +1230,290 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* 🌙 NIGHT SHIFT 30-DAY MASTER TABLE (جدول أعمال النظافة والتأسيس | نوفمبر 2026) */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {(activeSector === "housekeeping" || activeSector === "all") &&
+        (hkFilterShift === "all" || hkFilterShift === "night") &&
+        (() => {
+          const dayRowsWithStatus = HK_NIGHT_SHIFT_MONTHLY_DAYS.map((r) => {
+            const daySummaryUid = `${r.date}__hk_night_day__${r.day}`
+            const savedDayRec = records[daySummaryUid] || {}
+            // Also check if all 5 daily night tasks for that date are marked done
+            const mainTaskRec = records[`${r.date}__housekeeping__night_d${r.day}_main`]
+            const effectiveStatus = savedDayRec.status || mainTaskRec?.status || "pending"
+            const effectiveNotes = savedDayRec.whatWasDone ?? mainTaskRec?.whatWasDone ?? ""
+            return {
+              ...r,
+              daySummaryUid,
+              status: effectiveStatus,
+              supervisorNotes: effectiveNotes,
+            }
+          })
+
+          const totalPlanDays = dayRowsWithStatus.length // 30
+          const executedDaysCount = dayRowsWithStatus.filter((r) => r.status === "done").length
+          const remainingDaysCount = totalPlanDays - executedDaysCount
+          const completionPct = Math.round((executedDaysCount / totalPlanDays) * 100)
+
+          const cycleNightDayStatus = (row) => {
+            if (!canModify) return
+            const order = ["pending", "partial", "done", "not_done"]
+            const nextStatus = order[(order.indexOf(row.status) + 1) % order.length]
+            const fakeTask = {
+              uid: row.daySummaryUid,
+              date: row.date,
+              dayName: row.dayName,
+              sectorId: "housekeeping",
+              categoryAr: "الوردية الليلية — خطة نوفمبر 2026",
+              shiftOrSlotAr: "🌙 الوردية الليلية",
+              requiredTaskAr: `${row.main} | ${row.joints}`,
+              status: row.status,
+              whatWasDone: row.supervisorNotes,
+            }
+            saveTaskRecord(fakeTask, { status: nextStatus })
+          }
+
+          const saveNightDayNote = (row, noteVal) => {
+            if (!canModify) return
+            const fakeTask = {
+              uid: row.daySummaryUid,
+              date: row.date,
+              dayName: row.dayName,
+              sectorId: "housekeeping",
+              categoryAr: "الوردية الليلية — خطة نوفمبر 2026",
+              shiftOrSlotAr: "🌙 الوردية الليلية",
+              requiredTaskAr: `${row.main} | ${row.joints}`,
+              status: row.status,
+              whatWasDone: row.supervisorNotes,
+            }
+            saveTaskRecord(fakeTask, { whatWasDone: noteVal })
+          }
+
+          return (
+            <div
+              className="mobile-section-card"
+              style={{
+                ...s.card,
+                border: "1.5px solid #a855f7",
+                background: "linear-gradient(135deg, rgba(88,28,135,0.22), rgba(15,23,42,0.95))",
+                minWidth: 0,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: "#c084fc", letterSpacing: 0.5 }}>
+                    NIGHT SHIFT HOUSEKEEPING MASTER PLAN — NOVEMBER 2026
+                  </div>
+                  <h3 style={{ margin: "2px 0 4px 0", fontSize: 17, fontWeight: 900, color: "#f8fafc", lineHeight: 1.4 }}>
+                    🌙 {tr("جدول أعمال النظافة والتأسيس — الوردية الليلية | نوفمبر 2026", "Night Shift Cleaning & Foundation Schedule | November 2026")}
+                  </h3>
+                  <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>
+                    {tr(
+                      "خطة تنفيذ يومية مختصرة — تنظيف تندات المطاعم + غسيل أرضية الفواصل + الأعمال الجانبية والجراج والتحميل",
+                      "Daily Execution Plan — Restaurant Awnings + Floor Joints + Side Works + Garage CAT + Loading Dock"
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 4 KPI Summary Strip matching the Excel header */}
+              <div
+                className="mobile-kpi-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                  gap: 8,
+                  marginBottom: 12,
+                }}
+              >
+                <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid #334155", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 800 }}>{tr("إجمالي أيام الخطة", "Total Plan Days")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#38bdf8", marginTop: 2 }}>{totalPlanDays}</div>
+                </div>
+                <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#6ee7b7", fontWeight: 800 }}>{tr("تم التنفيذ", "Completed Days")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#10b981", marginTop: 2 }}>{executedDaysCount}</div>
+                </div>
+                <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#fcd34d", fontWeight: 800 }}>{tr("المتبقي", "Remaining Days")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#f59e0b", marginTop: 2 }}>{remainingDaysCount}</div>
+                </div>
+                <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(168,85,247,0.4)", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#d8b4fe", fontWeight: 800 }}>{tr("نسبة الإنجاز", "Completion Rate")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#c084fc", marginTop: 2 }}>{completionPct}%</div>
+                </div>
+              </div>
+
+              {/* Desktop Table View (> 768px) */}
+              <div className="desktop-table-view" style={{ maxHeight: 540, overflowY: "auto", border: "1px solid #334155", borderRadius: 12 }}>
+                <table style={s.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ ...s.th, width: 95 }}>{tr("التاريخ", "Date")}</th>
+                      <th style={{ ...s.th, width: 72 }}>{tr("اليوم", "Day")}</th>
+                      <th style={{ ...s.th, color: "#c084fc" }}>{tr("أعمال التنظيف الرئيسية", "Main Cleaning Works")}</th>
+                      <th style={{ ...s.th, color: "#38bdf8" }}>{tr("غسيل أرضية فواصل المطاعم", "Restaurant Floor Joints")}</th>
+                      <th style={{ ...s.th, color: "#4ade80" }}>{tr("الأعمال الجانبية", "Side Works")}</th>
+                      <th style={{ ...s.th, color: "#facc15" }}>{tr("أعمال الجراج (كات)", "Garage CAT Works")}</th>
+                      <th style={{ ...s.th, width: 85, textAlign: "center" }}>{tr("منطقة التحميل", "Loading")}</th>
+                      <th style={{ ...s.th, width: 115, textAlign: "center" }}>{tr("الحالة", "Status")}</th>
+                      <th style={{ ...s.th, width: 190 }}>{tr("ملاحظات المشرف", "Supervisor Notes")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dayRowsWithStatus.map((row) => {
+                      const isSelectedDay = row.date === selectedDate
+                      const stBadge =
+                        row.status === "done"
+                          ? { label: "✓ تم التنفيذ", bg: "rgba(16,185,129,0.2)", color: "#34d399", border: "#10b981" }
+                          : row.status === "partial"
+                          ? { label: "⏳ جاري التنفيذ", bg: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "#f59e0b" }
+                          : row.status === "not_done"
+                          ? { label: "❌ لم يتم", bg: "rgba(239,68,68,0.2)", color: "#f87171", border: "#ef4444" }
+                          : { label: "لم يبدأ", bg: "rgba(30,41,59,0.8)", color: "#94a3b8", border: "#475569" }
+                      return (
+                        <tr
+                          key={row.day}
+                          style={{
+                            background: isSelectedDay ? "rgba(168,85,247,0.18)" : "transparent",
+                            borderBottom: "1px solid #1e293b",
+                          }}
+                        >
+                          <td
+                            onClick={() => {
+                              setSelectedDate(row.date)
+                              setPeriodMode("daily")
+                            }}
+                            style={{ ...s.td, fontWeight: 800, color: "#f8fafc", whiteSpace: "nowrap", cursor: "pointer" }}
+                            title={tr("اضغط لعرض بنود هذا اليوم", "Click to select day")}
+                          >
+                            {isSelectedDay ? `📌 ${row.date}` : row.date}
+                          </td>
+                          <td style={{ ...s.td, fontWeight: 800, color: "#38bdf8" }}>{row.dayName}</td>
+                          <td style={{ ...s.td, fontWeight: 700, color: "#f8fafc", lineHeight: 1.5 }}>{row.main}</td>
+                          <td style={{ ...s.td, color: "#e2e8f0", lineHeight: 1.5 }}>{row.joints}</td>
+                          <td style={{ ...s.td, color: "#cbd5e1", lineHeight: 1.5 }}>{row.side}</td>
+                          <td style={{ ...s.td, color: "#fde68a", lineHeight: 1.5 }}>{row.garage}</td>
+                          <td style={{ ...s.td, textAlign: "center", fontWeight: 800, color: "#34d399" }}>{row.loading}</td>
+                          <td style={{ ...s.td, textAlign: "center" }}>
+                            <button
+                              type="button"
+                              onClick={() => cycleNightDayStatus(row)}
+                              style={{
+                                background: stBadge.bg,
+                                color: stBadge.color,
+                                border: `1px solid ${stBadge.border}`,
+                                borderRadius: 999,
+                                padding: "4px 10px",
+                                fontSize: 11,
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {stBadge.label}
+                            </button>
+                          </td>
+                          <td style={s.td}>
+                            <input
+                              type="text"
+                              value={row.supervisorNotes}
+                              onChange={(e) => saveNightDayNote(row, e.target.value)}
+                              placeholder={tr("ملاحظات المشرف...", "Supervisor notes...")}
+                              style={s.miniInput}
+                            />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards View (≤ 768px — Native Phone Layout) */}
+              <div className="mobile-cards-view" style={{ maxHeight: 520, overflowY: "auto", paddingRight: 2 }}>
+                {dayRowsWithStatus.map((row) => {
+                  const isSelectedDay = row.date === selectedDate
+                  const stBadge =
+                    row.status === "done"
+                      ? { label: "✓ تم التنفيذ", bg: "rgba(16,185,129,0.2)", color: "#34d399", border: "#10b981" }
+                      : row.status === "partial"
+                      ? { label: "⏳ جاري التنفيذ", bg: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "#f59e0b" }
+                      : row.status === "not_done"
+                      ? { label: "❌ لم يتم", bg: "rgba(239,68,68,0.2)", color: "#f87171", border: "#ef4444" }
+                      : { label: "لم يبدأ", bg: "rgba(30,41,59,0.8)", color: "#94a3b8", border: "#475569" }
+                  return (
+                    <div
+                      key={row.day}
+                      style={{
+                        background: isSelectedDay ? "rgba(168,85,247,0.18)" : "rgba(6,13,26,0.9)",
+                        border: `1.5px solid ${isSelectedDay ? "#a855f7" : "#334155"}`,
+                        borderRadius: 12,
+                        padding: 12,
+                        display: "grid",
+                        gap: 6,
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
+                        <span
+                          onClick={() => {
+                            setSelectedDate(row.date)
+                            setPeriodMode("daily")
+                          }}
+                          style={{ fontWeight: 900, fontSize: 14, color: "#f8fafc", cursor: "pointer" }}
+                        >
+                          🗓️ {row.date} ({row.dayName})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => cycleNightDayStatus(row)}
+                          style={{
+                            background: stBadge.bg,
+                            color: stBadge.color,
+                            border: `1px solid ${stBadge.border}`,
+                            borderRadius: 999,
+                            padding: "4px 10px",
+                            fontSize: 11,
+                            fontWeight: 800,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {stBadge.label}
+                        </button>
+                      </div>
+                      <div style={{ fontSize: 12.5, color: "#f8fafc", lineHeight: 1.5 }}>
+                        <strong style={{ color: "#c084fc" }}>⛺ الرئيسية: </strong>{row.main}
+                      </div>
+                      <div style={{ fontSize: 12.5, color: "#e2e8f0", lineHeight: 1.5 }}>
+                        <strong style={{ color: "#38bdf8" }}>🍽️ الفواصل: </strong>{row.joints}
+                      </div>
+                      <div style={{ fontSize: 12.5, color: "#cbd5e1", lineHeight: 1.5 }}>
+                        <strong style={{ color: "#4ade80" }}>🧱 الجانبية: </strong>{row.side}
+                      </div>
+                      <div style={{ fontSize: 12.5, color: "#fde68a", lineHeight: 1.5 }}>
+                        <strong style={{ color: "#facc15" }}>🚗 الجراج (كات): </strong>{row.garage} | <strong style={{ color: "#34d399" }}>🚛 التحميل: </strong>{row.loading}
+                      </div>
+                      <input
+                        type="text"
+                        value={row.supervisorNotes}
+                        onChange={(e) => saveNightDayNote(row, e.target.value)}
+                        placeholder={tr("ملاحظات المشرف...", "Supervisor notes...")}
+                        style={s.miniInput}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Footer Note from the Sheet */}
+              <div style={{ marginTop: 10, fontSize: 12, color: "#cbd5e1", background: "rgba(15,23,42,0.75)", border: "1px solid #334155", borderRadius: 10, padding: "8px 12px" }}>
+                📌 <strong>{tr("ملاحظة:", "Note:")}</strong> {HK_NIGHT_PLAN_NOTE}
+              </div>
+            </div>
+          )
+        })()}
+
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* VIEW A: MONTHLY MASTER SCHEDULE TABLES (When periodMode === "monthly") */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {periodMode === "monthly" && (
@@ -1266,7 +1551,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                     <th style={{ ...s.th, color: "#facc15" }}>🦟 {tr("البيست كنترول (Pro Vision)", "Pest Control (Pro Vision)")}</th>
                   )}
                   {(activeSector === "all" || activeSector === "housekeeping") && (
-                    <th style={{ ...s.th, color: "#c084fc" }}>🧹 {tr("الهاوس كيبنج (التند • الفواصل • الجراج)", "Housekeeping Monthly Plan")}</th>
+                    <th style={{ ...s.th, color: "#c084fc" }}>🧹 {tr("الهاوس كيبنج — الوردية الليلية (الرئيسية • الفواصل • الجراج)", "Housekeeping — Night Shift")}</th>
                   )}
                   <th style={s.th}>{tr("متابعة اليوم", "Inspect Day")}</th>
                 </tr>
@@ -1316,9 +1601,9 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
 
                       {(activeSector === "all" || activeSector === "housekeeping") && (
                         <td style={s.td}>
-                          <div><strong>التند/الكانوبي:</strong> {hk.specializedTasks[0]?.taskAr}</div>
+                          <div><strong>الرئيسية:</strong> {hk.nightEntry?.main}</div>
                           <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>
-                            <strong>الفواصل:</strong> {hk.specializedTasks[1]?.taskAr} | <strong>الجراج:</strong> {hk.specializedTasks[3]?.taskAr}
+                            <strong>الفواصل:</strong> {hk.nightEntry?.joints} | <strong>الجانبية:</strong> {hk.nightEntry?.side} | <strong>الجراج:</strong> {hk.nightEntry?.garage}
                           </div>
                         </td>
                       )}
@@ -1374,8 +1659,12 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {filteredDailyTasks.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#64748b" }}>
-              {tr("لا توجد مهام مطابقة للفلتر المحدد", "No tasks match the current filter")}
+            <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontWeight: 700 }}>
+              {hkFilterShift === "morning"
+                ? tr("🌅 تم تفريغ بنود الوردية الصباحية القديمة — بانتظار تزويد جدول الوردية الصباحية الشهري", "🌅 Morning shift cleared — awaiting monthly Morning Shift schedule")
+                : hkFilterShift === "evening"
+                ? tr("🌇 تم تفريغ بنود الوردية المسائية القديمة — بانتظار تزويد جدول الوردية المسائية الشهري", "🌇 Evening shift cleared — awaiting monthly Evening Shift schedule")
+                : tr("لا توجد مهام مطابقة للفلتر المحدد", "No tasks match the current filter")}
             </div>
           ) : (
             filteredDailyTasks.map((task, idx) => {

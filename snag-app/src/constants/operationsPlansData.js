@@ -523,62 +523,326 @@ export function getPestControlDayPlan(dateStr) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 4️⃣ HOUSEKEEPING PLAN — الجدول الشهري للتند والفواصل والجراج + الورديات الثلاث (587 بند)
+// 4️⃣ HOUSEKEEPING PLAN — جداول الورديات الشهرية (نبدأ بجدول الوردية الليلية - نوفمبر 2026)
 // ══════════════════════════════════════════════════════════════════════════════
 
-// 4A. Monthly Specialized Cleaning Schedule (30 Days — Tents, Canopies, Restaurant Joints, Garage CAT, Loading Area)
-export const HK_MONTHLY_DAYS = [
-  { day: 1,  main: "تنظيف تندة جوي اند جوس + تنظيف تندة BRGR", joints: "غسيل أرضية فواصل المطاعم – نطاق جوي اند جوس", side: "غسيل الأقماع", garage: "غسيل شارع مبنى 1 ومحيطه – جراج B1", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 2,  main: "تنظيف تندة دولاتو + تنظيف تندة Water Way", joints: "غسيل أرضية فواصل المطاعم – نطاق BRGR", side: "تمشيط الدواسات", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 3,  main: "تنظيف تندة آرت أوف فورم + تندة نورما + تندة كاف", joints: "غسيل أرضية فواصل المطاعم – نطاق دولاتو", side: "جرد الإنترلوك ضلع 1", garage: "غسيل الشارع الأوسط بين مبنى 1 و3 – جراج B1", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 4,  main: "تنظيف تندة 1980 + تنظيف تندة بيبابل (Babel)", joints: "غسيل أرضية فواصل المطاعم – نطاق Water Way", side: "جرد الإنترلوك ضلع 2", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 5,  main: "تنظيف تندة برانش اند كيك + نظافة البنك العربي", joints: "غسيل أرضية فواصل المطاعم – نطاق آرت أوف فورم", side: "جرد الإنترلوك ضلع 3", garage: "غسيل شارع مبنى 3 ومحيطه – جراج B1", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 6,  main: "تنظيف تندة سوشي مي + تنظيف تندة نولا", joints: "غسيل أرضية فواصل المطاعم – نطاق نورما", side: "جرد الإنترلوك بالبوابة الرئيسية", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 7,  main: "تنظيف تندة أم شريف + تنظيف تندة بيبول اند بليس", joints: "غسيل أرضية فواصل المطاعم – نطاق كاف", side: "تنظيف أحواض الزرع واللايت بوكس وكشافات الأضلاع", garage: "غسيل الأقماع والحواجز الصفراء", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 8,  main: "تأسيس وتنظيف سلم ريتشارد", joints: "غسيل أرضية فواصل المطاعم – نطاق 1980", side: "غسيل الأقماع", garage: "غسيل شارع مبنى 1 ومحيطه – جراج B2", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 9,  main: "تأسيس وتنظيف سلم ريتشارد (استكمال)", joints: "غسيل أرضية فواصل المطاعم – نطاق بيبابل", side: "تمشيط الدواسات", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 10, main: "تأسيس وتنظيف سلم مظلوم", joints: "غسيل أرضية فواصل المطاعم – نطاق برانش اند كيك", side: "جرد الإنترلوك ضلع 1", garage: "غسيل الشارع الأوسط بين مبنى 1 و3 – جراج B2", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 11, main: "فحص وتنظيف موضعي للكنب – ريسبشن 1 و3", joints: "غسيل أرضية فواصل المطاعم – نطاق سوشي مي", side: "جرد الإنترلوك ضلع 2", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 12, main: "تنظيف كانوبي مبنى 1", joints: "غسيل أرضية فواصل المطاعم – نطاق نولا", side: "جرد الإنترلوك ضلع 3", garage: "غسيل شارع مبنى 3 ومحيطه – جراج B2", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 13, main: "تنظيف كانوبي مبنى 2", joints: "غسيل أرضية فواصل المطاعم – نطاق أم شريف", side: "جرد الإنترلوك بالبوابة الرئيسية", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 14, main: "تنظيف كانوبي مبنى 3", joints: "غسيل أرضية فواصل المطاعم – نطاق بيبول اند بليس", side: "تنظيف أحواض الزرع واللايت بوكس وكشافات الأضلاع", garage: "غسيل الأقماع والحواجز الصفراء", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 15, main: "تنظيف كانوبي الأضلاع + نظافة الأسطح نصف الشهرية", joints: "غسيل أرضية فواصل المطاعم – نطاق جوي اند جوس", side: "غسيل الأقماع", garage: "غسيل شارع مبنى 1 ومحيطه – جراج B1", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 16, main: "تنظيف تندة جوي اند جوس + تنظيف تندة BRGR", joints: "غسيل أرضية فواصل المطاعم – نطاق BRGR", side: "تمشيط الدواسات", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 17, main: "تنظيف تندة دولاتو + تنظيف تندة Water Way", joints: "غسيل أرضية فواصل المطاعم – نطاق دولاتو", side: "جرد الإنترلوك ضلع 1", garage: "غسيل الشارع الأوسط بين مبنى 1 و3 – جراج B1", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 18, main: "تنظيف تندة آرت أوف فورم + تندة نورما + تندة كاف", joints: "غسيل أرضية فواصل المطاعم – نطاق Water Way", side: "جرد الإنترلوك ضلع 2", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 19, main: "تنظيف تندة 1980 + تنظيف تندة بيبابل (Babel)", joints: "غسيل أرضية فواصل المطاعم – نطاق آرت أوف فورم", side: "جرد الإنترلوك ضلع 3", garage: "غسيل شارع مبنى 3 ومحيطه – جراج B1", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 20, main: "تنظيف تندة برانش اند كيك + نظافة البنك العربي", joints: "غسيل أرضية فواصل المطاعم – نطاق نورما", side: "جرد الإنترلوك بالبوابة الرئيسية", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 21, main: "تنظيف تندة سوشي مي + تنظيف تندة نولا", joints: "غسيل أرضية فواصل المطاعم – نطاق كاف", side: "تنظيف أحواض الزرع واللايت بوكس وكشافات الأضلاع", garage: "غسيل الأقماع والحواجز الصفراء", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 22, main: "تنظيف تندة أم شريف + تنظيف تندة بيبول اند بليس", joints: "غسيل أرضية فواصل المطاعم – نطاق 1980", side: "غسيل الأقماع", garage: "غسيل شارع مبنى 1 ومحيطه – جراج B2", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 23, main: "تأسيس وتنظيف سلم ريتشارد", joints: "غسيل أرضية فواصل المطاعم – نطاق بيبابل", side: "تمشيط الدواسات", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 24, main: "تأسيس وتنظيف سلم ريتشارد (استكمال)", joints: "غسيل أرضية فواصل المطاعم – نطاق برانش اند كيك", side: "جرد الإنترلوك ضلع 1", garage: "غسيل الشارع الأوسط بين مبنى 1 و3 – جراج B2", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 25, main: "تأسيس وتنظيف سلم LMD", joints: "غسيل أرضية فواصل المطاعم – نطاق سوشي مي", side: "جرد الإنترلوك ضلع 2", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 26, main: "فحص وتنظيف موضعي للكنب – ريسبشن 1 و3", joints: "غسيل أرضية فواصل المطاعم – نطاق نولا", side: "جرد الإنترلوك ضلع 3", garage: "غسيل شارع مبنى 3 ومحيطه – جراج B2", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 27, main: "تنظيف كانوبي مبنى 1", joints: "غسيل أرضية فواصل المطاعم – نطاق أم شريف", side: "جرد الإنترلوك بالبوابة الرئيسية", garage: "تنظيف الإيبوكسي", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 28, main: "تنظيف كانوبي مبنى 2", joints: "غسيل أرضية فواصل المطاعم – نطاق بيبول اند بليس", side: "تنظيف أحواض الزرع واللايت بوكس وكشافات الأضلاع", garage: "غسيل الأقماع والحواجز الصفراء", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 29, main: "تنظيف كانوبي مبنى 3", joints: "غسيل تكميلي لفواصل المطاعم – حسب ملاحظات المشرف (1)", side: "غسيل الأقماع + تمشيط الدواسات", garage: "تنظيف المواسير العلوية بجراج 1", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 30, main: "تنظيف كانوبي الأضلاع", joints: "غسيل تكميلي لفواصل المطاعم – حسب ملاحظات المشرف (2)", side: "تنظيف شامل للكنب – ريسبشن 1 و3 (مرة شهرياً)", garage: "تنظيف المواسير العلوية بجراج 1", loading: "تنظيف منطقة التحميل (يومياً)" },
-  { day: 31, main: "مراجعة شاملة للتند والكانوبي والأسطح", joints: "غسيل تكميلي لفواصل المطاعم والمداخل", side: "جرد شامل للإنترلوك والدواسات", garage: "مراجعة نظافة جراج B1 و B2", loading: "تنظيف منطقة التحميل (يومياً)" },
+// 4A. جدول أعمال النظافة والتأسيس — الوردية الليلية | نوفمبر 2026 (30 يوم)
+export const HK_NIGHT_SHIFT_MONTHLY_DAYS = [
+  {
+    day: 1,
+    date: "2026-11-01",
+    dayName: "الأحد",
+    main: "تنظيف تندة بيجوي اند جوس + تنظيف تندة BRGR",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بيجوي اند جوس",
+    side: "غسيل الأقماع",
+    garage: "غسيل شارع مبنى 1 ومحيطه – جراج B1",
+    loading: "يوميًا",
+  },
+  {
+    day: 2,
+    date: "2026-11-02",
+    dayName: "الاثنين",
+    main: "تنظيف تندة دولاتو + تنظيف تندة بنزو",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق BRGR",
+    side: "تمشيط الدواسات",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 3,
+    date: "2026-11-03",
+    dayName: "الثلاثاء",
+    main: "تنظيف تندة ارت اوف فورم + تنظيف تندة نورما + تنظيف تندة كاف",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق دولاتو",
+    side: "جرد الإنترلوك ضلع 1",
+    garage: "غسيل الشارع الأوسط بين مبنى 1 و3 – جراج B1",
+    loading: "يوميًا",
+  },
+  {
+    day: 4,
+    date: "2026-11-04",
+    dayName: "الأربعاء",
+    main: "تنظيف تندة بوكا + تنظيف تندة بيبابل",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بنزو",
+    side: "جرد الإنترلوك ضلع 2",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 5,
+    date: "2026-11-05",
+    dayName: "الخميس",
+    main: "تنظيف تندة برانش اند كيك + نظافة البنك العربي",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق آرت أوف فورم",
+    side: "جرد الإنترلوك ضلع 3",
+    garage: "غسيل شارع مبنى 3 ومحيطه – جراج B1",
+    loading: "يوميًا",
+  },
+  {
+    day: 6,
+    date: "2026-11-06",
+    dayName: "الجمعة",
+    main: "تنظيف تندة سوشي مي + تنظيف تندة نولا",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق نورما",
+    side: "جرد الإنترلوك بالبوابة الرئيسية",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 7,
+    date: "2026-11-07",
+    dayName: "السبت",
+    main: "تنظيف تندة ام شريف + تنظيف تندة بيبول اند بليس",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق كاف",
+    side: "تنظيف أحواض الزرع واللايت بوكس وكشافات الأضلاع",
+    garage: "غسيل الأقماع والحواجز الصفراء",
+    loading: "يوميًا",
+  },
+  {
+    day: 8,
+    date: "2026-11-08",
+    dayName: "الأحد",
+    main: "تأسيس وتنظيف سلم ريتشارد",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بوكا",
+    side: "غسيل الأقماع",
+    garage: "غسيل شارع مبنى 1 ومحيطه – جراج B2",
+    loading: "يوميًا",
+  },
+  {
+    day: 9,
+    date: "2026-11-09",
+    dayName: "الاثنين",
+    main: "تأسيس وتنظيف سلم ريتشارد",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بيبابل",
+    side: "تمشيط الدواسات",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 10,
+    date: "2026-11-10",
+    dayName: "الثلاثاء",
+    main: "تأسيس وتنظيف سلم مظلوم",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق برانش اند كيك",
+    side: "جرد الإنترلوك ضلع 1",
+    garage: "غسيل الشارع الأوسط بين مبنى 1 و3 – جراج B2",
+    loading: "يوميًا",
+  },
+  {
+    day: 11,
+    date: "2026-11-11",
+    dayName: "الأربعاء",
+    main: "فحص وتنظيف موضعي للكنب – ريسبشن 1 و3",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق سوشي مي",
+    side: "جرد الإنترلوك ضلع 2",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 12,
+    date: "2026-11-12",
+    dayName: "الخميس",
+    main: "تنظيف كانوبي مبنى 1",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق نولا",
+    side: "جرد الإنترلوك ضلع 3",
+    garage: "غسيل شارع مبنى 3 ومحيطه – جراج B2",
+    loading: "يوميًا",
+  },
+  {
+    day: 13,
+    date: "2026-11-13",
+    dayName: "الجمعة",
+    main: "تنظيف كانوبي مبنى 2",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق أم شريف",
+    side: "جرد الإنترلوك بالبوابة الرئيسية",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 14,
+    date: "2026-11-14",
+    dayName: "السبت",
+    main: "تنظيف كانوبي مبنى 3",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بيبول اند بليس",
+    side: "تنظيف أحواض الزرع واللايت بوكس وكشافات الأضلاع",
+    garage: "غسيل الأقماع والحواجز الصفراء",
+    loading: "يوميًا",
+  },
+  {
+    day: 15,
+    date: "2026-11-15",
+    dayName: "الأحد",
+    main: "تنظيف كانوبي الأضلاع",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بيجوي اند جوس",
+    side: "غسيل الأقماع",
+    garage: "غسيل شارع مبنى 1 ومحيطه – جراج B1",
+    loading: "يوميًا",
+  },
+  {
+    day: 16,
+    date: "2026-11-16",
+    dayName: "الاثنين",
+    main: "تنظيف تندة بيجوي اند جوس + تنظيف تندة BRGR",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق BRGR",
+    side: "تمشيط الدواسات",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 17,
+    date: "2026-11-17",
+    dayName: "الثلاثاء",
+    main: "تنظيف تندة دولاتو + تنظيف تندة بنزو",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق دولاتو",
+    side: "جرد الإنترلوك ضلع 1",
+    garage: "غسيل الشارع الأوسط بين مبنى 1 و3 – جراج B1",
+    loading: "يوميًا",
+  },
+  {
+    day: 18,
+    date: "2026-11-18",
+    dayName: "الأربعاء",
+    main: "تنظيف تندة ارت اوف فورم + تنظيف تندة نورما + تنظيف تندة كاف",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بنزو",
+    side: "جرد الإنترلوك ضلع 2",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 19,
+    date: "2026-11-19",
+    dayName: "الخميس",
+    main: "تنظيف تندة بوكا + تنظيف تندة بيبابل",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق آرت أوف فورم",
+    side: "جرد الإنترلوك ضلع 3",
+    garage: "غسيل شارع مبنى 3 ومحيطه – جراج B1",
+    loading: "يوميًا",
+  },
+  {
+    day: 20,
+    date: "2026-11-20",
+    dayName: "الجمعة",
+    main: "تنظيف تندة برانش اند كيك + نظافة البنك العربي",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق نورما",
+    side: "جرد الإنترلوك بالبوابة الرئيسية",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 21,
+    date: "2026-11-21",
+    dayName: "السبت",
+    main: "تنظيف تندة سوشي مي + تنظيف تندة نولا",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق كاف",
+    side: "تنظيف أحواض الزرع واللايت بوكس وكشافات الأضلاع",
+    garage: "غسيل الأقماع والحواجز الصفراء",
+    loading: "يوميًا",
+  },
+  {
+    day: 22,
+    date: "2026-11-22",
+    dayName: "الأحد",
+    main: "تنظيف تندة ام شريف + تنظيف تندة بيبول اند بليس",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بوكا",
+    side: "غسيل الأقماع",
+    garage: "غسيل شارع مبنى 1 ومحيطه – جراج B2",
+    loading: "يوميًا",
+  },
+  {
+    day: 23,
+    date: "2026-11-23",
+    dayName: "الاثنين",
+    main: "تأسيس وتنظيف سلم ريتشارد",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بيبابل",
+    side: "تمشيط الدواسات",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 24,
+    date: "2026-11-24",
+    dayName: "الثلاثاء",
+    main: "تأسيس وتنظيف سلم ريتشارد",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق برانش اند كيك",
+    side: "جرد الإنترلوك ضلع 1",
+    garage: "غسيل الشارع الأوسط بين مبنى 1 و3 – جراج B2",
+    loading: "يوميًا",
+  },
+  {
+    day: 25,
+    date: "2026-11-25",
+    dayName: "الأربعاء",
+    main: "تأسيس وتنظيف سلم مظلوم",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق سوشي مي",
+    side: "جرد الإنترلوك ضلع 2",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 26,
+    date: "2026-11-26",
+    dayName: "الخميس",
+    main: "فحص وتنظيف موضعي للكنب – ريسبشن 1 و3",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق نولا",
+    side: "جرد الإنترلوك ضلع 3",
+    garage: "غسيل شارع مبنى 3 ومحيطه – جراج B2",
+    loading: "يوميًا",
+  },
+  {
+    day: 27,
+    date: "2026-11-27",
+    dayName: "الجمعة",
+    main: "تنظيف كانوبي مبنى 1",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق أم شريف",
+    side: "جرد الإنترلوك بالبوابة الرئيسية",
+    garage: "تنظيف الإيبوكسي",
+    loading: "يوميًا",
+  },
+  {
+    day: 28,
+    date: "2026-11-28",
+    dayName: "السبت",
+    main: "تنظيف كانوبي مبنى 2",
+    joints: "غسيل أرضية فواصل المطاعم – نطاق بيبول اند بليس",
+    side: "تنظيف أحواض الزرع واللايت بوكس وكشافات الأضلاع",
+    garage: "غسيل الأقماع والحواجز الصفراء",
+    loading: "يوميًا",
+  },
+  {
+    day: 29,
+    date: "2026-11-29",
+    dayName: "الأحد",
+    main: "تنظيف كانوبي مبنى 3",
+    joints: "غسيل تكميلي لفواصل المطاعم – حسب ملاحظات المشرف (1)",
+    side: "غسيل الأقماع + تمشيط الدواسات",
+    garage: "تنظيف المواسير العلوية بجراج 1",
+    loading: "يوميًا",
+  },
+  {
+    day: 30,
+    date: "2026-11-30",
+    dayName: "الاثنين",
+    main: "تنظيف كانوبي الأضلاع",
+    joints: "غسيل تكميلي لفواصل المطاعم – حسب ملاحظات المشرف (2)",
+    side: "تنظيف شامل للكنب – ريسبشن 1 و3 (مرة شهريًا)",
+    garage: "تنظيف المواسير العلوية بجراج 1",
+    loading: "يوميًا",
+  },
 ]
 
-// 4B. Housekeeping Granular Area / Element Filters (فلتر بنود وأماكن الهاوس كيبنج)
+export const HK_MONTHLY_DAYS = HK_NIGHT_SHIFT_MONTHLY_DAYS
+
+export const HK_NIGHT_PLAN_NOTE =
+  "توزيع غسيل فواصل المطاعم حسب نطاق كل مطعم؛ يُراجع المشرف المسارات الفعلية قبل التنفيذ. الأعمال اليومية بمنطقة التحميل مستمرة."
+
+// 4B. Housekeeping Granular Area / Element Filters (فلتر بنود جدول النظافة)
 export const HK_ITEM_FILTERS = [
-  { id: "all",                icon: "🧹", labelAr: "الكل (جميع البنود)",                 labelEn: "All HK Items" },
-  { id: "reception",          icon: "🏢", labelAr: "نظافة الرسبشن والمداخل",            labelEn: "Reception & Entrances" },
-  { id: "stairs",             icon: "🪜", labelAr: "السلالم (طوارئ • ريتشارد • مظلوم • LMD)", labelEn: "Stairs & Escalators" },
-  { id: "emergency_doors",    icon: "🚪", labelAr: "أبواب الطوارئ وأبواب الخدمات",       labelEn: "Emergency & Service Doors" },
-  { id: "fire_safety",        icon: "🧯", labelAr: "كبائن ومواسير الحريق والطفايات",     labelEn: "Fire Cabinets, Pipes & Extinguishers" },
-  { id: "elevators",          icon: "🛗", labelAr: "المصاعد ومصاعد الخدمة",             labelEn: "Elevators & Service Lifts" },
-  { id: "floors_corridors",   icon: "🚶‍♂️", labelAr: "الأدوار والممرات والحوائط والأسقف",  labelEn: "Floors, Corridors, Walls & Ceilings" },
-  { id: "service_corridors",  icon: "🛠️", labelAr: "طرق الخدمات (Service Corridors)",   labelEn: "Service Corridors" },
-  { id: "restrooms",          icon: "🚽", labelAr: "الحمامات والمصليات",                labelEn: "Restrooms & Prayer Rooms" },
-  { id: "glass_mirrors",      icon: "🪟", labelAr: "الزجاج والمرايات وفريمات الوحدات",   labelEn: "Glass, Mirrors & Unit Frames" },
-  { id: "plaza_wings",        icon: "⛲", labelAr: "البلازا والأضلاع والوحدات الفارغة",  labelEn: "Plaza, Wings & Vacant Units" },
-  { id: "canopies_tents",     icon: "⛺", labelAr: "التند والكانوبي والأسطح",           labelEn: "Awnings, Canopies & Roofs" },
-  { id: "restaurant_joints",  icon: "🍽️", labelAr: "فواصل المطاعم",                     labelEn: "Restaurant Floor Joints" },
-  { id: "interlock_sidewalks",icon: "🧱", labelAr: "الإنترلوك والأرصفة والرامب والدواسات", labelEn: "Interlock, Ramps, Sidewalks & Mats" },
-  { id: "garage_basement",    icon: "🚗", labelAr: "الجراج والبيزمنت (B1 / B2)",        labelEn: "Garage & Basement (B1 / B2)" },
-  { id: "loading_back",       icon: "🚛", labelAr: "منطقة التحميل واللوكرز وغرفة القمامة (تأسيس وتطهير)", labelEn: "Loading Dock, Lockers & Rubbish Room (Deep Clean & Sanitize)" },
+  { id: "all",                 icon: "🧹", labelAr: "الكل (جميع البنود)",                                  labelEn: "All HK Items" },
+  { id: "main_cleaning",       icon: "⛺", labelAr: "أعمال التنظيف الرئيسية (تندات • كانوبي • سلالم • ريسبشن)", labelEn: "Main Cleaning (Awnings, Canopies, Stairs, Reception)" },
+  { id: "restaurant_joints",   icon: "🍽️", labelAr: "غسيل أرضية فواصل المطاعم",                             labelEn: "Restaurant Floor Joints" },
+  { id: "side_works",          icon: "🧱", labelAr: "الأعمال الجانبية (الأقماع • الدواسات • الإنترلوك • أحواض الزرع)", labelEn: "Side Works (Cones, Mats, Interlock, Planters)" },
+  { id: "garage_cat",          icon: "🚗", labelAr: "أعمال الجراج (كات B1 / B2 • الإيبوكسي • المواسير)",     labelEn: "Garage CAT Works (B1/B2, Epoxy, Pipes)" },
+  { id: "loading_area",        icon: "🚛", labelAr: "منطقة التحميل (يوميًا)",                                labelEn: "Loading Area (Daily)" },
 ]
 
 /**
@@ -589,311 +853,96 @@ export function matchesHkItemFilter(taskItem, filterId) {
   if (Array.isArray(taskItem.hkTags) && taskItem.hkTags.includes(filterId)) return true
   const text = `${taskItem.categoryAr || ""} ${taskItem.requiredTaskAr || ""}`
   switch (filterId) {
-    case "reception":
-      return /رسبشن|ريسبشن|الأثاث|الكنب|البوابة الرئيسية/i.test(text)
-    case "stairs":
-      return /سلالم|سلم|ريتشارد|مظلوم|LMD|هندريلات/i.test(text)
-    case "emergency_doors":
-      return /أبواب الطوارئ|الأبواب|باب/i.test(text)
-    case "fire_safety":
-      return /كبائن الحريق|كابينة الحريق|مواسير الحريق|الطفايات/i.test(text)
-    case "elevators":
-      return /المصاعد|مصاعد|مصعد/i.test(text)
-    case "floors_corridors":
-      return /المباني|تأسيس الدور|نظافة الدور|الأدوار|الحوائط|الأسقف|عالي السقف|الكاربت|فيش الكهرباء/i.test(text)
-    case "service_corridors":
-      return /طرق الخدمات|طرقة خدمات/i.test(text)
-    case "restrooms":
-      return /حمامات|الحمامات|المصلى|الأحواض|القواعد|الكبائن/i.test(text)
-    case "glass_mirrors":
-      return /الزجاج|المرايات|فريمات|الفريم/i.test(text)
-    case "plaza_wings":
-      return /البلازا|الأضلاع|ضلع|الوحدات الفارغة|التراسات|أعمدة الإنارة|اللايت بوكس|أحواض الزرع/i.test(text)
-    case "canopies_tents":
-      return /تندة|التند|كانوبي|الكانوبي|الأسطح/i.test(text)
+    case "main_cleaning":
+      return /أعمال التنظيف الرئيسية|تندة|كانوبي|سلم| للكنب|البنك العربي/i.test(text)
     case "restaurant_joints":
       return /فواصل المطاعم/i.test(text)
-    case "interlock_sidewalks":
-      return /الإنترلوك|انترلوك|الدواسات|الأقماع|الأرصفة|الرامب/i.test(text)
-    case "garage_basement":
-      return /جراج|الجراج|بيزمنت|الإيبوكسي|الحواجز الصفراء|اللوفر|المواسير العلوية/i.test(text)
-    case "loading_back":
-      return /منطقة التحميل|اللوكر|Lockers|الكافيتريا|القمامة|تطهير|الشيلر|Chiller/i.test(text)
+    case "side_works":
+      return /الأعمال الجانبية|الأقماع|الدواسات|الإنترلوك|أحواض الزرع|اللايت بوكس/i.test(text)
+    case "garage_cat":
+      return /أعمال الجراج|جراج|الإيبوكسي|المواسير العلوية|الحواجز الصفراء/i.test(text)
+    case "loading_area":
+      return /منطقة التحميل/i.test(text)
     default:
       return true
   }
 }
 
-// 4C. Dynamic Generator for the 3-Shift Weekly Checklists (Morning, Evening, Night)
-export function getHousekeepingShiftChecklistForDay(dayName) {
-  // Morning Shift (الوردية الصباحية)
-  const morningStairsZone =
-    dayName === "السبت" || dayName === "الثلاثاء"
-      ? { zone: "مبنى 1 (A)", taskPrefix: "سحب سلالم مبنى 1" }
-      : dayName === "الأحد" || dayName === "الأربعاء"
-      ? { zone: "مبنى 2 (A-1/2)", taskPrefix: "سحب سلالم مبنى 2" }
-      : dayName === "الاثنين" || dayName === "الخميس"
-      ? { zone: "مبنى 3 (A)", taskPrefix: "سحب سلالم مبنى 3" }
-      : { zone: "جميع المباني (A)", taskPrefix: "التشييك على سلالم المباني" }
+// 4C. Dynamic Generator for the 3-Shift Monthly Checklists (Starting with Night Shift)
+export function getHousekeepingShiftChecklistForDay(dayName, dayOfMonth = 1) {
+  const safeDay = Math.min(30, Math.max(1, Number(dayOfMonth) || 1))
+  const entry =
+    HK_NIGHT_SHIFT_MONTHLY_DAYS.find((d) => d.day === safeDay) ||
+    HK_NIGHT_SHIFT_MONTHLY_DAYS[0]
 
-  const morningServiceZone =
-    dayName === "السبت" || dayName === "الثلاثاء"
-      ? "مبنى 1 (A)"
-      : dayName === "الأحد" || dayName === "الأربعاء"
-      ? "مبنى 2 (A)"
-      : dayName === "الاثنين" || dayName === "الخميس"
-      ? "مبنى 3 (A)"
-      : "مبنى 1 و 3"
+  // Morning Shift (الوردية الصباحية) — بانتظار تزويد جدول الوردية الصباحية من المستخدم
+  const morning = []
 
-  const morning = [
-    // الرسبشن (6 بنود)
-    { id: "m_rec_1", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception"], task: "متابعة نظافة الرسبشن — تنظيف الأتربة من الأسطح" },
-    { id: "m_rec_2", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "glass_mirrors"], task: "متابعة نظافة الرسبشن — تنظيف المرايات والزجاج" },
-    { id: "m_rec_3", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception"], task: "متابعة نظافة الرسبشن — تنظيف الأثاث والكنب" },
-    { id: "m_rec_4", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "fire_safety"], task: "متابعة نظافة الرسبشن — تنظيف الطفايات" },
-    { id: "m_rec_5", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "متابعة نظافة الرسبشن — تنظيف الأرضية" },
-    { id: "m_rec_6", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "elevators"], task: "متابعة نظافة الرسبشن — تنظيف المصاعد" },
-    // سلالم الطوارئ وأبواب الطوارئ (5 بنود)
-    ...(dayName === "الجمعة"
-      ? [
-          { id: "m_st_fri", shift: "morning", area: "سلالم الطوارئ", zone: "A", tags: ["stairs"], task: "التشييك على سلالم المباني" },
-          { id: "m_st_fri_doors", shift: "morning", area: "أبواب الطوارئ", zone: "A", tags: ["emergency_doors", "stairs"], task: "التشييك على نظافة أبواب الطوارئ" },
-        ]
-      : [
-          { id: "m_st_1", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, tags: ["stairs"], task: morningStairsZone.taskPrefix },
-          { id: "m_st_2", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, tags: ["stairs", "fire_safety"], task: "تنظيف كبائن الحريق بسلالم الطوارئ" },
-          { id: "m_st_3", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, tags: ["stairs", "floors_corridors"], task: "تنظيف الحوائط بسلالم الطوارئ" },
-          { id: "m_st_4", shift: "morning", area: "سلالم الطوارئ", zone: morningStairsZone.zone, tags: ["stairs", "fire_safety"], task: "تنظيف مواسير الحريق بسلالم الطوارئ" },
-          { id: "m_st_5", shift: "morning", area: "أبواب الطوارئ", zone: morningStairsZone.zone, tags: ["emergency_doors", "stairs"], task: "تنظيف أبواب الطوارئ من الداخل" },
-        ]),
-    // المباني وريتشارد
-    ...(dayName === "السبت"
-      ? [{ id: "m_bld_sat", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 1 / 2 / 3", tags: ["floors_corridors"], task: "التشييك على كل الأدوار والممرات" }]
-      : dayName === "الجمعة"
-      ? [
-          { id: "m_bld_fri_1", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد + المصلى الرجالي", tags: ["floors_corridors", "restrooms"], task: "تأسيس الدور — عالي السقف + غسيل الكاربت بعد الغلق" },
-          { id: "m_bld_fri_2", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["floors_corridors"], task: "تأسيس الدور — إزالة البقع من الحوائط" },
-          { id: "m_bld_fri_3", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["elevators", "floors_corridors"], task: "تأسيس الدور — تنظيف مجر وأبواب المصاعد" },
-          { id: "m_bld_fri_4", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["floors_corridors"], task: "تأسيس الدور — تنظيف فيش الكهرباء" },
-          { id: "m_bld_fri_5", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["glass_mirrors", "floors_corridors"], task: "تأسيس الدور — غسيل الزجاج والفريم وفريمات الوحدات" },
-          { id: "m_bld_fri_6", shift: "morning", area: "المباني وريتشارد", zone: "مبنى 3 A ريتشارد", tags: ["floors_corridors"], task: "تأسيس الدور — غسيل الأرضية" },
-        ]
-      : [
-          { id: "m_bld_1", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", tags: ["restrooms", "floors_corridors"], task: "متابعة نظافة الدور — تنظيف الحمامات" },
-          { id: "m_bld_2", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", tags: ["floors_corridors"], task: "متابعة نظافة الدور — تنظيف الأتربة من الأسطح" },
-          { id: "m_bld_3", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", tags: ["floors_corridors"], task: "متابعة نظافة الدور — تنظيف الأرضية" },
-          { id: "m_bld_4", shift: "morning", area: "المباني وريتشارد", zone: "الأدوار", tags: ["elevators", "floors_corridors"], task: "متابعة نظافة الدور — متابعة نظافة المصاعد" },
-        ]),
-    // طرق الخدمات (6 بنود)
-    ...(dayName === "الجمعة"
-      ? [{ id: "m_srv_fri", shift: "morning", area: "طرق الخدمات", zone: "مبنى 1 و 3", tags: ["service_corridors"], task: "التشييك على جميع طرق الخدمات" }]
-      : [
-          { id: "m_srv_1", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "floors_corridors"], task: "طرق الخدمات — تنظيف أسقف" },
-          { id: "m_srv_2", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "floors_corridors"], task: "طرق الخدمات — تنظيف حوائط" },
-          { id: "m_srv_3", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "fire_safety"], task: "طرق الخدمات — تنظيف كابينة الحريق" },
-          { id: "m_srv_4", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "emergency_doors"], task: "طرق الخدمات — تنظيف الأبواب وأبواب الخدمة" },
-          { id: "m_srv_5", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "floors_corridors"], task: "طرق الخدمات — تنظيف الأرضية" },
-          { id: "m_srv_6", shift: "morning", area: "طرق الخدمات", zone: morningServiceZone, tags: ["service_corridors", "elevators"], task: "طرق الخدمات — تنظيف مصاعد الخدمة" },
-        ]),
-    // حمامات
-    ...(dayName === "الجمعة"
-      ? [
-          { id: "m_wc_fri_1", shift: "morning", area: "الحمامات", zone: "حمامات المصلى", tags: ["restrooms"], task: "تأسيس الحمامات — تزعيف الهوايات وتنظيف الحوائط بالبلة" },
-          { id: "m_wc_fri_2", shift: "morning", area: "الحمامات", zone: "حمامات المصلى", tags: ["restrooms"], task: "تأسيس الحمامات — تنظيف الكبائن والأبواب والقواعد من الداخل والخارج" },
-          { id: "m_wc_fri_3", shift: "morning", area: "الحمامات", zone: "حمامات المصلى", tags: ["restrooms", "glass_mirrors"], task: "تأسيس الحمامات — تنظيف الأحواض والمرايات وأسفل الأحواض وغسيل الأرضية" },
-        ]
-      : [{ id: "m_wc_1", shift: "morning", area: "الحمامات", zone: "جميع المباني", tags: ["restrooms"], task: "متابعة نظافة الحمامات الدورية" }]),
-    // البلازا (5 بنود)
-    { id: "m_plz_1", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الداست (Dust)" },
-    { id: "m_plz_2", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings", "reception"], task: "متابعة نظافة البلازا — تنظيف البوابة الرئيسية" },
-    { id: "m_plz_3", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الوحدات الفارغة" },
-    { id: "m_plz_4", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings", "restrooms"], task: "متابعة نظافة البلازا — تنظيف الحمامات" },
-    { id: "m_plz_5", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الأضلاع" },
-    // منطقة التحميل وغرفة تجميع القمامة (شاملة مهمة تنظيف غرفة تجميع القمامة تأسيس نظافة - تطهير)
-    { id: "m_ld_1", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف منطقة التحميل الخارجية" },
-    { id: "m_ld_2", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف اللوكرز (Lockers)" },
-    { id: "m_ld_3", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف الكافيتريا" },
-    { id: "m_ld_4", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة" },
-    { id: "m_ld_4_sanitize", shift: "morning", area: "غرفة تجميع القمامة", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)" },
-    { id: "m_ld_5", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف منطقة الشيلر (Chiller)" },
-  ]
+  // Evening Shift (الوردية المسائية) — بانتظار تزويد جدول الوردية المسائية من المستخدم
+  const evening = []
 
-  // Evening Shift (الوردية المسائية)
-  const eveningFloorTarget =
-    dayName === "السبت"
-      ? "مبنى 1 / 2 / 3 — التشييك على كل الأدوار"
-      : dayName === "الأحد"
-      ? "الدور الأول مبنى 1 / الخامس والسادس مبنى 2"
-      : dayName === "الاثنين"
-      ? "الدور الرابع مبنى 1 / 2"
-      : dayName === "الثلاثاء"
-      ? "الدور الثالث مبنى 1 / 2"
-      : dayName === "الأربعاء"
-      ? "الدور الثاني مبنى 1 / 2"
-      : dayName === "الخميس"
-      ? "التشييك على جميع الأدوار"
-      : "مبنى 3 B البنك العربي + المصلى الحريمي"
-
-  const eveningLoadingTask =
-    dayName === "السبت"
-      ? "تنظيف حوائط الرامب + تنظيف الأرصفة"
-      : dayName === "الأحد"
-      ? "غسيل الحوائط بداية من الرامب حتى مكتب المالية + عالي المنطقة"
-      : dayName === "الاثنين"
-      ? "غسيل الحوائط والأبواب للمنطقة المتبقية + عالي المنطقة"
-      : dayName === "الثلاثاء"
-      ? "باقي عالي منطقة التحميل + تنظيف حاجز اللوفر الفاصل للجراج"
-      : dayName === "الأربعاء"
-      ? "تنظيف الهوايات ببيزمنت 2 بالجراج"
-      : dayName === "الخميس"
-      ? "تأسيس الشيلر (Chiller)"
-      : "تأسيس طرقة خدمات مصاعد ني (سقف + حوائط + مصعد + باب + أرضية)"
-
-  const evening = [
-    // الرسبشن (5 بنود)
-    { id: "e_rec_1", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception"], task: "تنظيف جزء من العالي بالرسبشن" },
-    { id: "e_rec_2", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "إزالة البقع من الحوائط بالرسبشن" },
-    { id: "e_rec_3", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "تنظيف فيش الكهرباء بالرسبشن" },
-    { id: "e_rec_4", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "glass_mirrors", "fire_safety"], task: "تنظيف المرايات والطفايات بالرسبشن" },
-    { id: "e_rec_5", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "elevators"], task: "تأسيس المصاعد من الداخل والخارج" },
-    // سلالم الطوارئ وأبواب الطوارئ (B)
-    { id: "e_st_1", shift: "evening", area: "سلالم الطوارئ", zone: "اتجاه B", tags: ["stairs"], task: "سحب سلالم الطوارئ (B) وتنظيف الحوائط والدرج" },
-    { id: "e_st_2", shift: "evening", area: "سلالم الطوارئ", zone: "اتجاه B", tags: ["stairs", "fire_safety"], task: "تنظيف كبائن ومواسير الحريق بسلالم الطوارئ (B)" },
-    { id: "e_st_3", shift: "evening", area: "أبواب الطوارئ", zone: "اتجاه B", tags: ["emergency_doors", "stairs"], task: "تنظيف أبواب الطوارئ من الداخل والخارج (B)" },
-    // المباني وريتشارد (تأسيس الأدوار)
-    { id: "e_bld_1", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, tags: ["floors_corridors"], task: "تأسيس الدور — عالي السقف وإزالة البقع من الحوائط" },
-    { id: "e_bld_2", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, tags: ["elevators", "floors_corridors"], task: "تأسيس الدور — تنظيف مجر وأبواب المصاعد وفيش الكهرباء" },
-    { id: "e_bld_3", shift: "evening", area: "المباني وريتشارد", zone: eveningFloorTarget, tags: ["glass_mirrors", "floors_corridors"], task: "تأسيس الدور — غسيل الزجاج والفريم وفريمات الوحدات وغسيل الأرضية" },
-    // طرق الخدمات (B)
-    { id: "e_srv_1", shift: "evening", area: "طرق الخدمات", zone: "اتجاه B", tags: ["service_corridors", "floors_corridors", "fire_safety"], task: "طرق الخدمات (B) — تنظيف أسقف وحوائط وكابينة الحريق والأرضية" },
-    { id: "e_srv_2", shift: "evening", area: "طرق الخدمات", zone: "اتجاه B", tags: ["service_corridors", "emergency_doors", "elevators"], task: "طرق الخدمات (B) — تنظيف الأبواب ومصاعد الخدمة" },
-    // تأسيس الحمامات
-    { id: "e_wc_1", shift: "evening", area: "الحمامات", zone: eveningFloorTarget, tags: ["restrooms", "glass_mirrors"], task: "تأسيس الحمامات — تزعيف الهوايات وتنظيف الحوائط بالبلة والكبائن والقواعد والأحواض وغسيل الأرضية" },
-    // البلازا
-    { id: "e_plz_1", shift: "evening", area: "البلازا", zone: "البلازا", tags: ["plaza_wings", "restrooms"], task: "متابعة نظافة البلازا — تنظيف الداست والبوابة الرئيسية والوحدات الفارغة والحمامات والأضلاع" },
-    // منطقة التحميل وغرفة القمامة
-    { id: "e_ld_1", shift: "evening", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back", "interlock_sidewalks", "garage_basement"], task: eveningLoadingTask },
-    { id: "e_ld_rubbish_sanitize", shift: "evening", area: "غرفة تجميع القمامة", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)" },
-  ]
-
-  // Night Shift (الوردية الليلية)
-  const nightPlazaExtra =
-    dayName === "السبت"
-      ? "تنظيف أعمدة الإنارة بالأضلاع"
-      : dayName === "الأحد"
-      ? "تنظيف أحواض الزرع بالأضلاع"
-      : dayName === "الاثنين"
-      ? "تنظيف أبواب الطوارئ من الخارج بالأضلاع"
-      : dayName === "الأربعاء"
-      ? "تنظيف الإنترلوك بضلع 1"
-      : dayName === "الخميس"
-      ? "تنظيف الإنترلوك بضلع 2 و 3"
-      : dayName === "الجمعة"
-      ? "تنظيف أعمدة الإنارة والإنترلوك بالبوابة الرئيسية"
-      : "مراجعة نظافة المشايات والأضلاع"
-
-  const nightLoadingExtra =
-    dayName === "السبت"
-      ? "غسيل الرامب + غسيل ممر لـ 40"
-      : dayName === "الأربعاء"
-      ? "غسيل الأرضية + تأسيس اللوكر الرجالي + تنظيف الكافيتريا واللوكر الحريمي"
-      : dayName === "الخميس"
-      ? "غسيل الأرضية + تأسيس اللوكر الحريمي + تنظيف الكافيتريا واللوكر الرجالي"
-      : dayName === "الجمعة"
-      ? "غسيل الأرضية + تنظيف الهوايات ببيزمنت 1"
-      : "غسيل الأرضية + تنظيف اللوكرات والكافيتريا"
-
+  // Night Shift (الوردية الليلية) — جدول أعمال النظافة والتأسيس الشهري (30 يوم)
   const night = [
-    { id: "n_rec_1", shift: "night", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "غسيل أرضية الرسبشن بالماكينة" },
-    ...(dayName === "السبت"
-      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "stairs"], task: "تنظيف عالي الدور الأول بريتشارد" }]
-      : dayName === "الأحد"
-      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "stairs"], task: "تنظيف عالي الدور الأرضي بريتشارد" }]
-      : dayName === "الاثنين"
-      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "garage_basement"], task: "تنظيف عالي دور بيزمنت 1 بريتشارد" }]
-      : dayName === "الثلاثاء"
-      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "garage_basement"], task: "تنظيف عالي دور بيزمنت 2 بريتشارد" }]
-      : []),
-    { id: "n_wc_1", shift: "night", area: "حمامات البلازا", zone: "البلازا", tags: ["restrooms", "plaza_wings", "glass_mirrors"], task: "تأسيس حمامات البلازا بالكامل ليلاً (هوايات + حوائط بالبلة + كبائن + قواعد + أحواض ومرايات + غسيل أرضية)" },
-    { id: "n_plz_1", shift: "night", area: "البلازا", zone: "البلازا والمنطقة الخارجية", tags: ["plaza_wings"], task: "تأسيس وغسيل أرضية البلازا بالكامل والمنطقة الخارجية + غسيل التراسات للوحدات الفارغة" },
     {
-      id: "n_plz_2",
+      id: `night_d${safeDay}_main`,
       shift: "night",
-      area: "البلازا والأضلاع",
-      zone: "البلازا",
-      tags: [
-        "plaza_wings",
-        "fire_safety",
-        ...(dayName === "الاثنين" ? ["emergency_doors"] : []),
-        ...(dayName === "الأربعاء" || dayName === "الخميس" || dayName === "الجمعة" ? ["interlock_sidewalks"] : []),
-      ],
-      task: `تنظيف أحواض الزرع والطفايات ونظافة المشايات + ${nightPlazaExtra}`,
+      area: "أعمال التنظيف الرئيسية",
+      zone: `يوم ${safeDay} (${entry.dayName})`,
+      tags: ["main_cleaning"],
+      task: entry.main,
     },
-    { id: "n_ld_1", shift: "night", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back", "interlock_sidewalks", "garage_basement"], task: nightLoadingExtra },
-    // ★ تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)
-    { id: "n_ld_rubbish_sanitize", shift: "night", area: "غرفة تجميع القمامة", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)" },
+    {
+      id: `night_d${safeDay}_joints`,
+      shift: "night",
+      area: "غسيل أرضية فواصل المطاعم",
+      zone: `يوم ${safeDay} (${entry.dayName})`,
+      tags: ["restaurant_joints"],
+      task: entry.joints,
+    },
+    {
+      id: `night_d${safeDay}_side`,
+      shift: "night",
+      area: "الأعمال الجانبية",
+      zone: `يوم ${safeDay} (${entry.dayName})`,
+      tags: ["side_works"],
+      task: entry.side,
+    },
+    {
+      id: `night_d${safeDay}_garage`,
+      shift: "night",
+      area: "أعمال الجراج (كات)",
+      zone: `يوم ${safeDay} (${entry.dayName})`,
+      tags: ["garage_cat"],
+      task: entry.garage,
+    },
+    {
+      id: `night_d${safeDay}_loading`,
+      shift: "night",
+      area: "منطقة التحميل",
+      zone: `يوم ${safeDay} (${entry.dayName})`,
+      tags: ["loading_area"],
+      task: `تنظيف منطقة التحميل (${entry.loading})`,
+    },
   ]
 
-  return { morning, evening, night }
+  return { morning, evening, night, nightEntry: entry }
 }
 
 export function getHousekeepingDayPlan(dateStr) {
   const dayName = getArabicDayName(dateStr)
-  const dayOfMonth = Math.min(31, Math.max(1, Number((dateStr || "").split("-")[2]) || 1))
-  const monthlyEntry = HK_MONTHLY_DAYS.find((d) => d.day === dayOfMonth) || HK_MONTHLY_DAYS[0]
-  const shifts = getHousekeepingShiftChecklistForDay(dayName)
+  const dayOfMonth = Math.min(30, Math.max(1, Number((dateStr || "").split("-")[2]) || 1))
+  const nightEntry =
+    HK_NIGHT_SHIFT_MONTHLY_DAYS.find((d) => d.day === dayOfMonth) ||
+    HK_NIGHT_SHIFT_MONTHLY_DAYS[0]
+  const shifts = getHousekeepingShiftChecklistForDay(dayName, dayOfMonth)
 
-  const specializedTasks = [
-    {
-      id: "hk_spec_main",
-      categoryAr: "أعمال التنظيف الرئيسية (التند والكانوبي والسلالم)",
-      categoryEn: "Main Cleaning (Awnings, Canopies & Stairs)",
-      tags: ["canopies_tents", "stairs", "reception"],
-      taskAr: monthlyEntry.main,
-    },
-    {
-      id: "hk_spec_joints",
-      categoryAr: "غسيل أرضية فواصل المطاعم",
-      categoryEn: "Restaurant Floor Joints Washing",
-      tags: ["restaurant_joints", "plaza_wings"],
-      taskAr: monthlyEntry.joints,
-    },
-    {
-      id: "hk_spec_side",
-      categoryAr: "الأعمال الجانبية والإنترلوك والدواسات",
-      categoryEn: "Side Works, Interlock & Mats",
-      tags: ["interlock_sidewalks", "plaza_wings", "reception"],
-      taskAr: monthlyEntry.side,
-    },
-    {
-      id: "hk_spec_garage",
-      categoryAr: "أعمال الجراج (كات B1 / B2)",
-      categoryEn: "Garage CAT Works (B1 / B2)",
-      tags: ["garage_basement"],
-      taskAr: monthlyEntry.garage,
-    },
-    {
-      id: "hk_spec_loading",
-      categoryAr: "منطقة التحميل والأسطح",
-      categoryEn: "Loading Dock & Roofs",
-      tags: ["loading_back", "canopies_tents", "emergency_doors"],
-      taskAr:
-        [1, 2, 3, 15, 16, 17].includes(dayOfMonth)
-          ? `${monthlyEntry.loading} + 🔥 موعد نظافة الأسطح الشهري (إزالة المخلفات وتنظيف الأبواب والأرضية)`
-          : monthlyEntry.loading,
-    },
-    {
-      id: "hk_spec_rubbish_room_sanitize",
-      categoryAr: "غرفة تجميع القمامة — تأسيس (نظافة - تطهير)",
-      categoryEn: "Garbage Collection Room — Deep Cleaning & Sanitization",
-      tags: ["loading_back"],
-      taskAr: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)",
-    },
-  ]
+  // Empty specializedTasks to prevent duplicating Night Shift items
+  const specializedTasks = []
 
   return {
     dayName,
     dayOfMonth,
+    nightEntry,
     specializedTasks,
     shifts,
   }
