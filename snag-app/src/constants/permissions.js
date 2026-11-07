@@ -12,6 +12,14 @@ export const APP_MODULES = [
     descEn: "Record and track maintenance & operations snags across the mall",
   },
   {
+    id: "night-report",
+    icon: "🌙",
+    labelAr: "التقرير الليلي والملخص التنفيذي اليومي (Executive Summary)",
+    labelEn: "Night Shift Report & Daily Executive Summary",
+    descAr: "توثيق أعمال المقاولين والوحدات، النظافة الليلية، صيانة المول، متابعة صناديق الدهون بالمطاعم، وتسليم الشيفت مع الملخص التنفيذي اليومي",
+    descEn: "Manage night shift contractors, housekeeping, maintenance, restaurant grease traps & shift handover with Daily Executive Summary",
+  },
+  {
     id: "operations-plans",
     icon: "📅",
     labelAr: "خطط التشغيل والتقارير (اللاندسكيب • السبايدر • المكافحة • النظافة)",
@@ -221,6 +229,7 @@ export const ROLE_PRESETS = {
     },
     matrix: buildMatrix({
       "snags":            { view: true, add: true, edit: true, status: true, delete: false, export: true },
+      "night-report":     { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "operations-plans": { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "park-street":      { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "restrooms":        { view: true, add: true, edit: true, status: true, delete: false, export: true },
@@ -248,6 +257,7 @@ export const ROLE_PRESETS = {
     },
     matrix: buildMatrix({
       "snags":            { view: true, add: true, edit: false, status: true, delete: false, export: false },
+      "night-report":     { view: true, add: true, edit: true, status: true, delete: false, export: false },
       "operations-plans": { view: true, add: false, edit: true, status: true, delete: false, export: false },
       "park-street":      { view: true, add: false, edit: true, status: true, delete: false, export: false },
       "restrooms":        { view: true, add: false, edit: true, status: true, delete: false, export: false },

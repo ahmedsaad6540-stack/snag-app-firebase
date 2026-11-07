@@ -11,6 +11,7 @@ import StoresModule from "./components/StoresModule.jsx"
 import RestroomsModule from "./components/RestroomsModule.jsx"
 import ParkStreetModule from "./components/ParkStreetModule.jsx"
 import OperationsPlansModule from "./components/OperationsPlansModule.jsx"
+import NightShiftReportModule from "./components/NightShiftReportModule.jsx"
 import AICommandCenter from "./components/AICommandCenter.jsx"
 import { useSnags } from "./hooks/useSnags.js"
 import { useAuth }  from "./hooks/useAuth.js"
@@ -254,6 +255,14 @@ export default function App() {
               📋 {tr("سجل الملاحظات", "Snags Log")}
             </button>
           )}
+          {canUser(user, "night-report", "view") && (
+            <button 
+              style={{ ...s.tab, ...(activeTab === "night-report" ? { ...s.activeTab, background: "linear-gradient(135deg, #059669, #312e81)", color: "#ecfdf5" } : {}) }}
+              onClick={() => setActiveTab("night-report")}
+            >
+              🌙 {tr("التقرير الليلي والملخص التنفيذي (Executive Summary)", "Night Report & Executive Summary")}
+            </button>
+          )}
           {canUser(user, "operations-plans", "view") && (
             <button 
               style={{ ...s.tab, ...(activeTab === "operations-plans" ? { ...s.activeTab, background: "linear-gradient(135deg, #16a34a, #0e7490)", color: "#f0fdf4" } : {}) }}
@@ -341,8 +350,52 @@ export default function App() {
 
         {activeTab === "snags" && canUser(user, "snags", "view") && (
           <>
-            {/* Quick-access banners to Operations Plans, Park St. Inspection & Restroom Snag Center */}
+            {/* Quick-access banners to Night Shift Report, Operations Plans, Park St. Inspection & Restroom Snag Center */}
             <div className="quick-banners-grid">
+              {canUser(user, "night-report", "view") && (
+                <div
+                  onClick={() => setActiveTab("night-report")}
+                  style={{
+                    background: "linear-gradient(135deg, rgba(6,78,59,0.5), rgba(49,46,129,0.55))",
+                    border: "1px solid #10b981",
+                    borderRadius: 14,
+                    padding: "12px 16px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 24 }}>🌙</span>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: "#ecfdf5" }}>
+                        {tr("NIGHT REPORT & EXECUTIVE SUMMARY | التقرير الليلي والملخص التنفيذي لأهم الأحداث", "NIGHT REPORT & EXECUTIVE SUMMARY | Night Shift Operations")}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#a7f3d0" }}>
+                        {tr(
+                          "🏗️ المقاولين والوحدات • 🧹 النظافة الليلية • 🔧 صيانة المول • 🛢️ صناديق الدهون بالمطاعم • 🤝 تسليم الشيفت",
+                          "🏗️ Contractors & Units • 🧹 Night HK • 🔧 Maintenance • 🛢️ Grease Traps • 🤝 Shift Handover"
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{
+                    background: "#10b981",
+                    color: "#022c22",
+                    fontWeight: 900,
+                    fontSize: 11,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    whiteSpace: "nowrap",
+                  }}>
+                    {tr("فتح التقرير الليلي والملخص ←", "Open Night Report →")}
+                  </span>
+                </div>
+              )}
+
               {canUser(user, "operations-plans", "view") && (
                 <div
                   onClick={() => setActiveTab("operations-plans")}
@@ -503,6 +556,14 @@ export default function App() {
           </>
         )}
         
+        {activeTab === "night-report" && canUser(user, "night-report", "view") && (
+          <NightShiftReportModule
+            currentUser={user}
+            notify={notify}
+            onAddSnag={addSnag}
+            snags={snags}
+          />
+        )}
         {activeTab === "operations-plans" && canUser(user, "operations-plans", "view") && <OperationsPlansModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "park-street" && canUser(user, "park-street", "view") && <ParkStreetModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "restrooms" && canUser(user, "restrooms", "view") && <RestroomsModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
