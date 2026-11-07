@@ -18,6 +18,8 @@ import {
   HK_MONTHLY_DAYS,
   HK_NIGHT_SHIFT_MONTHLY_DAYS,
   HK_NIGHT_PLAN_NOTE,
+  HK_MORNING_SHIFT_MONTHLY_DAYS,
+  HK_MORNING_PLAN_NOTE,
   HK_ITEM_FILTERS,
   matchesHkItemFilter,
   getHousekeepingDayPlan,
@@ -1108,8 +1110,8 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             </span>
             {[
               { id: "all",     label: tr("الكل (الـ 3 ورديات)", "All (3 Shifts)") },
+              { id: "morning", label: tr("🌅 الوردية الصباحية (جدول نوفمبر 2026 — 30 يوم)", "🌅 Morning Shift (Nov 2026 — 30 Days)") },
               { id: "night",   label: tr("🌙 الوردية الليلية (جدول نوفمبر 2026 — 30 يوم)", "🌙 Night Shift (Nov 2026 — 30 Days)") },
-              { id: "morning", label: tr("🌅 الوردية الصباحية (بانتظار الجدول)", "🌅 Morning Shift (Pending Table)") },
               { id: "evening", label: tr("🌇 الوردية المسائية (بانتظار الجدول)", "🌇 Evening Shift (Pending Table)") },
             ].map((sh) => (
               <button
@@ -1514,6 +1516,311 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         })()}
 
       {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* 🌅 MORNING SHIFT 30-DAY MASTER TABLE (جدول أعمال النظافة — الوردية الصباحية | نوفمبر 2026) */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {(activeSector === "housekeeping" || activeSector === "all") &&
+        (hkFilterShift === "all" || hkFilterShift === "morning") &&
+        (() => {
+          const morningRowsWithStatus = HK_MORNING_SHIFT_MONTHLY_DAYS.map((r) => {
+            const daySummaryUid = `${r.date}__hk_morning_day__${r.day}`
+            const savedDayRec = records[daySummaryUid] || {}
+            const firstTaskRec = records[`${r.date}__housekeeping__morning_d${r.day}_t1`]
+            const effectiveStatus = savedDayRec.status || firstTaskRec?.status || "pending"
+            const effectiveNotes = savedDayRec.whatWasDone ?? firstTaskRec?.whatWasDone ?? ""
+            return {
+              ...r,
+              daySummaryUid,
+              status: effectiveStatus,
+              supervisorNotes: effectiveNotes,
+            }
+          })
+
+          const totalPlanDays = morningRowsWithStatus.length // 30
+          const executedDaysCount = morningRowsWithStatus.filter((r) => r.status === "done").length
+          const remainingDaysCount = totalPlanDays - executedDaysCount
+          const completionPct = Math.round((executedDaysCount / totalPlanDays) * 100)
+
+          const cycleMorningDayStatus = (row) => {
+            if (!canModify) return
+            const order = ["pending", "partial", "done", "not_done"]
+            const nextStatus = order[(order.indexOf(row.status) + 1) % order.length]
+            const fakeTask = {
+              uid: row.daySummaryUid,
+              date: row.date,
+              dayName: row.dayName,
+              sectorId: "housekeeping",
+              categoryAr: "الوردية الصباحية — خطة نوفمبر 2026",
+              shiftOrSlotAr: "🌅 الوردية الصباحية",
+              requiredTaskAr: row.summaryText,
+              status: row.status,
+              whatWasDone: row.supervisorNotes,
+            }
+            saveTaskRecord(fakeTask, { status: nextStatus })
+          }
+
+          const saveMorningDayNote = (row, noteVal) => {
+            if (!canModify) return
+            const fakeTask = {
+              uid: row.daySummaryUid,
+              date: row.date,
+              dayName: row.dayName,
+              sectorId: "housekeeping",
+              categoryAr: "الوردية الصباحية — خطة نوفمبر 2026",
+              shiftOrSlotAr: "🌅 الوردية الصباحية",
+              requiredTaskAr: row.summaryText,
+              status: row.status,
+              whatWasDone: row.supervisorNotes,
+            }
+            saveTaskRecord(fakeTask, { whatWasDone: noteVal })
+          }
+
+          return (
+            <div
+              className="mobile-section-card"
+              style={{
+                ...s.card,
+                border: "1.5px solid #f59e0b",
+                background: "linear-gradient(135deg, rgba(180,83,9,0.20), rgba(15,23,42,0.95))",
+                minWidth: 0,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: "#fbbf24", letterSpacing: 0.5 }}>
+                    MORNING SHIFT HOUSEKEEPING MASTER PLAN — NOVEMBER 2026 (7-DAY CYCLE REPEATED ACROSS 30 DAYS)
+                  </div>
+                  <h3 style={{ margin: "2px 0 4px 0", fontSize: 17, fontWeight: 900, color: "#f8fafc", lineHeight: 1.4 }}>
+                    🌅 {tr("جدول أعمال النظافة — الوردية الصباحية | نوفمبر 2026 (مكرر على مدار الشهر)", "Morning Shift Cleaning Schedule | November 2026 (30 Days)")}
+                  </h3>
+                  <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>
+                    {tr(
+                      "خطة الوردية الصباحية (مهام الأيام من 1 إلى 7 مكررة طوال الشهر) — أدوار وحمامات المباني 1-2-3 • البلازا والأضلاع • المصليات • سلالم الطوارئ • الريسبشنات وتراس مبنى 1",
+                      "Morning Shift 30-Day Plan — Buildings 1-2-3 Floors & Restrooms • Plaza & Wings • Prayer Rooms • Emergency Stairs • Receptions & Terrace"
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 4 KPI Summary Strip */}
+              <div
+                className="mobile-kpi-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                  gap: 8,
+                  marginBottom: 12,
+                }}
+              >
+                <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid #334155", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 800 }}>{tr("إجمالي أيام الخطة", "Total Plan Days")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#fbbf24", marginTop: 2 }}>{totalPlanDays}</div>
+                </div>
+                <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#6ee7b7", fontWeight: 800 }}>{tr("تم التنفيذ", "Completed Days")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#10b981", marginTop: 2 }}>{executedDaysCount}</div>
+                </div>
+                <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#fcd34d", fontWeight: 800 }}>{tr("المتبقي", "Remaining Days")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#f59e0b", marginTop: 2 }}>{remainingDaysCount}</div>
+                </div>
+                <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(56,189,248,0.4)", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#7dd3fc", fontWeight: 800 }}>{tr("نسبة الإنجاز", "Completion Rate")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#38bdf8", marginTop: 2 }}>{completionPct}%</div>
+                </div>
+              </div>
+
+              {/* Desktop Table View (> 768px) */}
+              <div className="desktop-table-view" style={{ maxHeight: 540, overflowY: "auto", border: "1px solid #334155", borderRadius: 12 }}>
+                <table style={s.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ ...s.th, width: 100 }}>{tr("التاريخ", "Date")}</th>
+                      <th style={{ ...s.th, width: 85 }}>{tr("اليوم", "Day")}</th>
+                      <th style={{ ...s.th, width: 150, color: "#fbbf24" }}>{tr("الأسبوع", "Week")}</th>
+                      <th style={{ ...s.th, color: "#38bdf8" }}>{tr("الأعمال المطلوبة في الوردية الصباحية", "Morning Shift Scheduled Tasks")}</th>
+                      <th style={{ ...s.th, width: 120, textAlign: "center" }}>{tr("الحالة", "Status")}</th>
+                      <th style={{ ...s.th, width: 210 }}>{tr("ملاحظات المشرف", "Supervisor Notes")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {morningRowsWithStatus.map((row) => {
+                      const isSelectedDay = row.date === selectedDate
+                      const stBadge =
+                        row.status === "done"
+                          ? { label: "✓ تم التنفيذ", bg: "rgba(16,185,129,0.2)", color: "#34d399", border: "#10b981" }
+                          : row.status === "partial"
+                          ? { label: "⏳ جاري التنفيذ", bg: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "#f59e0b" }
+                          : row.status === "not_done"
+                          ? { label: "❌ لم يتم", bg: "rgba(239,68,68,0.2)", color: "#f87171", border: "#ef4444" }
+                          : { label: "لم يبدأ", bg: "rgba(30,41,59,0.8)", color: "#94a3b8", border: "#475569" }
+                      return (
+                        <tr
+                          key={row.day}
+                          style={{
+                            background: isSelectedDay ? "rgba(245,158,11,0.16)" : "transparent",
+                            borderBottom: "1px solid #1e293b",
+                          }}
+                        >
+                          <td
+                            onClick={() => {
+                              setSelectedDate(row.date)
+                              setPeriodMode("daily")
+                            }}
+                            style={{ ...s.td, fontWeight: 800, color: "#f8fafc", whiteSpace: "nowrap", cursor: "pointer" }}
+                            title={tr("اضغط لعرض بنود هذا اليوم", "Click to select day")}
+                          >
+                            {isSelectedDay ? `📌 ${row.date}` : row.date}
+                          </td>
+                          <td style={{ ...s.td, fontWeight: 800, color: "#fbbf24" }}>{row.dayName}</td>
+                          <td style={{ ...s.td, fontSize: 11.5, color: "#cbd5e1", fontWeight: 700 }}>{row.weekLabelAr}</td>
+                          <td style={{ ...s.td, padding: "10px 12px" }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {row.taskObjects.map((item, idx) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    background: "rgba(15,23,42,0.9)",
+                                    border: "1px solid rgba(56,189,248,0.3)",
+                                    borderRadius: 8,
+                                    padding: "5px 10px",
+                                    fontSize: 12,
+                                    color: "#f8fafc",
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  <strong style={{ color: "#fbbf24" }}>{idx + 1}.</strong> {item.task}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td style={{ ...s.td, textAlign: "center" }}>
+                            <button
+                              type="button"
+                              onClick={() => cycleMorningDayStatus(row)}
+                              style={{
+                                background: stBadge.bg,
+                                color: stBadge.color,
+                                border: `1px solid ${stBadge.border}`,
+                                borderRadius: 999,
+                                padding: "4px 10px",
+                                fontSize: 11,
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {stBadge.label}
+                            </button>
+                          </td>
+                          <td style={s.td}>
+                            <input
+                              type="text"
+                              value={row.supervisorNotes}
+                              onChange={(e) => saveMorningDayNote(row, e.target.value)}
+                              placeholder={tr("ملاحظات المشرف...", "Supervisor notes...")}
+                              style={s.miniInput}
+                            />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards View (≤ 768px — Native Phone Layout) */}
+              <div className="mobile-cards-view" style={{ maxHeight: 520, overflowY: "auto", paddingRight: 2 }}>
+                {morningRowsWithStatus.map((row) => {
+                  const isSelectedDay = row.date === selectedDate
+                  const stBadge =
+                    row.status === "done"
+                      ? { label: "✓ تم التنفيذ", bg: "rgba(16,185,129,0.2)", color: "#34d399", border: "#10b981" }
+                      : row.status === "partial"
+                      ? { label: "⏳ جاري التنفيذ", bg: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "#f59e0b" }
+                      : row.status === "not_done"
+                      ? { label: "❌ لم يتم", bg: "rgba(239,68,68,0.2)", color: "#f87171", border: "#ef4444" }
+                      : { label: "لم يبدأ", bg: "rgba(30,41,59,0.8)", color: "#94a3b8", border: "#475569" }
+                  return (
+                    <div
+                      key={row.day}
+                      style={{
+                        background: isSelectedDay ? "rgba(245,158,11,0.16)" : "rgba(6,13,26,0.9)",
+                        border: `1.5px solid ${isSelectedDay ? "#f59e0b" : "#334155"}`,
+                        borderRadius: 12,
+                        padding: 12,
+                        display: "grid",
+                        gap: 6,
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
+                        <div>
+                          <div
+                            onClick={() => {
+                              setSelectedDate(row.date)
+                              setPeriodMode("daily")
+                            }}
+                            style={{ fontWeight: 900, fontSize: 14, color: "#f8fafc", cursor: "pointer" }}
+                          >
+                            🌅 {row.date} ({row.dayName})
+                          </div>
+                          <div style={{ fontSize: 11, color: "#fbbf24", fontWeight: 700 }}>{row.weekLabelAr}</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => cycleMorningDayStatus(row)}
+                          style={{
+                            background: stBadge.bg,
+                            color: stBadge.color,
+                            border: `1px solid ${stBadge.border}`,
+                            borderRadius: 999,
+                            padding: "4px 10px",
+                            fontSize: 11,
+                            fontWeight: 800,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {stBadge.label}
+                        </button>
+                      </div>
+                      <div style={{ display: "grid", gap: 4 }}>
+                        {row.taskObjects.map((item, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              fontSize: 12.5,
+                              color: "#f8fafc",
+                              background: "rgba(15,23,42,0.75)",
+                              border: "1px solid rgba(56,189,248,0.22)",
+                              borderRadius: 8,
+                              padding: "6px 8px",
+                              lineHeight: 1.45,
+                            }}
+                          >
+                            <strong style={{ color: "#fbbf24" }}>{idx + 1}. {item.area}: </strong>{item.task}
+                          </div>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        value={row.supervisorNotes}
+                        onChange={(e) => saveMorningDayNote(row, e.target.value)}
+                        placeholder={tr("ملاحظات المشرف...", "Supervisor notes...")}
+                        style={s.miniInput}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Footer Note */}
+              <div style={{ marginTop: 10, fontSize: 12, color: "#cbd5e1", background: "rgba(15,23,42,0.75)", border: "1px solid #334155", borderRadius: 10, padding: "8px 12px" }}>
+                📌 <strong>{tr("ملاحظة:", "Note:")}</strong> {HK_MORNING_PLAN_NOTE}
+              </div>
+            </div>
+          )
+        })()}
+
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* VIEW A: MONTHLY MASTER SCHEDULE TABLES (When periodMode === "monthly") */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {periodMode === "monthly" && (
@@ -1551,7 +1858,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                     <th style={{ ...s.th, color: "#facc15" }}>🦟 {tr("البيست كنترول (Pro Vision)", "Pest Control (Pro Vision)")}</th>
                   )}
                   {(activeSector === "all" || activeSector === "housekeeping") && (
-                    <th style={{ ...s.th, color: "#c084fc" }}>🧹 {tr("الهاوس كيبنج — الوردية الليلية (الرئيسية • الفواصل • الجراج)", "Housekeeping — Night Shift")}</th>
+                    <th style={{ ...s.th, color: "#c084fc" }}>🧹 {tr("الهاوس كيبنج (الوردية الصباحية + الوردية الليلية)", "Housekeeping (Morning + Night Shifts)")}</th>
                   )}
                   <th style={s.th}>{tr("متابعة اليوم", "Inspect Day")}</th>
                 </tr>
@@ -1601,7 +1908,10 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
 
                       {(activeSector === "all" || activeSector === "housekeeping") && (
                         <td style={s.td}>
-                          <div><strong>الرئيسية:</strong> {hk.nightEntry?.main}</div>
+                          <div style={{ marginBottom: 4 }}>
+                            <strong style={{ color: "#fbbf24" }}>🌅 الصباحية:</strong> {hk.morningEntry?.summaryText}
+                          </div>
+                          <div><strong style={{ color: "#c084fc" }}>🌙 الليلية (الرئيسية):</strong> {hk.nightEntry?.main}</div>
                           <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>
                             <strong>الفواصل:</strong> {hk.nightEntry?.joints} | <strong>الجانبية:</strong> {hk.nightEntry?.side} | <strong>الجراج:</strong> {hk.nightEntry?.garage}
                           </div>

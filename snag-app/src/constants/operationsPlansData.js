@@ -835,14 +835,134 @@ export const HK_MONTHLY_DAYS = HK_NIGHT_SHIFT_MONTHLY_DAYS
 export const HK_NIGHT_PLAN_NOTE =
   "توزيع غسيل فواصل المطاعم حسب نطاق كل مطعم؛ يُراجع المشرف المسارات الفعلية قبل التنفيذ. الأعمال اليومية بمنطقة التحميل مستمرة."
 
-// 4B. Housekeeping Granular Area / Element Filters (فلتر بنود جدول النظافة)
+// ══════════════════════════════════════════════════════════════════════════════
+// 4B. جدول أعمال النظافة — الوردية الصباحية | نوفمبر 2026 (دورة الـ 7 أيام مكررة على مدار الشهر)
+//     تم استثناء الوردية الليلية من الجدول المرسل وتكرار مهام الوردية الصباحية (أيام 1 إلى 7) طوال الشهر
+// ══════════════════════════════════════════════════════════════════════════════
+export const HK_MORNING_WEEKLY_CYCLE = [
+  {
+    cycleDay: 1,
+    dayName: "الأحد",
+    tasks: [
+      { area: "أدوار مبنى 1", tags: ["morning_floors_restrooms"], task: "العمل على ادوار مبنى 1 تشييك و تسكين مناديل" },
+      { area: "تراس مبنى 1", tags: ["morning_terrace_receptions"], task: "تأسيس تراس مبنى 1" },
+      { area: "أدوار مبنى 2", tags: ["morning_floors_restrooms"], task: "العمل على ادوار مبنى 2 تشييك و تسكين مناديل" },
+      { area: "أدوار مبنى 3", tags: ["morning_floors_restrooms"], task: "العمل على ادوار مبنى 3 تشييك و تسكين مناديل" },
+      { area: "البلازا", tags: ["morning_plaza_wings"], task: "العمل على البلازا" },
+      { area: "حمامات البلازا", tags: ["morning_plaza_wings", "morning_floors_restrooms"], task: "العمل على حمامات البلازا" },
+      { area: "سلالم الطوارئ", tags: ["morning_emergency_stairs"], task: "تنظيف سلالم طوارىء مبنى 3" },
+    ],
+  },
+  {
+    cycleDay: 2,
+    dayName: "الاثنين",
+    tasks: [
+      { area: "الأضلاع 1-2-3", tags: ["morning_plaza_wings"], task: "العمل على متابعه ضلع 1-2-3" },
+      { area: "أدوار وحمامات مبنى 1", tags: ["morning_floors_restrooms"], task: "العمل على ادوار مبنى 1 مع التشييك و المتابعه المستمره على الحمامات" },
+      { area: "أدوار وحمامات مبنى 2", tags: ["morning_floors_restrooms"], task: "العمل على ادوار مبنى 2 مع التشييك و المتابعه المستمره على الحمامات" },
+      { area: "أدوار وحمامات مبنى 3", tags: ["morning_floors_restrooms"], task: "العمل على ادوار مبنى 3 مع التشييك و المتابعه المستمره على الحمامات" },
+      { area: "المصليات الحريمي والرجالي", tags: ["morning_prayer_rooms"], task: "تنظيف المصلي الحريمي و الرجالى مع متابعه باقى اعمال اليوم" },
+    ],
+  },
+  {
+    cycleDay: 3,
+    dayName: "الثلاثاء",
+    tasks: [
+      { area: "سلالم الطوارئ 1-2-3", tags: ["morning_emergency_stairs"], task: "العمل على تنظيف سلالم طوارىء 1-2-3" },
+      { area: "أدوار وحمامات مبنى 1-2-3", tags: ["morning_floors_restrooms"], task: "العمل على الادوار مبنى 1-2-3 والتشييك على الحمامات" },
+      { area: "المصليات الحريمي والرجالي", tags: ["morning_prayer_rooms"], task: "تنظيف المصليه الحريمي والرجالى" },
+      { area: "نظافة مبنى 1-2-3", tags: ["morning_floors_restrooms"], task: "العمل على تنظيف مبنى 1-2-3" },
+    ],
+  },
+  {
+    cycleDay: 4,
+    dayName: "الأربعاء",
+    tasks: [
+      { area: "الأضلاع 1-2-3", tags: ["morning_plaza_wings"], task: "العمل على متابعه ضلع 1-2-3" },
+      { area: "أدوار وحمامات مبنى 1-2-3", tags: ["morning_floors_restrooms"], task: "العمل على الادوار مبنى 1-2-3 والتشييك على الحمامات" },
+      { area: "المصليات الرجالي والحريمي", tags: ["morning_prayer_rooms"], task: "تنظيف المصليه الرجالى و الحريمي" },
+      { area: "سلالم الطوارئ 1-2-3", tags: ["morning_emergency_stairs"], task: "تنظيف سلالم طوارىء مبنى 1-2-3" },
+    ],
+  },
+  {
+    cycleDay: 5,
+    dayName: "الخميس",
+    tasks: [
+      { area: "الأضلاع 1-2-3", tags: ["morning_plaza_wings"], task: "العمل على متابعه ضلع 1-2-3" },
+      { area: "أدوار وحمامات مبنى 1-2-3", tags: ["morning_floors_restrooms"], task: "العمل على الادوار مبنى 1-2-3 والتشييك على الحمامات" },
+      { area: "تراس مبنى 1", tags: ["morning_terrace_receptions"], task: "التشييك على تراس مبنى 1" },
+      { area: "سلالم الطوارئ 1-2-3", tags: ["morning_emergency_stairs"], task: "التشييك على سلالم طوارىء مبنى 1-2-3" },
+      { area: "المصليات الحريمي والرجالي", tags: ["morning_prayer_rooms"], task: "تنظيف المصليه الحريمي والرجالى" },
+    ],
+  },
+  {
+    cycleDay: 6,
+    dayName: "الجمعة",
+    tasks: [
+      { area: "أدوار مبنى 1-2-3", tags: ["morning_floors_restrooms"], task: "العمل على ادوار مبنى 1-2-3 و تشييك و تسكين مناديل" },
+      { area: "جميع الريسبشنات", tags: ["morning_terrace_receptions"], task: "العمل على متابعه جميع الرسبشنات 1-2-3- ساتشى - ريتشارد" },
+      { area: "حمامات المصليات", tags: ["morning_prayer_rooms"], task: "تنظيف حمامات المصليه الرجالى و الحريمي" },
+      { area: "البلازا", tags: ["morning_plaza_wings"], task: "متابعه البلازا على مدار الورديه" },
+    ],
+  },
+  {
+    cycleDay: 7,
+    dayName: "السبت",
+    tasks: [
+      { area: "تأسيس حمامات مبنى 1-2-3", tags: ["morning_floors_restrooms"], task: "تأسيس كامل لحمامات مبنى 1-2-3" },
+      { area: "مداخل الريسبشنات", tags: ["morning_terrace_receptions"], task: "غسيل الدواسات امام الريسبشنات بالهاى بريشر" },
+      { area: "حمامات المصليات", tags: ["morning_prayer_rooms"], task: "تنظيف حمامات المصليه الرجالى و الحريمي" },
+      { area: "سجاد المصليات", tags: ["morning_prayer_rooms"], task: "تنظيف سجاد المصليات بالهوفر" },
+    ],
+  },
+]
+
+// توليد جدول الـ 30 يوم للوردية الصباحية (شهر نوفمبر 2026 — من 1/11 إلى 30/11 بتكرار الأيام من 1 إلى 7)
+export const HK_MORNING_SHIFT_MONTHLY_DAYS = Array.from({ length: 30 }, (_, idx) => {
+  const day = idx + 1
+  const date = `2026-11-${String(day).padStart(2, "0")}`
+  const template = HK_MORNING_WEEKLY_CYCLE[idx % 7]
+  const weekNum = Math.ceil(day / 7)
+  return {
+    day,
+    date,
+    dayName: template.dayName,
+    cycleDay: template.cycleDay,
+    weekNumber: weekNum,
+    weekLabelAr:
+      weekNum === 1
+        ? "الأسبوع الأول (1 - 7 نوفمبر)"
+        : weekNum === 2
+        ? "الأسبوع الثاني (8 - 14 نوفمبر)"
+        : weekNum === 3
+        ? "الأسبوع الثالث (15 - 21 نوفمبر)"
+        : weekNum === 4
+        ? "الأسبوع الرابع (22 - 28 نوفمبر)"
+        : "نهاية الشهر (29 - 30 نوفمبر)",
+    taskObjects: template.tasks,
+    tasks: template.tasks.map((t) => t.task),
+    summaryText: template.tasks.map((t) => t.task).join(" • "),
+  }
+})
+
+export const HK_MORNING_PLAN_NOTE =
+  "تُكرر مهام الوردية الصباحية المعتمدة للأسبوع الأول (من الأحد 1/11 إلى السبت 7/11) بانتظام على مدار أيام الشهر مع المتابعة المستمرة للحمامات والأدوار والبلازا والمصليات."
+
+// 4C. Housekeeping Granular Area / Element Filters (فلتر بنود جدول النظافة للورديتين الصباحية والليلية)
 export const HK_ITEM_FILTERS = [
-  { id: "all",                 icon: "🧹", labelAr: "الكل (جميع البنود)",                                  labelEn: "All HK Items" },
-  { id: "main_cleaning",       icon: "⛺", labelAr: "أعمال التنظيف الرئيسية (تندات • كانوبي • سلالم • ريسبشن)", labelEn: "Main Cleaning (Awnings, Canopies, Stairs, Reception)" },
-  { id: "restaurant_joints",   icon: "🍽️", labelAr: "غسيل أرضية فواصل المطاعم",                             labelEn: "Restaurant Floor Joints" },
-  { id: "side_works",          icon: "🧱", labelAr: "الأعمال الجانبية (الأقماع • الدواسات • الإنترلوك • أحواض الزرع)", labelEn: "Side Works (Cones, Mats, Interlock, Planters)" },
-  { id: "garage_cat",          icon: "🚗", labelAr: "أعمال الجراج (كات B1 / B2 • الإيبوكسي • المواسير)",     labelEn: "Garage CAT Works (B1/B2, Epoxy, Pipes)" },
-  { id: "loading_area",        icon: "🚛", labelAr: "منطقة التحميل (يوميًا)",                                labelEn: "Loading Area (Daily)" },
+  { id: "all",                        icon: "🧹", labelAr: "الكل (جميع البنود)",                                            labelEn: "All HK Items" },
+  // فلاتر الوردية الصباحية
+  { id: "morning_floors_restrooms",   icon: "🏢", labelAr: "صباحي: أدوار وحمامات المباني (1-2-3) وتسكين المناديل",           labelEn: "Morning: Buildings 1-2-3 Floors & Restrooms" },
+  { id: "morning_plaza_wings",        icon: "🏛️", labelAr: "صباحي: البلازا وحمامات البلازا والأضلاع (1-2-3)",                labelEn: "Morning: Plaza, Plaza Restrooms & Wings 1-2-3" },
+  { id: "morning_prayer_rooms",       icon: "🕌", labelAr: "صباحي: المصليات الرجالي والحريمي (حمامات وسجاد)",                labelEn: "Morning: Male & Female Prayer Rooms" },
+  { id: "morning_emergency_stairs",   icon: "🚪", labelAr: "صباحي: سلالم الطوارئ (مبنى 1-2-3)",                              labelEn: "Morning: Emergency Stairs (B1-B2-B3)" },
+  { id: "morning_terrace_receptions", icon: "🛋️", labelAr: "صباحي: الريسبشنات والدواسات وتراس مبنى 1",                       labelEn: "Morning: Receptions, Mats & B1 Terrace" },
+  // فلاتر الوردية الليلية
+  { id: "main_cleaning",              icon: "⛺", labelAr: "ليلي: أعمال التنظيف الرئيسية (تندات • كانوبي • سلالم • ريسبشن)", labelEn: "Night: Main Cleaning (Awnings, Canopies, Stairs)" },
+  { id: "restaurant_joints",          icon: "🍽️", labelAr: "ليلي: غسيل أرضية فواصل المطاعم",                                 labelEn: "Night: Restaurant Floor Joints" },
+  { id: "side_works",                 icon: "🧱", labelAr: "ليلي: الأعمال الجانبية (الأقماع • الدواسات • الإنترلوك • الزرع)", labelEn: "Night: Side Works (Cones, Mats, Interlock)" },
+  { id: "garage_cat",                 icon: "🚗", labelAr: "ليلي: أعمال الجراج (كات B1 / B2 • الإيبوكسي • المواسير)",        labelEn: "Night: Garage CAT Works" },
+  { id: "loading_area",               icon: "🚛", labelAr: "ليلي: منطقة التحميل (يوميًا)",                                    labelEn: "Night: Loading Area (Daily)" },
 ]
 
 /**
@@ -853,6 +973,16 @@ export function matchesHkItemFilter(taskItem, filterId) {
   if (Array.isArray(taskItem.hkTags) && taskItem.hkTags.includes(filterId)) return true
   const text = `${taskItem.categoryAr || ""} ${taskItem.requiredTaskAr || ""}`
   switch (filterId) {
+    case "morning_floors_restrooms":
+      return /ادوار|الادوار|تسكين مناديل|لحمامات مبنى|تنظيف مبنى/i.test(text)
+    case "morning_plaza_wings":
+      return /البلازا|ضلع 1-2-3/i.test(text)
+    case "morning_prayer_rooms":
+      return /المصلي|المصليه|المصليات/i.test(text)
+    case "morning_emergency_stairs":
+      return /سلالم طوارىء|سلالم الطوارئ/i.test(text)
+    case "morning_terrace_receptions":
+      return /تراس مبنى|الرسبشنات|الريسبشنات/i.test(text)
     case "main_cleaning":
       return /أعمال التنظيف الرئيسية|تندة|كانوبي|سلم| للكنب|البنك العربي/i.test(text)
     case "restaurant_joints":
@@ -868,15 +998,27 @@ export function matchesHkItemFilter(taskItem, filterId) {
   }
 }
 
-// 4C. Dynamic Generator for the 3-Shift Monthly Checklists (Starting with Night Shift)
+// 4D. Dynamic Generator for the 3-Shift Monthly Checklists (Morning + Night Shifts Ready)
 export function getHousekeepingShiftChecklistForDay(dayName, dayOfMonth = 1) {
   const safeDay = Math.min(30, Math.max(1, Number(dayOfMonth) || 1))
   const entry =
     HK_NIGHT_SHIFT_MONTHLY_DAYS.find((d) => d.day === safeDay) ||
     HK_NIGHT_SHIFT_MONTHLY_DAYS[0]
 
-  // Morning Shift (الوردية الصباحية) — بانتظار تزويد جدول الوردية الصباحية من المستخدم
-  const morning = []
+  const morningEntry =
+    HK_MORNING_SHIFT_MONTHLY_DAYS.find((d) => d.day === safeDay) ||
+    HK_MORNING_SHIFT_MONTHLY_DAYS.find((d) => d.dayName === dayName) ||
+    HK_MORNING_SHIFT_MONTHLY_DAYS[0]
+
+  // Morning Shift (الوردية الصباحية) — دورة الـ 7 أيام مكررة على مدار الشهر (30 يوم)
+  const morning = morningEntry.taskObjects.map((item, idx) => ({
+    id: `morning_d${safeDay}_t${idx + 1}`,
+    shift: "morning",
+    area: item.area,
+    zone: `يوم ${safeDay} (${morningEntry.dayName})`,
+    tags: item.tags,
+    task: item.task,
+  }))
 
   // Evening Shift (الوردية المسائية) — بانتظار تزويد جدول الوردية المسائية من المستخدم
   const evening = []
@@ -925,7 +1067,7 @@ export function getHousekeepingShiftChecklistForDay(dayName, dayOfMonth = 1) {
     },
   ]
 
-  return { morning, evening, night, nightEntry: entry }
+  return { morning, evening, night, nightEntry: entry, morningEntry }
 }
 
 export function getHousekeepingDayPlan(dateStr) {
@@ -934,15 +1076,20 @@ export function getHousekeepingDayPlan(dateStr) {
   const nightEntry =
     HK_NIGHT_SHIFT_MONTHLY_DAYS.find((d) => d.day === dayOfMonth) ||
     HK_NIGHT_SHIFT_MONTHLY_DAYS[0]
+  const morningEntry =
+    HK_MORNING_SHIFT_MONTHLY_DAYS.find((d) => d.day === dayOfMonth) ||
+    HK_MORNING_SHIFT_MONTHLY_DAYS.find((d) => d.dayName === dayName) ||
+    HK_MORNING_SHIFT_MONTHLY_DAYS[0]
   const shifts = getHousekeepingShiftChecklistForDay(dayName, dayOfMonth)
 
-  // Empty specializedTasks to prevent duplicating Night Shift items
+  // Empty specializedTasks to prevent duplicating Shift items
   const specializedTasks = []
 
   return {
     dayName,
     dayOfMonth,
     nightEntry,
+    morningEntry,
     specializedTasks,
     shifts,
   }
