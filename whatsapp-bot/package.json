@@ -1,0 +1,16 @@
+{
+  "name": "park-street-whatsapp-shift-bot",
+  "version": "1.0.0",
+  "description": "Automated WhatsApp Web Bot for Park Street Mall 3-Shift Operations (Maintenance, Operations, Security, Housekeeping, Safety)",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "firebase": "^10.12.0",
+    "node-cron": "^3.0.3",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.25.0"
+  }
+}

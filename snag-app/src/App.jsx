@@ -11,6 +11,7 @@ import StoresModule from "./components/StoresModule.jsx"
 import RestroomsModule from "./components/RestroomsModule.jsx"
 import ParkStreetModule from "./components/ParkStreetModule.jsx"
 import OperationsPlansModule from "./components/OperationsPlansModule.jsx"
+import WhatsAppShiftHubModule from "./components/WhatsAppShiftHubModule.jsx"
 import AICommandCenter from "./components/AICommandCenter.jsx"
 import { useSnags } from "./hooks/useSnags.js"
 import { useAuth }  from "./hooks/useAuth.js"
@@ -254,6 +255,14 @@ export default function App() {
               📋 {tr("سجل الملاحظات", "Snags Log")}
             </button>
           )}
+          {canUser(user, "whatsapp-hub", "view") && (
+            <button 
+              style={{ ...s.tab, ...(activeTab === "whatsapp-hub" ? { ...s.activeTab, background: "linear-gradient(135deg, #059669, #15803d)", color: "#ecfdf5" } : {}) }}
+              onClick={() => setActiveTab("whatsapp-hub")}
+            >
+              💬 {tr("تحليل واتساب وملخص الـ 3 شيفتات", "WhatsApp Groups & 3-Shifts Hub")}
+            </button>
+          )}
           {canUser(user, "operations-plans", "view") && (
             <button 
               style={{ ...s.tab, ...(activeTab === "operations-plans" ? { ...s.activeTab, background: "linear-gradient(135deg, #16a34a, #0e7490)", color: "#f0fdf4" } : {}) }}
@@ -341,8 +350,52 @@ export default function App() {
 
         {activeTab === "snags" && canUser(user, "snags", "view") && (
           <>
-            {/* Quick-access banners to Operations Plans, Park St. Inspection & Restroom Snag Center */}
+            {/* Quick-access banners to WhatsApp Hub, Operations Plans, Park St. Inspection & Restroom Snag Center */}
             <div className="quick-banners-grid">
+              {canUser(user, "whatsapp-hub", "view") && (
+                <div
+                  onClick={() => setActiveTab("whatsapp-hub")}
+                  style={{
+                    background: "linear-gradient(135deg, rgba(5,150,105,0.38), rgba(15,23,42,0.85))",
+                    border: "1px solid #22c55e",
+                    borderRadius: 14,
+                    padding: "12px 16px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 24 }}>💬</span>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: "#ecfdf5" }}>
+                        {tr("WHATSAPP 3-SHIFTS AI HUB | تحليل جروبات الواتساب وملخص نهاية الـ 3 شيفتات", "WHATSAPP 3-SHIFTS AI HUB | WhatsApp Groups & Shift Summary")}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#86efac" }}>
+                        {tr(
+                          "🔧 الصيانة • ⚙️ التشغيل • 🛡️ الأمن • 🧹 النظافة • 🧯 السيفتي | حصر المفتوح والمنتهي والفئات والملخص التنفيذي",
+                          "🔧 Maintenance • ⚙️ Operations • 🛡️ Security • 🧹 Housekeeping • 🧯 Safety | Open vs Done & Executive Summary"
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{
+                    background: "#16a34a",
+                    color: "#fff",
+                    fontWeight: 800,
+                    fontSize: 11,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    whiteSpace: "nowrap",
+                  }}>
+                    {tr("فتح محلل الواتساب والشيفتات ←", "Open WhatsApp Hub →")}
+                  </span>
+                </div>
+              )}
+
               {canUser(user, "operations-plans", "view") && (
                 <div
                   onClick={() => setActiveTab("operations-plans")}
@@ -503,6 +556,7 @@ export default function App() {
           </>
         )}
         
+        {activeTab === "whatsapp-hub" && canUser(user, "whatsapp-hub", "view") && <WhatsAppShiftHubModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "operations-plans" && canUser(user, "operations-plans", "view") && <OperationsPlansModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "park-street" && canUser(user, "park-street", "view") && <ParkStreetModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "restrooms" && canUser(user, "restrooms", "view") && <RestroomsModule currentUser={user} notify={notify} onAddSnag={addSnag} />}

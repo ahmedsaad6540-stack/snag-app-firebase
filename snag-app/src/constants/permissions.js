@@ -12,6 +12,14 @@ export const APP_MODULES = [
     descEn: "Record and track maintenance & operations snags across the mall",
   },
   {
+    id: "whatsapp-hub",
+    icon: "💬",
+    labelAr: "تحليل جروبات الواتساب وملخص الـ 3 شيفتات",
+    labelEn: "WhatsApp Groups & 3-Shifts Analyzer",
+    descAr: "تحليل جروبات (الصيانة • التشغيل • الأمن • النظافة • السيفتي) وحصر المفتوح والمنتهي والملخص التنفيذي",
+    descEn: "Track WhatsApp groups across 3 shifts, classify maintenance/ops orders & generate executive summary",
+  },
+  {
     id: "operations-plans",
     icon: "📅",
     labelAr: "خطط التشغيل والتقارير (اللاندسكيب • السبايدر • المكافحة • النظافة)",
@@ -221,6 +229,7 @@ export const ROLE_PRESETS = {
     },
     matrix: buildMatrix({
       "snags":            { view: true, add: true, edit: true, status: true, delete: false, export: true },
+      "whatsapp-hub":     { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "operations-plans": { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "park-street":      { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "restrooms":        { view: true, add: true, edit: true, status: true, delete: false, export: true },
@@ -248,6 +257,7 @@ export const ROLE_PRESETS = {
     },
     matrix: buildMatrix({
       "snags":            { view: true, add: true, edit: false, status: true, delete: false, export: false },
+      "whatsapp-hub":     { view: true, add: true, edit: true, status: true, delete: false, export: false },
       "operations-plans": { view: true, add: false, edit: true, status: true, delete: false, export: false },
       "park-street":      { view: true, add: false, edit: true, status: true, delete: false, export: false },
       "restrooms":        { view: true, add: false, edit: true, status: true, delete: false, export: false },
