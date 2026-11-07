@@ -917,12 +917,29 @@ export const HK_MORNING_WEEKLY_CYCLE = [
   },
 ]
 
-// توليد جدول الـ 30 يوم للوردية الصباحية (شهر نوفمبر 2026 — من 1/11 إلى 30/11 بتكرار الأيام من 1 إلى 7)
+// ثوابت المتابعة اليومية للوردية الصباحية (تتكرر يوميًا طوال الشهر)
+export const HK_MORNING_DAILY_CONSTANTS = [
+  {
+    area: "ثابت متابعة يومية — حمامات البلازا",
+    tags: ["morning_daily_constants", "morning_plaza_wings"],
+    isConstant: true,
+    task: "تنظيف ومتابعة حمامات البلازا (ثابت متابعة يومية بالوردية الصباحية)",
+  },
+  {
+    area: "ثابت متابعة يومية — حمامات الأدوار والمصلى",
+    tags: ["morning_daily_constants", "morning_floors_restrooms", "morning_prayer_rooms"],
+    isConstant: true,
+    task: "متابعة حمامات الأدوار مبنى 1/2/3 والمصلى (ثابت متابعة يومية بالوردية الصباحية)",
+  },
+]
+
+// توليد جدول الـ 30 يوم للوردية الصباحية (شهر نوفمبر 2026 — من 1/11 إلى 30/11 بتكرار الأيام من 1 إلى 7 + ثوابت المتابعة اليومية)
 export const HK_MORNING_SHIFT_MONTHLY_DAYS = Array.from({ length: 30 }, (_, idx) => {
   const day = idx + 1
   const date = `2026-11-${String(day).padStart(2, "0")}`
   const template = HK_MORNING_WEEKLY_CYCLE[idx % 7]
   const weekNum = Math.ceil(day / 7)
+  const allDayTasks = [...template.tasks, ...HK_MORNING_DAILY_CONSTANTS]
   return {
     day,
     date,
@@ -939,14 +956,18 @@ export const HK_MORNING_SHIFT_MONTHLY_DAYS = Array.from({ length: 30 }, (_, idx)
         : weekNum === 4
         ? "الأسبوع الرابع (22 - 28 نوفمبر)"
         : "نهاية الشهر (29 - 30 نوفمبر)",
-    taskObjects: template.tasks,
-    tasks: template.tasks.map((t) => t.task),
-    summaryText: template.tasks.map((t) => t.task).join(" • "),
+    scheduledTaskObjects: template.tasks,
+    constantTaskObjects: HK_MORNING_DAILY_CONSTANTS,
+    plazaRestroomsConstant: "تنظيف ومتابعة حمامات البلازا (ثابت يومي)",
+    floorsPrayerRestroomsConstant: "متابعة حمامات الأدوار مبنى 1/2/3 والمصلى (ثابت يومي)",
+    taskObjects: allDayTasks,
+    tasks: allDayTasks.map((t) => t.task),
+    summaryText: allDayTasks.map((t) => t.task).join(" • "),
   }
 })
 
 export const HK_MORNING_PLAN_NOTE =
-  "تُكرر مهام الوردية الصباحية المعتمدة للأسبوع الأول (من الأحد 1/11 إلى السبت 7/11) بانتظام على مدار أيام الشهر مع المتابعة المستمرة للحمامات والأدوار والبلازا والمصليات."
+  "تُكرر مهام الوردية الصباحية المعتمدة للأسبوع الأول (من الأحد 1/11 إلى السبت 7/11) بانتظام على مدار أيام الشهر، مع الالتزام اليومي بثوابت المتابعة اليومية: (1) تنظيف ومتابعة حمامات البلازا، (2) متابعة حمامات الأدوار مبنى 1/2/3 والمصلى."
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 4C. جدول أعمال النظافة والتأسيس — الوردية المسائية | نوفمبر 2026 (دورة الـ 7 أيام + ثوابت المتابعة اليومية)
@@ -1003,7 +1024,7 @@ export const HK_EVENING_WEEKLY_CYCLE = [
   },
 ]
 
-// توليد جدول الـ 30 يوم للوردية المسائية (شهر نوفمبر 2026 — دورة الـ 7 أيام + ثوابت المتابعة اليومية: تنظيف خلف المطاعم وأرصفة الجراج)
+// توليد جدول الـ 30 يوم للوردية المسائية (شهر نوفمبر 2026 — دورة الـ 7 أيام + 4 ثوابت متابعة يومية: حمامات البلازا • حمامات الأدوار والمصلى • خلف المطاعم • أرصفة الجراج)
 export const HK_EVENING_SHIFT_MONTHLY_DAYS = Array.from({ length: 30 }, (_, idx) => {
   const day = idx + 1
   const date = `2026-11-${String(day).padStart(2, "0")}`
@@ -1016,13 +1037,27 @@ export const HK_EVENING_SHIFT_MONTHLY_DAYS = Array.from({ length: 30 }, (_, idx)
       task: template.mainFoundationTask,
     },
     {
+      area: "ثابت متابعة يومية — حمامات البلازا",
+      tags: ["evening_daily_constants"],
+      isConstant: true,
+      task: "تنظيف ومتابعة حمامات البلازا (متابعة يومية ثابتة بالوردية المسائية)",
+    },
+    {
+      area: "ثابت متابعة يومية — حمامات الأدوار والمصلى",
+      tags: ["evening_daily_constants"],
+      isConstant: true,
+      task: "متابعة حمامات الأدوار مبنى 1/2/3 والمصلى (متابعة يومية ثابتة بالوردية المسائية)",
+    },
+    {
       area: "ثابت متابعة يومية — خلف المطاعم",
       tags: ["evening_daily_constants"],
+      isConstant: true,
       task: "تنظيف خلف المطاعم (متابعة يومية ثابتة بالوردية المسائية)",
     },
     {
       area: "ثابت متابعة يومية — أرصفة الجراج",
       tags: ["evening_daily_constants"],
+      isConstant: true,
       task: "تنظيف أرصفة الجراج (متابعة يومية ثابتة بالوردية المسائية)",
     },
   ]
@@ -1044,16 +1079,18 @@ export const HK_EVENING_SHIFT_MONTHLY_DAYS = Array.from({ length: 30 }, (_, idx)
         : "نهاية الشهر (29 - 30 نوفمبر)",
     foundationArea: template.area,
     foundationTask: template.mainFoundationTask,
+    plazaRestroomsConstant: "تنظيف ومتابعة حمامات البلازا (ثابت متابعة يومية)",
+    floorsPrayerRestroomsConstant: "متابعة حمامات الأدوار مبنى 1/2/3 والمصلى (ثابت متابعة يومية)",
     restaurantsBack: "تنظيف خلف المطاعم (ثابت متابعة يومية)",
     garageSidewalks: "تنظيف أرصفة الجراج (ثابت متابعة يومية)",
     taskObjects,
     tasks: taskObjects.map((t) => t.task),
-    summaryText: `${template.mainFoundationTask} • تنظيف خلف المطاعم • تنظيف أرصفة الجراج`,
+    summaryText: `${template.mainFoundationTask} • حمامات البلازا • حمامات الأدوار 1/2/3 والمصلى • تنظيف خلف المطاعم • أرصفة الجراج`,
   }
 })
 
 export const HK_EVENING_PLAN_NOTE =
-  "تُكرر مهام التأسيس والمراجعة للوردية المسائية (الأيام من 1 إلى 7) على مدار الشهر بالكامل، مع الالتزام اليومي بثوابت المتابعة اليومية: (1) تنظيف خلف المطاعم، (2) تنظيف أرصفة الجراج."
+  "تُكرر مهام التأسيس والمراجعة للوردية المسائية (الأيام من 1 إلى 7) على مدار الشهر بالكامل، مع الالتزام اليومي بـ 4 ثوابت متابعة يومية: (1) تنظيف ومتابعة حمامات البلازا، (2) متابعة حمامات الأدوار مبنى 1/2/3 والمصلى، (3) تنظيف خلف المطاعم، (4) تنظيف أرصفة الجراج."
 
 // 4D. Housekeeping Granular Area / Element Filters (فلتر بنود جدول النظافة للـ 3 ورديات: الصباحية والمسائية والليلية)
 export const HK_ITEM_FILTERS = [
@@ -1064,16 +1101,19 @@ export const HK_ITEM_FILTERS = [
   { id: "morning_prayer_rooms",       icon: "🕌", labelAr: "صباحي: المصليات الرجالي والحريمي (حمامات وسجاد)",                labelEn: "Morning: Male & Female Prayer Rooms" },
   { id: "morning_emergency_stairs",   icon: "🚪", labelAr: "صباحي: سلالم الطوارئ (مبنى 1-2-3)",                              labelEn: "Morning: Emergency Stairs (B1-B2-B3)" },
   { id: "morning_terrace_receptions", icon: "🛋️", labelAr: "صباحي: الريسبشنات والدواسات وتراس مبنى 1",                       labelEn: "Morning: Receptions, Mats & B1 Terrace" },
+  { id: "morning_daily_constants",    icon: "🔄", labelAr: "صباحي (ثوابت يومية): حمامات البلازا + حمامات الأدوار والمصلى",    labelEn: "Morning (Daily Constants): Plaza & Floors/Prayer Restrooms" },
   // فلاتر الوردية المسائية
   { id: "evening_foundation_floors",  icon: "🌇", labelAr: "مسائي: تأسيس ومراجعة أدوار مبنى (1/2/3)",                        labelEn: "Evening: Buildings 1/2/3 Floors Foundation & Review" },
   { id: "evening_emergency_prayer",   icon: "🕌", labelAr: "مسائي: تأسيس سلالم طوارئ مبنى 2 (سلم B) والمصلية وحماماتها",     labelEn: "Evening: B2 Emergency Stairs B & Prayer Room Foundation" },
-  { id: "evening_daily_constants",    icon: "🔄", labelAr: "مسائي (ثوابت يومية): تنظيف خلف المطاعم + أرصفة الجراج",           labelEn: "Evening (Daily Constants): Behind Restaurants & Garage Sidewalks" },
+  { id: "evening_daily_constants",    icon: "🔄", labelAr: "مسائي (ثوابت يومية): حمامات البلازا والأدوار والمصلى • خلف المطاعم • الجراج", labelEn: "Evening (Daily Constants): Restrooms, Behind Restaurants & Garage" },
   // فلاتر الوردية الليلية
   { id: "main_cleaning",              icon: "⛺", labelAr: "ليلي: أعمال التنظيف الرئيسية (تندات • كانوبي • سلالم • ريسبشن)", labelEn: "Night: Main Cleaning (Awnings, Canopies, Stairs)" },
   { id: "restaurant_joints",          icon: "🍽️", labelAr: "ليلي: غسيل أرضية فواصل المطاعم",                                 labelEn: "Night: Restaurant Floor Joints" },
   { id: "side_works",                 icon: "🧱", labelAr: "ليلي: الأعمال الجانبية (الأقماع • الدواسات • الإنترلوك • الزرع)", labelEn: "Night: Side Works (Cones, Mats, Interlock)" },
   { id: "garage_cat",                 icon: "🚗", labelAr: "ليلي: أعمال الجراج (كات B1 / B2 • الإيبوكسي • المواسير)",        labelEn: "Night: Garage CAT Works" },
   { id: "loading_area",               icon: "🚛", labelAr: "ليلي: منطقة التحميل (يوميًا)",                                    labelEn: "Night: Loading Area (Daily)" },
+  // المهام والملاحظات الإضافية
+  { id: "extra_shift_tasks",          icon: "➕", labelAr: "مهام وملاحظات إضافية بالورديات (صباحي • مسائي • ليلي)",          labelEn: "Extra Shift Tasks & Notes" },
 ]
 
 /**
@@ -1085,21 +1125,23 @@ export function matchesHkItemFilter(taskItem, filterId) {
   const text = `${taskItem.categoryAr || ""} ${taskItem.requiredTaskAr || ""}`
   switch (filterId) {
     case "morning_floors_restrooms":
-      return /ادوار|الادوار|تسكين مناديل|لحمامات مبنى|تنظيف مبنى/i.test(text)
+      return /ادوار|الادوار|أدوار|تسكين مناديل|لحمامات مبنى|تنظيف مبنى/i.test(text)
     case "morning_plaza_wings":
       return /البلازا|ضلع 1-2-3/i.test(text)
     case "morning_prayer_rooms":
-      return /المصلي|المصليه|المصليات/i.test(text)
+      return /المصلي|المصليه|المصليات|والمصلى/i.test(text)
     case "morning_emergency_stairs":
       return /سلالم طوارىء|سلالم الطوارئ/i.test(text)
     case "morning_terrace_receptions":
       return /تراس مبنى|الرسبشنات|الريسبشنات/i.test(text)
+    case "morning_daily_constants":
+      return /ثابت متابعة يومية بالوردية الصباحية/i.test(text)
     case "evening_foundation_floors":
       return /مبني 1\/2|مبني 3|الدور 4|الدور 3|الدور 2|الدور 1|الدور الاول/i.test(text)
     case "evening_emergency_prayer":
       return /سلم B|تأسيس المصلية/i.test(text)
     case "evening_daily_constants":
-      return /خلف المطاعم|أرصفة الجراج|ارصفة الجراج/i.test(text)
+      return /خلف المطاعم|أرصفة الجراج|ارصفة الجراج|متابعة يومية ثابتة بالوردية المسائية/i.test(text)
     case "main_cleaning":
       return /أعمال التنظيف الرئيسية|تندة|كانوبي|سلم| للكنب|البنك العربي/i.test(text)
     case "restaurant_joints":
@@ -1110,6 +1152,8 @@ export function matchesHkItemFilter(taskItem, filterId) {
       return /أعمال الجراج|جراج|الإيبوكسي|المواسير العلوية|الحواجز الصفراء/i.test(text)
     case "loading_area":
       return /منطقة التحميل/i.test(text)
+    case "extra_shift_tasks":
+      return /مهمة إضافية|ملاحظة إضافية/i.test(text)
     default:
       return true
   }

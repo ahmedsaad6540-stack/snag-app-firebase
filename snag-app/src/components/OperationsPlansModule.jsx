@@ -231,6 +231,11 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
   const [records, setRecords] = useState({})
   const [exporting, setExporting] = useState(false)
 
+  // Extra Shift Task / Note Quick-Add State (إضافة ملاحظة أو مهمة إضافية في كل شيفت)
+  const [extraShiftKey, setExtraShiftKey] = useState("morning") // "morning" | "evening" | "night"
+  const [extraShiftArea, setExtraShiftArea] = useState("")
+  const [extraShiftTaskText, setExtraShiftTaskText] = useState("")
+
   // Camera & Lightbox
   const [cameraTargetUid, setCameraTargetUid] = useState(null)
   const [uploadTargetUid, setUploadTargetUid] = useState(null)
@@ -411,6 +416,57 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
     toast.success(tr("🚨 تم ترحيل عدم التنفيذ إلى سجل الملاحظات العام!", "🚨 Promoted to Main Snags Log!"))
   }
 
+  async function handleAddExtraShiftTask() {
+    if (!canModify) return
+    const text = extraShiftTaskText.trim()
+    if (!text) {
+      toast.error(tr("يرجى كتابة نص المهمة أو الملاحظة الإضافية أولاً", "Please enter the extra task or note text first"))
+      return
+    }
+    const shiftLabels = {
+      morning: "🌅 الوردية الصباحية",
+      evening: "🌇 الوردية المسائية",
+      night:   "🌙 الوردية الليلية",
+    }
+    const dayName = getArabicDayName(selectedDate)
+    const uid = `${selectedDate}__housekeeping__extra_${extraShiftKey}_${Date.now()}`
+    const areaLabel = extraShiftArea.trim() || "مهمة / ملاحظة إضافية بالوردية"
+    const newRec = {
+      uid,
+      isCustomHkShiftTask: true,
+      date: selectedDate,
+      dayName,
+      sectorId: "housekeeping",
+      sectorLabelAr: "الهاوس كيبنج — مهام وملاحظات إضافية بالوردية",
+      hkSubGroup: extraShiftKey,
+      hkTags: ["extra_shift_tasks"],
+      categoryAr: `${areaLabel} (${shiftLabels[extraShiftKey]})`,
+      shiftOrSlotAr: shiftLabels[extraShiftKey],
+      requiredTaskAr: `➕ مهمة/ملاحظة إضافية: ${text}`,
+      status: "pending",
+      workforceCount: "",
+      whatWasDone: "",
+      reasonOrBasis: "",
+      inspector: userName,
+      photos: [],
+      updatedAt: new Date().toISOString(),
+    }
+    setRecords((prev) => ({ ...prev, [uid]: newRec }))
+    setExtraShiftTaskText("")
+    setExtraShiftArea("")
+    try {
+      await setDoc(
+        doc(db, "operations_action_logs", uid),
+        { ...newRec, serverTimestamp: serverTimestamp() },
+        { merge: true }
+      )
+      toast.success(tr(`✅ تمت إضافة المهمة/الملاحظة الإضافية في ${shiftLabels[extraShiftKey]}`, "Extra shift task added!"))
+    } catch (err) {
+      console.error("Failed saving extra shift task:", err)
+      toast.error(tr("تعذر حفظ المهمة الإضافية في السحابة", "Failed saving extra task"))
+    }
+  }
+
   // ── Compute Dates for Current Period (Daily / Weekly / Monthly) ──
   const activeDatesList = useMemo(() => {
     if (periodMode === "daily") {
@@ -435,8 +491,57 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
   // ── Build Tasks for Active Period ──
   const allPeriodTasks = useMemo(() => {
     const list = []
+    const shiftLabels = {
+      morning: "🌅 الوردية الصباحية",
+      evening: "🌇 الوردية المسائية",
+      night:   "🌙 الوردية الليلية",
+    }
     for (const dStr of activeDatesList) {
       const dayTasks = buildAllTasksForDate(dStr)
+
+      // Also include inline extraShiftTask from the 30-day shift tables + custom added shift tasks for this date
+      const dayNum = Math.min(30, Math.max(1, Number((dStr || "").split("-")[2]) || 1))
+      const dayName = getArabicDayName(dStr)
+      for (const shKey of ["morning", "evening", "night"]) {
+        const summaryRec = records[`${dStr}__hk_${shKey}_day__${dayNum}`]
+        if (summaryRec?.extraShiftTask && summaryRec.extraShiftTask.trim()) {
+          dayTasks.push({
+            uid: `${dStr}__hk_${shKey}_extra_inline__${dayNum}`,
+            date: dStr,
+            dayName,
+            sectorId: "housekeeping",
+            sectorLabelAr: "الهاوس كيبنج — متابعة الورديات",
+            hkSubGroup: shKey,
+            hkTags: ["extra_shift_tasks"],
+            categoryAr: `مهمة / ملاحظة إضافية (${shiftLabels[shKey]})`,
+            shiftOrSlotAr: shiftLabels[shKey],
+            requiredTaskAr: `➕ مهمة إضافية: ${summaryRec.extraShiftTask.trim()}`,
+            extraMetaAr: shiftLabels[shKey],
+            defaultStatus: summaryRec.status || "pending",
+          })
+        }
+      }
+
+      // Append any custom tasks added via the Quick-Add Extra Shift Task bar for this date
+      Object.values(records).forEach((r) => {
+        if (r && r.isCustomHkShiftTask && r.date === dStr) {
+          dayTasks.push({
+            uid: r.uid,
+            date: r.date,
+            dayName: r.dayName || dayName,
+            sectorId: "housekeeping",
+            sectorLabelAr: r.sectorLabelAr || "الهاوس كيبنج — مهام إضافية",
+            hkSubGroup: r.hkSubGroup || "morning",
+            hkTags: r.hkTags || ["extra_shift_tasks"],
+            categoryAr: r.categoryAr || "مهمة / ملاحظة إضافية",
+            shiftOrSlotAr: r.shiftOrSlotAr || shiftLabels[r.hkSubGroup || "morning"],
+            requiredTaskAr: r.requiredTaskAr,
+            extraMetaAr: r.shiftOrSlotAr || "",
+            defaultStatus: r.status || "pending",
+          })
+        }
+      })
+
       for (const t of dayTasks) {
         if (activeSector !== "all" && t.sectorId !== activeSector) continue
         if (t.sectorId === "housekeeping") {
@@ -1173,6 +1278,78 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               )
             })}
           </div>
+
+          {/* Row 3: Quick-Add Extra Task or Note for ANY Shift (إدخال ملاحظة أو مهمة إضافية في كل شيفت) */}
+          {canModify && (
+            <div
+              className="mobile-stack-row"
+              style={{
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+                alignItems: "center",
+                paddingTop: 10,
+                borderTop: "1px solid #1e293b",
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 900, color: "#fbbf24", whiteSpace: "nowrap" }}>
+                ➕ {tr(`إدخال مهمة أو ملاحظة إضافية ليوم (${selectedDate}):`, `Add Extra Shift Task/Note (${selectedDate}):`)}
+              </span>
+              <select
+                value={extraShiftKey}
+                onChange={(e) => setExtraShiftKey(e.target.value)}
+                style={{
+                  ...s.miniInput,
+                  width: "auto",
+                  minWidth: 165,
+                  fontWeight: 800,
+                  color: "#38bdf8",
+                  cursor: "pointer",
+                }}
+              >
+                <option value="morning">🌅 الوردية الصباحية</option>
+                <option value="evening">🌇 الوردية المسائية</option>
+                <option value="night">🌙 الوردية الليلية</option>
+              </select>
+              <input
+                type="text"
+                value={extraShiftArea}
+                onChange={(e) => setExtraShiftArea(e.target.value)}
+                placeholder={tr("الموقع / النطاق (مثال: حمامات البلازا / مبنى 2)...", "Area / Location (optional)...")}
+                style={{ ...s.miniInput, flex: "0 1 210px", minWidth: 150 }}
+              />
+              <input
+                type="text"
+                value={extraShiftTaskText}
+                onChange={(e) => setExtraShiftTaskText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    handleAddExtraShiftTask()
+                  }
+                }}
+                placeholder={tr("اكتب المهمة أو الملاحظة الإضافية للوردية واضغط إضافة...", "Type extra task or note for the shift...")}
+                style={{ ...s.miniInput, flex: 1, minWidth: 220 }}
+              />
+              <button
+                type="button"
+                onClick={handleAddExtraShiftTask}
+                style={{
+                  background: "linear-gradient(135deg, #f59e0b, #ea580c)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                ➕ {tr("إضافة للوردية", "Add to Shift")}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1246,11 +1423,13 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             const mainTaskRec = records[`${r.date}__housekeeping__night_d${r.day}_main`]
             const effectiveStatus = savedDayRec.status || mainTaskRec?.status || "pending"
             const effectiveNotes = savedDayRec.whatWasDone ?? mainTaskRec?.whatWasDone ?? ""
+            const effectiveExtraTask = savedDayRec.extraShiftTask ?? ""
             return {
               ...r,
               daySummaryUid,
               status: effectiveStatus,
               supervisorNotes: effectiveNotes,
+              extraShiftTask: effectiveExtraTask,
             }
           })
 
@@ -1273,6 +1452,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               requiredTaskAr: `${row.main} | ${row.joints}`,
               status: row.status,
               whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
             }
             saveTaskRecord(fakeTask, { status: nextStatus })
           }
@@ -1289,8 +1469,26 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               requiredTaskAr: `${row.main} | ${row.joints}`,
               status: row.status,
               whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
             }
             saveTaskRecord(fakeTask, { whatWasDone: noteVal })
+          }
+
+          const saveNightExtraTask = (row, extraVal) => {
+            if (!canModify) return
+            const fakeTask = {
+              uid: row.daySummaryUid,
+              date: row.date,
+              dayName: row.dayName,
+              sectorId: "housekeeping",
+              categoryAr: "الوردية الليلية — خطة نوفمبر 2026",
+              shiftOrSlotAr: "🌙 الوردية الليلية",
+              requiredTaskAr: `${row.main} | ${row.joints}`,
+              status: row.status,
+              whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
+            }
+            saveTaskRecord(fakeTask, { extraShiftTask: extraVal })
           }
 
           return (
@@ -1361,7 +1559,8 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                       <th style={{ ...s.th, color: "#facc15" }}>{tr("أعمال الجراج (كات)", "Garage CAT Works")}</th>
                       <th style={{ ...s.th, width: 85, textAlign: "center" }}>{tr("منطقة التحميل", "Loading")}</th>
                       <th style={{ ...s.th, width: 115, textAlign: "center" }}>{tr("الحالة", "Status")}</th>
-                      <th style={{ ...s.th, width: 190 }}>{tr("ملاحظات المشرف", "Supervisor Notes")}</th>
+                      <th style={{ ...s.th, width: 185, color: "#fbbf24" }}>➕ {tr("مهمة / ملاحظة إضافية", "Extra Shift Task/Note")}</th>
+                      <th style={{ ...s.th, width: 185 }}>{tr("ملاحظات المشرف", "Supervisor Notes")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1417,6 +1616,15 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                             >
                               {stBadge.label}
                             </button>
+                          </td>
+                          <td style={s.td}>
+                            <input
+                              type="text"
+                              value={row.extraShiftTask}
+                              onChange={(e) => saveNightExtraTask(row, e.target.value)}
+                              placeholder={tr("➕ مهمة أو ملاحظة إضافية...", "➕ Extra task or note...")}
+                              style={{ ...s.miniInput, borderColor: row.extraShiftTask ? "#f59e0b" : "#334155" }}
+                            />
                           </td>
                           <td style={s.td}>
                             <input
@@ -1499,6 +1707,13 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                       </div>
                       <input
                         type="text"
+                        value={row.extraShiftTask}
+                        onChange={(e) => saveNightExtraTask(row, e.target.value)}
+                        placeholder={tr("➕ مهمة أو ملاحظة إضافية بالوردية الليلية...", "➕ Extra shift task/note...")}
+                        style={{ ...s.miniInput, borderColor: row.extraShiftTask ? "#f59e0b" : "#334155" }}
+                      />
+                      <input
+                        type="text"
                         value={row.supervisorNotes}
                         onChange={(e) => saveNightDayNote(row, e.target.value)}
                         placeholder={tr("ملاحظات المشرف...", "Supervisor notes...")}
@@ -1529,11 +1744,13 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             const firstTaskRec = records[`${r.date}__housekeeping__morning_d${r.day}_t1`]
             const effectiveStatus = savedDayRec.status || firstTaskRec?.status || "pending"
             const effectiveNotes = savedDayRec.whatWasDone ?? firstTaskRec?.whatWasDone ?? ""
+            const effectiveExtraTask = savedDayRec.extraShiftTask ?? ""
             return {
               ...r,
               daySummaryUid,
               status: effectiveStatus,
               supervisorNotes: effectiveNotes,
+              extraShiftTask: effectiveExtraTask,
             }
           })
 
@@ -1556,6 +1773,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               requiredTaskAr: row.summaryText,
               status: row.status,
               whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
             }
             saveTaskRecord(fakeTask, { status: nextStatus })
           }
@@ -1572,8 +1790,26 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               requiredTaskAr: row.summaryText,
               status: row.status,
               whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
             }
             saveTaskRecord(fakeTask, { whatWasDone: noteVal })
+          }
+
+          const saveMorningExtraTask = (row, extraVal) => {
+            if (!canModify) return
+            const fakeTask = {
+              uid: row.daySummaryUid,
+              date: row.date,
+              dayName: row.dayName,
+              sectorId: "housekeeping",
+              categoryAr: "الوردية الصباحية — خطة نوفمبر 2026",
+              shiftOrSlotAr: "🌅 الوردية الصباحية",
+              requiredTaskAr: row.summaryText,
+              status: row.status,
+              whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
+            }
+            saveTaskRecord(fakeTask, { extraShiftTask: extraVal })
           }
 
           return (
@@ -1636,12 +1872,14 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                 <table style={s.table}>
                   <thead>
                     <tr>
-                      <th style={{ ...s.th, width: 100 }}>{tr("التاريخ", "Date")}</th>
-                      <th style={{ ...s.th, width: 85 }}>{tr("اليوم", "Day")}</th>
-                      <th style={{ ...s.th, width: 150, color: "#fbbf24" }}>{tr("الأسبوع", "Week")}</th>
-                      <th style={{ ...s.th, color: "#38bdf8" }}>{tr("الأعمال المطلوبة في الوردية الصباحية", "Morning Shift Scheduled Tasks")}</th>
-                      <th style={{ ...s.th, width: 120, textAlign: "center" }}>{tr("الحالة", "Status")}</th>
-                      <th style={{ ...s.th, width: 210 }}>{tr("ملاحظات المشرف", "Supervisor Notes")}</th>
+                      <th style={{ ...s.th, width: 95 }}>{tr("التاريخ", "Date")}</th>
+                      <th style={{ ...s.th, width: 75 }}>{tr("اليوم", "Day")}</th>
+                      <th style={{ ...s.th, width: 135, color: "#fbbf24" }}>{tr("الأسبوع", "Week")}</th>
+                      <th style={{ ...s.th, color: "#38bdf8" }}>{tr("الأعمال المطلوبة في الوردية الصباحية (دورة الـ 7 أيام)", "Morning Shift Scheduled Tasks")}</th>
+                      <th style={{ ...s.th, width: 225, color: "#4ade80" }}>🔄 {tr("ثوابت المتابعة اليومية بالوردية الصباحية", "Morning Daily Constants")}</th>
+                      <th style={{ ...s.th, width: 115, textAlign: "center" }}>{tr("الحالة", "Status")}</th>
+                      <th style={{ ...s.th, width: 180, color: "#fbbf24" }}>➕ {tr("مهمة / ملاحظة إضافية", "Extra Shift Task/Note")}</th>
+                      <th style={{ ...s.th, width: 180 }}>{tr("ملاحظات المشرف", "Supervisor Notes")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1677,7 +1915,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                           <td style={{ ...s.td, fontSize: 11.5, color: "#cbd5e1", fontWeight: 700 }}>{row.weekLabelAr}</td>
                           <td style={{ ...s.td, padding: "10px 12px" }}>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                              {row.taskObjects.map((item, idx) => (
+                              {(row.scheduledTaskObjects || row.taskObjects).map((item, idx) => (
                                 <span
                                   key={idx}
                                   style={{
@@ -1694,6 +1932,10 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                                 </span>
                               ))}
                             </div>
+                          </td>
+                          <td style={{ ...s.td, fontSize: 12, lineHeight: 1.5 }}>
+                            <div style={{ color: "#86efac", fontWeight: 700 }}>🔄 1. {row.plazaRestroomsConstant}</div>
+                            <div style={{ color: "#fde047", fontWeight: 700, marginTop: 3 }}>🔄 2. {row.floorsPrayerRestroomsConstant}</div>
                           </td>
                           <td style={{ ...s.td, textAlign: "center" }}>
                             <button
@@ -1713,6 +1955,15 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                             >
                               {stBadge.label}
                             </button>
+                          </td>
+                          <td style={s.td}>
+                            <input
+                              type="text"
+                              value={row.extraShiftTask}
+                              onChange={(e) => saveMorningExtraTask(row, e.target.value)}
+                              placeholder={tr("➕ مهمة أو ملاحظة إضافية...", "➕ Extra task or note...")}
+                              style={{ ...s.miniInput, borderColor: row.extraShiftTask ? "#f59e0b" : "#334155" }}
+                            />
                           </td>
                           <td style={s.td}>
                             <input
@@ -1785,7 +2036,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                         </button>
                       </div>
                       <div style={{ display: "grid", gap: 4 }}>
-                        {row.taskObjects.map((item, idx) => (
+                        {(row.scheduledTaskObjects || row.taskObjects).map((item, idx) => (
                           <div
                             key={idx}
                             style={{
@@ -1802,6 +2053,17 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                           </div>
                         ))}
                       </div>
+                      <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 8, padding: "6px 8px", fontSize: 12, lineHeight: 1.5 }}>
+                        <div style={{ color: "#86efac", fontWeight: 800 }}>🔄 ثابت يومي (1): {row.plazaRestroomsConstant}</div>
+                        <div style={{ color: "#fde047", fontWeight: 800 }}>🔄 ثابت يومي (2): {row.floorsPrayerRestroomsConstant}</div>
+                      </div>
+                      <input
+                        type="text"
+                        value={row.extraShiftTask}
+                        onChange={(e) => saveMorningExtraTask(row, e.target.value)}
+                        placeholder={tr("➕ مهمة أو ملاحظة إضافية بالوردية الصباحية...", "➕ Extra shift task/note...")}
+                        style={{ ...s.miniInput, borderColor: row.extraShiftTask ? "#f59e0b" : "#334155" }}
+                      />
                       <input
                         type="text"
                         value={row.supervisorNotes}
@@ -1834,11 +2096,13 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             const firstTaskRec = records[`${r.date}__housekeeping__evening_d${r.day}_t1`]
             const effectiveStatus = savedDayRec.status || firstTaskRec?.status || "pending"
             const effectiveNotes = savedDayRec.whatWasDone ?? firstTaskRec?.whatWasDone ?? ""
+            const effectiveExtraTask = savedDayRec.extraShiftTask ?? ""
             return {
               ...r,
               daySummaryUid,
               status: effectiveStatus,
               supervisorNotes: effectiveNotes,
+              extraShiftTask: effectiveExtraTask,
             }
           })
 
@@ -1861,6 +2125,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               requiredTaskAr: row.summaryText,
               status: row.status,
               whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
             }
             saveTaskRecord(fakeTask, { status: nextStatus })
           }
@@ -1877,8 +2142,26 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               requiredTaskAr: row.summaryText,
               status: row.status,
               whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
             }
             saveTaskRecord(fakeTask, { whatWasDone: noteVal })
+          }
+
+          const saveEveningExtraTask = (row, extraVal) => {
+            if (!canModify) return
+            const fakeTask = {
+              uid: row.daySummaryUid,
+              date: row.date,
+              dayName: row.dayName,
+              sectorId: "housekeeping",
+              categoryAr: "الوردية المسائية — خطة نوفمبر 2026",
+              shiftOrSlotAr: "🌇 الوردية المسائية",
+              requiredTaskAr: row.summaryText,
+              status: row.status,
+              whatWasDone: row.supervisorNotes,
+              extraShiftTask: row.extraShiftTask,
+            }
+            saveTaskRecord(fakeTask, { extraShiftTask: extraVal })
           }
 
           return (
@@ -1943,12 +2226,13 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                     <tr>
                       <th style={{ ...s.th, width: 95 }}>{tr("التاريخ", "Date")}</th>
                       <th style={{ ...s.th, width: 75 }}>{tr("اليوم", "Day")}</th>
-                      <th style={{ ...s.th, width: 145, color: "#38bdf8" }}>{tr("الأسبوع", "Week")}</th>
+                      <th style={{ ...s.th, width: 135, color: "#38bdf8" }}>{tr("الأسبوع", "Week")}</th>
                       <th style={{ ...s.th, color: "#f8fafc" }}>{tr("أعمال التأسيس والمراجعة الرئيسية (دورة الـ 7 أيام)", "Main Foundation & Review Task")}</th>
-                      <th style={{ ...s.th, color: "#4ade80" }}>{tr("ثابت متابعة يومية (1): خلف المطاعم", "Daily Constant 1: Behind Restaurants")}</th>
-                      <th style={{ ...s.th, color: "#facc15" }}>{tr("ثابت متابعة يومية (2): أرصفة الجراج", "Daily Constant 2: Garage Sidewalks")}</th>
+                      <th style={{ ...s.th, color: "#4ade80" }}>🔄 {tr("ثوابت الحمامات (البلازا + الأدوار 1/2/3 والمصلى)", "Daily Restrooms Constants")}</th>
+                      <th style={{ ...s.th, color: "#facc15" }}>🔄 {tr("ثوابت الساحات (خلف المطاعم + أرصفة الجراج)", "Behind Restaurants & Garage Sidewalks")}</th>
                       <th style={{ ...s.th, width: 115, textAlign: "center" }}>{tr("الحالة", "Status")}</th>
-                      <th style={{ ...s.th, width: 195 }}>{tr("ملاحظات المشرف", "Supervisor Notes")}</th>
+                      <th style={{ ...s.th, width: 180, color: "#fbbf24" }}>➕ {tr("مهمة / ملاحظة إضافية", "Extra Shift Task/Note")}</th>
+                      <th style={{ ...s.th, width: 180 }}>{tr("ملاحظات المشرف", "Supervisor Notes")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1985,11 +2269,13 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                           <td style={{ ...s.td, fontWeight: 800, color: "#f8fafc", lineHeight: 1.5 }}>
                             🌇 {row.foundationTask}
                           </td>
-                          <td style={{ ...s.td, color: "#86efac", fontWeight: 700, lineHeight: 1.5 }}>
-                            🔄 {row.restaurantsBack}
+                          <td style={{ ...s.td, fontSize: 12, lineHeight: 1.5 }}>
+                            <div style={{ color: "#86efac", fontWeight: 700 }}>🔄 1. {row.plazaRestroomsConstant}</div>
+                            <div style={{ color: "#6ee7b7", fontWeight: 700, marginTop: 3 }}>🔄 2. {row.floorsPrayerRestroomsConstant}</div>
                           </td>
-                          <td style={{ ...s.td, color: "#fde047", fontWeight: 700, lineHeight: 1.5 }}>
-                            🔄 {row.garageSidewalks}
+                          <td style={{ ...s.td, fontSize: 12, lineHeight: 1.5 }}>
+                            <div style={{ color: "#fde047", fontWeight: 700 }}>🔄 3. {row.restaurantsBack}</div>
+                            <div style={{ color: "#fcd34d", fontWeight: 700, marginTop: 3 }}>🔄 4. {row.garageSidewalks}</div>
                           </td>
                           <td style={{ ...s.td, textAlign: "center" }}>
                             <button
@@ -2009,6 +2295,15 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                             >
                               {stBadge.label}
                             </button>
+                          </td>
+                          <td style={s.td}>
+                            <input
+                              type="text"
+                              value={row.extraShiftTask}
+                              onChange={(e) => saveEveningExtraTask(row, e.target.value)}
+                              placeholder={tr("➕ مهمة أو ملاحظة إضافية...", "➕ Extra task or note...")}
+                              style={{ ...s.miniInput, borderColor: row.extraShiftTask ? "#f59e0b" : "#334155" }}
+                            />
                           </td>
                           <td style={s.td}>
                             <input
@@ -2083,12 +2378,25 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                       <div style={{ fontSize: 12.5, color: "#f8fafc", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(56,189,248,0.3)", borderRadius: 8, padding: "7px 9px", lineHeight: 1.5 }}>
                         <strong style={{ color: "#38bdf8" }}>🌇 المهمة التأسيسية لليوم: </strong>{row.foundationTask}
                       </div>
-                      <div style={{ fontSize: 12.5, color: "#86efac", lineHeight: 1.5 }}>
-                        <strong>🔄 ثابت يومي (1): </strong>{row.restaurantsBack}
+                      <div style={{ fontSize: 12, color: "#86efac", lineHeight: 1.5 }}>
+                        <strong>🔄 ثابت يومي (1): </strong>{row.plazaRestroomsConstant}
                       </div>
-                      <div style={{ fontSize: 12.5, color: "#fde047", lineHeight: 1.5 }}>
-                        <strong>🔄 ثابت يومي (2): </strong>{row.garageSidewalks}
+                      <div style={{ fontSize: 12, color: "#6ee7b7", lineHeight: 1.5 }}>
+                        <strong>🔄 ثابت يومي (2): </strong>{row.floorsPrayerRestroomsConstant}
                       </div>
+                      <div style={{ fontSize: 12, color: "#fde047", lineHeight: 1.5 }}>
+                        <strong>🔄 ثابت يومي (3): </strong>{row.restaurantsBack}
+                      </div>
+                      <div style={{ fontSize: 12, color: "#fcd34d", lineHeight: 1.5 }}>
+                        <strong>🔄 ثابت يومي (4): </strong>{row.garageSidewalks}
+                      </div>
+                      <input
+                        type="text"
+                        value={row.extraShiftTask}
+                        onChange={(e) => saveEveningExtraTask(row, e.target.value)}
+                        placeholder={tr("➕ مهمة أو ملاحظة إضافية بالوردية المسائية...", "➕ Extra shift task/note...")}
+                        style={{ ...s.miniInput, borderColor: row.extraShiftTask ? "#f59e0b" : "#334155" }}
+                      />
                       <input
                         type="text"
                         value={row.supervisorNotes}
