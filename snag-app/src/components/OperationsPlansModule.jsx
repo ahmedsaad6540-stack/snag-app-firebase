@@ -235,6 +235,22 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
   const [extraShiftKey, setExtraShiftKey] = useState("morning") // "morning" | "evening" | "night"
   const [extraShiftArea, setExtraShiftArea] = useState("")
   const [extraShiftTaskText, setExtraShiftTaskText] = useState("")
+  // Scope of days displayed inside the 3 Shift Master Tables ("all" = 30 days, "week" = 7 days of selectedDate, "day" = selectedDate only)
+  const [hkTableScope, setHkTableScope] = useState("all")
+
+  const filterShiftTableRows = (rows) => {
+    if (hkTableScope === "day") {
+      const targetDayNum = Math.min(30, Math.max(1, Number((selectedDate || "").split("-")[2]) || 1))
+      return rows.filter((r) => r.date === selectedDate || r.day === targetDayNum)
+    }
+    if (hkTableScope === "week") {
+      const targetDayNum = Math.min(30, Math.max(1, Number((selectedDate || "").split("-")[2]) || 1))
+      const startDay = Math.floor((targetDayNum - 1) / 7) * 7 + 1
+      const endDay = startDay + 6
+      return rows.filter((r) => r.day >= startDay && r.day <= endDay)
+    }
+    return rows
+  }
 
   // Camera & Lightbox
   const [cameraTargetUid, setCameraTargetUid] = useState(null)
@@ -942,9 +958,9 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
   return (
     <div style={s.wrap}>
       {/* ── Top Hero Banner ── */}
-      <div style={s.hero}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ flex: 1, minWidth: 260 }}>
+      <div style={s.hero} className="mobile-section-card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, width: "100%", minWidth: 0 }}>
+          <div style={{ flex: "1 1 240px", minWidth: 0, width: "100%" }}>
             <div style={s.heroBadge}>
               PARK STREET MALL — INTEGRATED ACTION PLANS & DAILY/WEEKLY/MONTHLY REPORTS
             </div>
@@ -964,7 +980,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
 
           {/* Export Buttons (Excel / PDF / Word) */}
           {canExport && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="mobile-btn-grid" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button
                 type="button"
                 disabled={exporting}
@@ -994,7 +1010,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         </div>
 
         {/* ── 3 Period Mode Switcher (Daily / Weekly / Monthly) ── */}
-        <div style={s.periodTabs}>
+        <div style={s.periodTabs} className="mobile-stack-row">
           {PERIOD_MODES.map((pm) => {
             const active = periodMode === pm.id
             return (
@@ -1011,7 +1027,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                 }}
               >
                 <span style={{ fontSize: 18 }}>{pm.icon}</span>
-                <span>{lang === "ar" ? pm.labelAr : pm.labelEn}</span>
+                <span style={{ lineHeight: 1.35 }}>{lang === "ar" ? pm.labelAr : pm.labelEn}</span>
               </button>
             )
           })}
@@ -1019,8 +1035,8 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
 
         {/* ── Date / Week / Month Selector Bar ── */}
         <div style={s.dateBar}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: "#38bdf8" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", width: "100%", minWidth: 0 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 800, color: "#38bdf8" }}>
               🗓️ {tr("التاريخ المحدد:", "Target Date:")}
             </span>
             <button
@@ -1035,7 +1051,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               type="date"
               value={selectedDate}
               onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-              style={s.dateInput}
+              style={{ ...s.dateInput, flex: "1 1 135px", minWidth: 0 }}
             />
             <button
               type="button"
@@ -1056,17 +1072,19 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               background: "rgba(56,189,248,0.16)",
               border: "1px solid #0284c7",
               color: "#e0f2fe",
-              padding: "6px 12px",
+              padding: "6px 10px",
               borderRadius: 8,
-              fontSize: 13,
+              fontSize: 12.5,
               fontWeight: 800,
+              flex: "1 1 auto",
+              textAlign: "center",
             }}>
               📆 {getArabicDayName(selectedDate)} — {selectedDate}
             </span>
           </div>
 
           {periodMode === "weekly" && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <div className="mobile-wrap-pills" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", width: "100%" }}>
               <span style={{ fontSize: 12, color: "#fde047", fontWeight: 800 }}>
                 {tr("اختر الأسبوع:", "Select Week:")}
               </span>
@@ -1120,14 +1138,15 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                 ...s.sectorCard,
                 border: active ? `2px solid ${sec.color}` : "1px solid #1e293b",
                 background: active ? `${sec.color}18` : "#0a1628",
+                minWidth: 0,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                <span style={{ fontSize: 24 }}>{sec.icon}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 4, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 22 }}>{sec.icon}</span>
                 <span style={{
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: 800,
-                  padding: "2px 8px",
+                  padding: "2px 7px",
                   borderRadius: 999,
                   background: st.notDone > 0 ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.18)",
                   color: st.notDone > 0 ? "#fca5a5" : "#6ee7b7",
@@ -1135,7 +1154,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                   {st.notDone > 0 ? `✗ ${st.notDone} لم يتم` : `✓ ${st.done}/${st.total}`}
                 </span>
               </div>
-              <div style={{ fontWeight: 800, fontSize: 13.5, color: active ? "#fff" : "#e2e8f0", marginTop: 8 }}>
+              <div style={{ fontWeight: 800, fontSize: 12.5, color: active ? "#fff" : "#e2e8f0", marginTop: 8, lineHeight: 1.35 }}>
                 {lang === "ar" ? sec.labelAr : sec.labelEn}
               </div>
             </button>
@@ -1144,27 +1163,31 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
       </div>
 
       {/* ── Daily Workforce Attendance Bar (عدد العمالة غير ثابت ويُسجل يومياً) ── */}
-      <div style={{
-        background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.85))",
-        border: "1px solid #334155",
-        borderRadius: 14,
-        padding: "12px 16px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#38bdf8" }}>
+      <div
+        className="mobile-section-card"
+        style={{
+          background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.85))",
+          border: "1px solid #334155",
+          borderRadius: 14,
+          padding: "12px 16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          minWidth: 0,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#38bdf8", lineHeight: 1.4 }}>
             👷 {tr(
               `تسجيل عدد العمالة الفعلي المتواجد يوم (${selectedDate} — ${getArabicDayName(selectedDate)}):`,
               `Actual Workforce Count on Site (${selectedDate}):`
             )}
           </div>
-          <span style={{ fontSize: 11, color: "#94a3b8" }}>
+          <span style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.4 }}>
             {tr("عدد العمالة غير ثابت ويتم تسجيل العدد الفعلي المتواجد على أرض الواقع يومياً لكل قطاع أو لكل بند", "Workforce count is dynamic and recorded daily per sector or task")}
           </span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 8 }}>
+        <div className="mobile-zones-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8 }}>
           {SECTORS.filter((sc) => sc.id !== "all").map((sc) => {
             const wfVal = records[`${selectedDate}__workforce__${sc.id}`]?.workforceCount || ""
             return (
@@ -1178,6 +1201,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                   display: "flex",
                   flexDirection: "column",
                   gap: 4,
+                  minWidth: 0,
                 }}
               >
                 <label style={{ fontSize: 11.5, fontWeight: 800, color: sc.color }}>
@@ -1211,15 +1235,15 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           }}
         >
           {/* Row 1: Shift / Schedule Filter */}
-          <div className="mobile-scroll-pills" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <div className="mobile-wrap-pills" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <span style={{ fontSize: 12, fontWeight: 800, color: "#c084fc" }}>
               🕐 {tr("فلتر ورديات الهاوس كيبنج:", "Housekeeping Shifts Filter:")}
             </span>
             {[
               { id: "all",     label: tr("الكل (الـ 3 ورديات)", "All (3 Shifts)") },
-              { id: "morning", label: tr("🌅 الوردية الصباحية (جدول نوفمبر 2026 — 30 يوم)", "🌅 Morning Shift (Nov 2026 — 30 Days)") },
-              { id: "evening", label: tr("🌇 الوردية المسائية (جدول نوفمبر 2026 — 30 يوم)", "🌇 Evening Shift (Nov 2026 — 30 Days)") },
-              { id: "night",   label: tr("🌙 الوردية الليلية (جدول نوفمبر 2026 — 30 يوم)", "🌙 Night Shift (Nov 2026 — 30 Days)") },
+              { id: "morning", label: tr("🌅 الوردية الصباحية (جدول نوفمبر 2026)", "🌅 Morning Shift (Nov 2026)") },
+              { id: "evening", label: tr("🌇 الوردية المسائية (جدول نوفمبر 2026)", "🌇 Evening Shift (Nov 2026)") },
+              { id: "night",   label: tr("🌙 الوردية الليلية (جدول نوفمبر 2026)", "🌙 Night Shift (Nov 2026)") },
             ].map((sh) => (
               <button
                 key={sh.id}
@@ -1237,9 +1261,45 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             ))}
           </div>
 
+          {/* Row 1.5: Table Days Scope Switcher (كل الشهر 30 يوم | أسبوع التقرير 7 أيام | يوم التقرير فقط) */}
+          <div
+            className="mobile-wrap-pills"
+            style={{
+              display: "flex",
+              gap: 6,
+              flexWrap: "wrap",
+              alignItems: "center",
+              paddingTop: 8,
+              borderTop: "1px solid #1e293b",
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#4ade80" }}>
+              📱 {tr("نطاق عرض جداول الورديات:", "Shift Schedules Display Mode:")}
+            </span>
+            {[
+              { id: "all",  label: tr("🗓️ عرض الشهر كامل (30 يوم)", "🗓️ Full Month (30 Days)") },
+              { id: "week", label: tr("📅 عرض أسبوع التقرير (7 أيام)", "📅 Selected Week (7 Days)") },
+              { id: "day",  label: tr(`📌 عرض يوم التقرير فقط (${selectedDate})`, `📌 Selected Day Only (${selectedDate})`) },
+            ].map((sc) => (
+              <button
+                key={sc.id}
+                type="button"
+                onClick={() => setHkTableScope(sc.id)}
+                style={{
+                  ...s.filterPill,
+                  background: hkTableScope === sc.id ? "#059669" : "#060d1a",
+                  color: hkTableScope === sc.id ? "#fff" : "#a7f3d0",
+                  borderColor: hkTableScope === sc.id ? "#10b981" : "#334155",
+                }}
+              >
+                {sc.label}
+              </button>
+            ))}
+          </div>
+
           {/* Row 2: Granular Housekeeping Area / Item Filter */}
           <div
-            className="mobile-scroll-pills"
+            className="mobile-wrap-pills"
             style={{
               display: "flex",
               gap: 6,
@@ -1270,7 +1330,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                     color: isSelected ? "#fff" : "#e2e8f0",
                     borderColor: isSelected ? "#38bdf8" : "#334155",
                     fontSize: 11.5,
-                    padding: "6px 11px",
+                    padding: "6px 10px",
                   }}
                 >
                   {flt.icon} {lang === "ar" ? flt.labelAr : flt.labelEn}
@@ -1282,72 +1342,72 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           {/* Row 3: Quick-Add Extra Task or Note for ANY Shift (إدخال ملاحظة أو مهمة إضافية في كل شيفت) */}
           {canModify && (
             <div
-              className="mobile-stack-row"
               style={{
                 display: "flex",
+                flexDirection: "column",
                 gap: 8,
-                flexWrap: "wrap",
-                alignItems: "center",
                 paddingTop: 10,
                 borderTop: "1px solid #1e293b",
+                width: "100%",
+                minWidth: 0,
               }}
             >
-              <span style={{ fontSize: 12, fontWeight: 900, color: "#fbbf24", whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "#fbbf24", lineHeight: 1.4 }}>
                 ➕ {tr(`إدخال مهمة أو ملاحظة إضافية ليوم (${selectedDate}):`, `Add Extra Shift Task/Note (${selectedDate}):`)}
-              </span>
-              <select
-                value={extraShiftKey}
-                onChange={(e) => setExtraShiftKey(e.target.value)}
-                style={{
-                  ...s.miniInput,
-                  width: "auto",
-                  minWidth: 165,
-                  fontWeight: 800,
-                  color: "#38bdf8",
-                  cursor: "pointer",
-                }}
-              >
-                <option value="morning">🌅 الوردية الصباحية</option>
-                <option value="evening">🌇 الوردية المسائية</option>
-                <option value="night">🌙 الوردية الليلية</option>
-              </select>
-              <input
-                type="text"
-                value={extraShiftArea}
-                onChange={(e) => setExtraShiftArea(e.target.value)}
-                placeholder={tr("الموقع / النطاق (مثال: حمامات البلازا / مبنى 2)...", "Area / Location (optional)...")}
-                style={{ ...s.miniInput, flex: "0 1 210px", minWidth: 150 }}
-              />
-              <input
-                type="text"
-                value={extraShiftTaskText}
-                onChange={(e) => setExtraShiftTaskText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault()
-                    handleAddExtraShiftTask()
-                  }
-                }}
-                placeholder={tr("اكتب المهمة أو الملاحظة الإضافية للوردية واضغط إضافة...", "Type extra task or note for the shift...")}
-                style={{ ...s.miniInput, flex: 1, minWidth: 220 }}
-              />
-              <button
-                type="button"
-                onClick={handleAddExtraShiftTask}
-                style={{
-                  background: "linear-gradient(135deg, #f59e0b, #ea580c)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                ➕ {tr("إضافة للوردية", "Add to Shift")}
-              </button>
+              </div>
+              <div className="extra-task-form-grid">
+                <select
+                  value={extraShiftKey}
+                  onChange={(e) => setExtraShiftKey(e.target.value)}
+                  style={{
+                    ...s.miniInput,
+                    fontWeight: 800,
+                    color: "#38bdf8",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="morning">🌅 الوردية الصباحية</option>
+                  <option value="evening">🌇 الوردية المسائية</option>
+                  <option value="night">🌙 الوردية الليلية</option>
+                </select>
+                <input
+                  type="text"
+                  value={extraShiftArea}
+                  onChange={(e) => setExtraShiftArea(e.target.value)}
+                  placeholder={tr("الموقع / النطاق (مثال: حمامات البلازا / مبنى 2)...", "Area / Location (optional)...")}
+                  style={s.miniInput}
+                />
+                <input
+                  type="text"
+                  value={extraShiftTaskText}
+                  onChange={(e) => setExtraShiftTaskText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      handleAddExtraShiftTask()
+                    }
+                  }}
+                  placeholder={tr("اكتب المهمة أو الملاحظة الإضافية للوردية واضغط إضافة...", "Type extra task or note for the shift...")}
+                  style={s.miniInput}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddExtraShiftTask}
+                  style={{
+                    background: "linear-gradient(135deg, #f59e0b, #ea580c)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "9px 14px",
+                    fontSize: 12,
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  ➕ {tr("إضافة للوردية", "Add to Shift")}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1361,7 +1421,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <div className="mobile-scroll-pills" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <div className="mobile-wrap-pills" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <button
             type="button"
             onClick={() => setStatusFilter("all")}
@@ -1437,6 +1497,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           const executedDaysCount = dayRowsWithStatus.filter((r) => r.status === "done").length
           const remainingDaysCount = totalPlanDays - executedDaysCount
           const completionPct = Math.round((executedDaysCount / totalPlanDays) * 100)
+          const visibleNightRows = filterShiftTableRows(dayRowsWithStatus)
 
           const cycleNightDayStatus = (row) => {
             if (!canModify) return
@@ -1564,7 +1625,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                     </tr>
                   </thead>
                   <tbody>
-                    {dayRowsWithStatus.map((row) => {
+                    {visibleNightRows.map((row) => {
                       const isSelectedDay = row.date === selectedDate
                       const stBadge =
                         row.status === "done"
@@ -1643,8 +1704,8 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               </div>
 
               {/* Mobile Cards View (≤ 768px — Native Phone Layout) */}
-              <div className="mobile-cards-view" style={{ maxHeight: 520, overflowY: "auto", paddingRight: 2 }}>
-                {dayRowsWithStatus.map((row) => {
+              <div className="mobile-cards-view" style={{ maxHeight: hkTableScope === "all" ? 480 : "none", overflowY: hkTableScope === "all" ? "auto" : "visible", paddingRight: 2 }}>
+                {visibleNightRows.map((row) => {
                   const isSelectedDay = row.date === selectedDate
                   const stBadge =
                     row.status === "done"
@@ -1664,15 +1725,18 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                         padding: 12,
                         display: "grid",
                         gap: 6,
+                        minWidth: 0,
+                        maxWidth: "100%",
+                        wordBreak: "break-word",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
                         <span
                           onClick={() => {
                             setSelectedDate(row.date)
                             setPeriodMode("daily")
                           }}
-                          style={{ fontWeight: 900, fontSize: 14, color: "#f8fafc", cursor: "pointer" }}
+                          style={{ fontWeight: 900, fontSize: 13.5, color: "#f8fafc", cursor: "pointer" }}
                         >
                           🗓️ {row.date} ({row.dayName})
                         </span>
@@ -1758,6 +1822,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           const executedDaysCount = morningRowsWithStatus.filter((r) => r.status === "done").length
           const remainingDaysCount = totalPlanDays - executedDaysCount
           const completionPct = Math.round((executedDaysCount / totalPlanDays) * 100)
+          const visibleMorningRows = filterShiftTableRows(morningRowsWithStatus)
 
           const cycleMorningDayStatus = (row) => {
             if (!canModify) return
@@ -1883,7 +1948,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                     </tr>
                   </thead>
                   <tbody>
-                    {morningRowsWithStatus.map((row) => {
+                    {visibleMorningRows.map((row) => {
                       const isSelectedDay = row.date === selectedDate
                       const stBadge =
                         row.status === "done"
@@ -1982,8 +2047,8 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               </div>
 
               {/* Mobile Cards View (≤ 768px — Native Phone Layout) */}
-              <div className="mobile-cards-view" style={{ maxHeight: 520, overflowY: "auto", paddingRight: 2 }}>
-                {morningRowsWithStatus.map((row) => {
+              <div className="mobile-cards-view" style={{ maxHeight: hkTableScope === "all" ? 480 : "none", overflowY: hkTableScope === "all" ? "auto" : "visible", paddingRight: 2 }}>
+                {visibleMorningRows.map((row) => {
                   const isSelectedDay = row.date === selectedDate
                   const stBadge =
                     row.status === "done"
@@ -2003,16 +2068,19 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                         padding: 12,
                         display: "grid",
                         gap: 6,
+                        minWidth: 0,
+                        maxWidth: "100%",
+                        wordBreak: "break-word",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
                         <div>
                           <div
                             onClick={() => {
                               setSelectedDate(row.date)
                               setPeriodMode("daily")
                             }}
-                            style={{ fontWeight: 900, fontSize: 14, color: "#f8fafc", cursor: "pointer" }}
+                            style={{ fontWeight: 900, fontSize: 13.5, color: "#f8fafc", cursor: "pointer" }}
                           >
                             🌅 {row.date} ({row.dayName})
                           </div>
@@ -2110,6 +2178,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           const executedDaysCount = eveningRowsWithStatus.filter((r) => r.status === "done").length
           const remainingDaysCount = totalPlanDays - executedDaysCount
           const completionPct = Math.round((executedDaysCount / totalPlanDays) * 100)
+          const visibleEveningRows = filterShiftTableRows(eveningRowsWithStatus)
 
           const cycleEveningDayStatus = (row) => {
             if (!canModify) return
@@ -2236,7 +2305,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                     </tr>
                   </thead>
                   <tbody>
-                    {eveningRowsWithStatus.map((row) => {
+                    {visibleEveningRows.map((row) => {
                       const isSelectedDay = row.date === selectedDate
                       const stBadge =
                         row.status === "done"
@@ -2322,8 +2391,8 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               </div>
 
               {/* Mobile Cards View (≤ 768px — Native Phone Layout) */}
-              <div className="mobile-cards-view" style={{ maxHeight: 520, overflowY: "auto", paddingRight: 2 }}>
-                {eveningRowsWithStatus.map((row) => {
+              <div className="mobile-cards-view" style={{ maxHeight: hkTableScope === "all" ? 480 : "none", overflowY: hkTableScope === "all" ? "auto" : "visible", paddingRight: 2 }}>
+                {visibleEveningRows.map((row) => {
                   const isSelectedDay = row.date === selectedDate
                   const stBadge =
                     row.status === "done"
@@ -2343,16 +2412,19 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                         padding: 12,
                         display: "grid",
                         gap: 6,
+                        minWidth: 0,
+                        maxWidth: "100%",
+                        wordBreak: "break-word",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
                         <div>
                           <div
                             onClick={() => {
                               setSelectedDate(row.date)
                               setPeriodMode("daily")
                             }}
-                            style={{ fontWeight: 900, fontSize: 14, color: "#f8fafc", cursor: "pointer" }}
+                            style={{ fontWeight: 900, fontSize: 13.5, color: "#f8fafc", cursor: "pointer" }}
                           >
                             🌇 {row.date} ({row.dayName})
                           </div>
@@ -2421,13 +2493,13 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
       {/* VIEW A: MONTHLY MASTER SCHEDULE TABLES (When periodMode === "monthly") */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {periodMode === "monthly" && (
-        <div style={s.card}>
+        <div style={s.card} className="mobile-section-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
-            <div>
-              <h3 style={{ margin: 0, fontSize: 17, color: "#f8fafc" }}>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ margin: 0, fontSize: 17, color: "#f8fafc", lineHeight: 1.4 }}>
                 🗓️ {tr(`جدول خطة العمل الشهرية الكامل — شهر ${selectedYearMonth}`, `Full Monthly Master Action Plan — ${selectedYearMonth}`)}
               </h3>
-              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 4, lineHeight: 1.5 }}>
                 {tr(
                   "اضغط على أي يوم في الجدول بالأسفل لفتح تفاصيل أعمال هذا اليوم وتسجيل ما تم وما لم يتم وملاحظاتك اليومية",
                   "Click any date row below to open that day's interactive execution checklist and record notes"
@@ -2436,7 +2508,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
             </div>
           </div>
 
-          <div className="table-scroll" style={{ maxHeight: 520, overflowY: "auto", border: "1px solid #1e293b", borderRadius: 12 }}>
+          <div className="desktop-table-view" style={{ maxHeight: 520, overflowY: "auto", border: "1px solid #1e293b", borderRadius: 12 }}>
             <table style={s.table}>
               <thead>
                 <tr>
@@ -2546,19 +2618,99 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards View for Monthly Master Plan (≤ 768px) */}
+          <div className="mobile-cards-view" style={{ maxHeight: 480, overflowY: "auto", paddingRight: 2 }}>
+            {activeDatesList.map((dStr) => {
+              const dayName = getArabicDayName(dStr)
+              const isFri = dayName === "الجمعة"
+              const land = getLandscapeDayPlan(dStr)
+              const spider = getSpiderDayPlan(dStr)
+              const pest = getPestControlDayPlan(dStr)
+              const hk = getHousekeepingDayPlan(dStr)
+              return (
+                <div
+                  key={dStr}
+                  style={{
+                    background: isFri ? "rgba(220,38,38,0.14)" : dStr === selectedDate ? "rgba(14,165,233,0.16)" : "rgba(6,13,26,0.9)",
+                    border: `1.5px solid ${dStr === selectedDate ? "#0ea5e9" : "#334155"}`,
+                    borderRadius: 12,
+                    padding: 12,
+                    display: "grid",
+                    gap: 6,
+                    minWidth: 0,
+                    maxWidth: "100%",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, borderBottom: "1px solid rgba(148,163,184,0.18)", paddingBottom: 6 }}>
+                    <span style={{ fontWeight: 900, fontSize: 13.5, color: "#f8fafc" }}>
+                      🗓️ {dStr} ({dayName})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDate(dStr)
+                        setPeriodMode("daily")
+                      }}
+                      style={{
+                        background: "#0ea5e9",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "5px 10px",
+                        fontSize: 11,
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      📝 {tr("فتح تقرير اليوم", "Open Day Log")}
+                    </button>
+                  </div>
+                  {(activeSector === "all" || activeSector === "landscape") && (
+                    <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.45 }}>
+                      <strong style={{ color: "#4ade80" }}>🌿 اللاندسكيب: </strong>
+                      {isFri ? "إجازة أسبوعية" : `${land.tasks[0]?.taskAr} | ${land.tasks[1]?.taskAr}`}
+                    </div>
+                  )}
+                  {(activeSector === "all" || activeSector === "spider") && (
+                    <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.45 }}>
+                      <strong style={{ color: "#38bdf8" }}>🧗‍♂️ السبايدر: </strong>
+                      {isFri ? "إجازة أسبوعية" : spider.tasks.map((t) => t.taskAr).join(" | ")}
+                    </div>
+                  )}
+                  {(activeSector === "all" || activeSector === "pest") && (
+                    <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.45 }}>
+                      <strong style={{ color: "#facc15" }}>🦟 مكافحة الآفات: </strong>
+                      {pest.isTwiceWeeklyDay
+                        ? "رش وفحص الـ 17 موقع + 🔥 فحص المصائد البيولوجية ومحطات القوارض"
+                        : "رش وفحص الـ 17 موقع يومياً"}
+                    </div>
+                  )}
+                  {(activeSector === "all" || activeSector === "housekeeping") && (
+                    <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.45, display: "grid", gap: 3 }}>
+                      <div><strong style={{ color: "#fbbf24" }}>🌅 الصباحية:</strong> {hk.morningEntry?.summaryText}</div>
+                      <div><strong style={{ color: "#38bdf8" }}>🌇 المسائية:</strong> {hk.eveningEntry?.summaryText}</div>
+                      <div><strong style={{ color: "#c084fc" }}>🌙 الليلية:</strong> {hk.nightEntry?.main} | {hk.nightEntry?.joints}</div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* VIEW B: INTERACTIVE EXECUTION LOG (Daily / Weekly / Filtered Tasks)     */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
-      <div style={s.card}>
+      <div style={s.card} className="mobile-section-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 17, color: "#f8fafc" }}>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ margin: 0, fontSize: 16.5, color: "#f8fafc", lineHeight: 1.4 }}>
               📋 {periodTitleAr} — {sectorTitleAr}
             </h3>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 4, lineHeight: 1.5 }}>
               {tr(
                 `إجمالي المهام المعروضة: ${filteredDailyTasks.length} مهمة | حدد حالة كل مهمة وسجّل عدد العمالة وملاحظات التنفيذ`,
                 `Showing ${filteredDailyTasks.length} scheduled tasks | Select execution status and record workforce & notes`
@@ -2570,25 +2722,23 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {filteredDailyTasks.length === 0 ? (
             <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontWeight: 700 }}>
-              {hkFilterShift === "morning"
-                ? tr("🌅 تم تفريغ بنود الوردية الصباحية القديمة — بانتظار تزويد جدول الوردية الصباحية الشهري", "🌅 Morning shift cleared — awaiting monthly Morning Shift schedule")
-                : hkFilterShift === "evening"
-                ? tr("🌇 تم تفريغ بنود الوردية المسائية القديمة — بانتظار تزويد جدول الوردية المسائية الشهري", "🌇 Evening shift cleared — awaiting monthly Evening Shift schedule")
-                : tr("لا توجد مهام مطابقة للفلتر المحدد", "No tasks match the current filter")}
+              {tr("لا توجد مهام مطابقة للفلتر المحدد", "No tasks match the current filter")}
             </div>
           ) : (
             filteredDailyTasks.map((task, idx) => {
-              const stObj = EXEC_STATUSES.find((st) => st.id === task.status) || EXEC_STATUSES[0]
               const secObj = SECTORS.find((sc) => sc.id === task.sectorId) || SECTORS[0]
               return (
                 <div
                   key={task.uid}
+                  className="mobile-section-card"
                   style={{
                     background: "#060d1a",
                     border: `1px solid ${task.status === "not_done" ? "#ef4444" : task.status === "done" ? "#10b981" : "#1e293b"}`,
                     borderInlineStart: `4px solid ${secObj.color}`,
                     borderRadius: 12,
                     padding: 14,
+                    minWidth: 0,
+                    wordBreak: "break-word",
                   }}
                 >
                   {/* Top Row: Task Info & Status Buttons */}
@@ -2629,10 +2779,10 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                         </span>
                       </div>
 
-                      <div style={{ fontWeight: 800, fontSize: 14.5, color: "#f8fafc", marginTop: 4, lineHeight: 1.5 }}>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: "#f8fafc", marginTop: 4, lineHeight: 1.5 }}>
                         {idx + 1}. {task.requiredTaskAr}
                       </div>
-                      <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2, lineHeight: 1.45 }}>
                         📍 {tr("الموقع / النطاق:", "Location / Scope:")} <strong style={{ color: "#cbd5e1" }}>{task.categoryAr}</strong>
                         {task.extraMetaAr ? ` • (${task.extraMetaAr})` : ""}
                       </div>
@@ -2666,15 +2816,18 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                   </div>
 
                   {/* Bottom Row: Workforce Count + Execution Notes + Non-execution Reason + Photo / Snag Actions */}
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: 8,
-                    marginTop: 10,
-                    paddingTop: 10,
-                    borderTop: "1px solid rgba(30,41,59,0.7)",
-                  }}>
-                    <div>
+                  <div
+                    className="mobile-zones-grid"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                      gap: 8,
+                      marginTop: 10,
+                      paddingTop: 10,
+                      borderTop: "1px solid rgba(30,41,59,0.7)",
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
                       <label style={s.miniLabel}>
                         👷 {tr("عدد العمالة الفعلي:", "Actual Workforce Count:")}
                       </label>
@@ -2686,7 +2839,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                       />
                     </div>
 
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <label style={s.miniLabel}>
                         📝 {tr("ملاحظات التنفيذ / البيان المنفذ:", "Execution Notes / Details:")}
                       </label>
@@ -2698,7 +2851,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                       />
                     </div>
 
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <label style={s.miniLabel}>
                         ⚠️ {tr("سبب عدم التنفيذ / الملاحظات الإضافية:", "Reason for Non-Execution / Remarks:")}
                       </label>
@@ -2713,7 +2866,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                       />
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "flex-end", gap: 6, flexWrap: "wrap" }}>
+                    <div className="mobile-btn-grid" style={{ display: "flex", alignItems: "flex-end", gap: 6, flexWrap: "wrap" }}>
                       <button
                         type="button"
                         onClick={() => setCameraTargetUid(task)}
@@ -2808,26 +2961,28 @@ function KpiBox({ label, value, color }) {
       border: `1px solid ${color}44`,
       borderTop: `3px solid ${color}`,
       borderRadius: 12,
-      padding: "10px 14px",
-      minWidth: 130,
-      flex: "1 1 130px",
+      padding: "10px 12px",
+      minWidth: 0,
+      flex: "1 1 125px",
     }}>
-      <div style={{ fontSize: 22, fontWeight: 900, color }}>{value}</div>
-      <div style={{ fontSize: 11, color: "#cbd5e1", fontWeight: 700, marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 21, fontWeight: 900, color }}>{value}</div>
+      <div style={{ fontSize: 11, color: "#cbd5e1", fontWeight: 700, marginTop: 2, lineHeight: 1.3 }}>{label}</div>
     </div>
   )
 }
 
 const s = {
-  wrap: { display: "flex", flexDirection: "column", gap: 16 },
+  wrap: { display: "flex", flexDirection: "column", gap: 14, width: "100%", maxWidth: "100%", minWidth: 0 },
   hero: {
     background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #064e3b 100%)",
     border: "1px solid #334155",
     borderRadius: 18,
-    padding: 20,
+    padding: 18,
     display: "flex",
     flexDirection: "column",
     gap: 14,
+    minWidth: 0,
+    maxWidth: "100%",
   },
   heroBadge: {
     display: "inline-block",
@@ -2838,55 +2993,59 @@ const s = {
     padding: "3px 10px",
     borderRadius: 999,
     marginBottom: 6,
+    maxWidth: "100%",
+    wordBreak: "break-word",
+    lineHeight: 1.4,
   },
-  heroTitle: { margin: 0, fontSize: 20, fontWeight: 900, color: "#fff" },
-  heroSub: { margin: "6px 0 0", fontSize: 13, color: "#cbd5e1", lineHeight: 1.6 },
+  heroTitle: { margin: 0, fontSize: 18.5, fontWeight: 900, color: "#fff", lineHeight: 1.4 },
+  heroSub: { margin: "6px 0 0", fontSize: 12.5, color: "#cbd5e1", lineHeight: 1.6 },
   exportBtn: {
     border: "none",
     borderRadius: 10,
-    padding: "10px 14px",
+    padding: "9px 12px",
     color: "#fff",
     fontWeight: 800,
-    fontSize: 12.5,
+    fontSize: 12,
     cursor: "pointer",
-    whiteSpace: "nowrap",
   },
   periodTabs: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: 10,
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: 8,
   },
   periodBtn: {
     border: "1.5px solid",
     borderRadius: 12,
-    padding: "12px 14px",
+    padding: "10px 12px",
     fontWeight: 800,
-    fontSize: 13.5,
+    fontSize: 13,
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     transition: "all 0.2s",
+    textAlign: "center",
   },
   dateBar: {
     background: "rgba(6,13,26,0.7)",
     border: "1px solid #334155",
     borderRadius: 12,
-    padding: "10px 14px",
+    padding: "10px 12px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     flexWrap: "wrap",
-    gap: 10,
+    gap: 8,
+    minWidth: 0,
   },
   dateInput: {
     background: "#0f172a",
     border: "1px solid #38bdf8",
     color: "#fff",
     borderRadius: 8,
-    padding: "6px 12px",
-    fontSize: 13,
+    padding: "6px 10px",
+    fontSize: 12.5,
     fontWeight: 800,
   },
   navDayBtn: {
@@ -2894,24 +3053,24 @@ const s = {
     border: "1px solid #334155",
     color: "#cbd5e1",
     borderRadius: 8,
-    padding: "6px 12px",
-    fontSize: 12,
+    padding: "6px 10px",
+    fontSize: 11.5,
     fontWeight: 800,
     cursor: "pointer",
   },
   kpiGrid: {
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))",
+    gap: 8,
   },
   sectorGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(195px, 1fr))",
-    gap: 10,
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 8,
   },
   sectorCard: {
     borderRadius: 14,
-    padding: 14,
+    padding: 12,
     cursor: "pointer",
     textAlign: "start",
     display: "flex",
@@ -2925,31 +3084,35 @@ const s = {
     borderRadius: 14,
     padding: 12,
     display: "flex",
-    gap: 10,
+    gap: 8,
     flexWrap: "wrap",
     alignItems: "center",
+    minWidth: 0,
   },
   input: {
     background: "#060d1a",
     border: "1px solid #1e293b",
     borderRadius: 10,
-    padding: "9px 14px",
+    padding: "9px 12px",
     color: "#e2e8f0",
     fontSize: 13,
   },
   filterPill: {
     border: "1px solid #334155",
     borderRadius: 8,
-    padding: "7px 12px",
-    fontSize: 12,
+    padding: "7px 10px",
+    fontSize: 11.5,
     fontWeight: 800,
     cursor: "pointer",
+    lineHeight: 1.35,
   },
   card: {
     background: "#0a1628",
     border: "1px solid #1e293b",
     borderRadius: 16,
     padding: 16,
+    minWidth: 0,
+    maxWidth: "100%",
   },
   table: {
     width: "100%",
@@ -2982,6 +3145,7 @@ const s = {
   },
   miniInput: {
     width: "100%",
+    minWidth: 0,
     background: "#0f172a",
     border: "1px solid #1e293b",
     borderRadius: 8,
@@ -2992,10 +3156,9 @@ const s = {
   smallBtn: {
     border: "none",
     borderRadius: 8,
-    padding: "8px 12px",
+    padding: "8px 10px",
     fontSize: 12,
     fontWeight: 800,
     cursor: "pointer",
-    whiteSpace: "nowrap",
   },
 }
