@@ -888,9 +888,9 @@ export default function NightShiftReportModule({
   return (
     <div style={st.wrapper}>
       {/* ── Top Executive Banner ── */}
-      <div style={st.heroBanner}>
+      <div className="mobile-section-card" style={st.heroBanner}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 }}>
-          <div>
+          <div style={{ minWidth: 0, flex: "1 1 260px" }}>
             <div style={st.badgePill}>
               🌙 NIGHT SHIFT OPERATIONS & DAILY EXECUTIVE SUMMARY
             </div>
@@ -909,7 +909,7 @@ export default function NightShiftReportModule({
           </div>
 
           {/* Export & Action Buttons */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <div className="mobile-btn-grid" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <button type="button" onClick={handleCopySummaryText} style={st.btnPrimary}>
               📋 {tr("نسخ الملخص التنفيذي", "Copy Exec. Summary")}
             </button>
@@ -978,7 +978,7 @@ export default function NightShiftReportModule({
             </button>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", flex: "1 1 220px" }}>
             <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 700 }}>
               👤 {tr("مشرف الوردية:", "Shift Supervisor:")}
             </span>
@@ -987,7 +987,7 @@ export default function NightShiftReportModule({
               value={currentReport.supervisorName || ""}
               onChange={(e) => saveReportPatch({ supervisorName: e.target.value })}
               placeholder={tr("اسم مشرف الوردية الليلية", "Night Shift Supervisor")}
-              style={{ ...st.dateInput, minWidth: 180 }}
+              style={{ ...st.dateInput, flex: 1, minWidth: 140 }}
             />
             {saving && (
               <span style={{ fontSize: 11, color: "#34d399", fontWeight: 800 }}>
@@ -999,8 +999,8 @@ export default function NightShiftReportModule({
 
         {/* Saved Archive Dates Pills */}
         {savedDatesList.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
-            <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 700 }}>
+          <div className="mobile-scroll-pills" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+            <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 700, flexShrink: 0 }}>
               🗂️ {tr("التقارير المحفوظة بالأرشيف:", "Saved Night Reports:")}
             </span>
             {savedDatesList.slice(0, 8).map((dt) => (
@@ -1013,10 +1013,11 @@ export default function NightShiftReportModule({
                   color: selectedDate === dt ? "#38bdf8" : "#cbd5e1",
                   border: `1px solid ${selectedDate === dt ? "#38bdf8" : "#334155"}`,
                   borderRadius: 999,
-                  padding: "3px 10px",
+                  padding: "4px 10px",
                   fontSize: 11,
                   fontWeight: 800,
                   cursor: "pointer",
+                  flexShrink: 0,
                 }}
               >
                 📅 {formatArabicDateDisplay(dt)}
@@ -1027,7 +1028,7 @@ export default function NightShiftReportModule({
       </div>
 
       {/* ── 6 Interactive KPI Cards (Click to Filter & Scroll) ── */}
-      <div style={st.kpiGrid}>
+      <div className="mobile-kpi-grid" style={st.kpiGrid}>
         <InteractiveKpiCard
           icon="📊"
           value={`${execSummary.overallScore}%`}
@@ -1114,18 +1115,18 @@ export default function NightShiftReportModule({
           📊 SECTION 0: DAILY EXECUTIVE SUMMARY (الملخص التنفيذي لأهم الأحداث)
          ══════════════════════════════════════════════════════════════════════ */}
       {(activeSectionFilter === "all" || activeSectionFilter === "exec") && (
-        <div ref={sectionRefs.exec} style={st.execCard}>
+        <div ref={sectionRefs.exec} className="mobile-section-card" style={st.execCard}>
           <div style={st.sectionHeaderRow}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 900, color: "#34d399", letterSpacing: 0.8 }}>
                 DAILY EXECUTIVE SUMMARY & KEY HIGHLIGHTS
               </div>
-              <h3 style={{ margin: "2px 0 0 0", fontSize: 18, fontWeight: 900, color: "#ecfdf5" }}>
+              <h3 style={{ margin: "2px 0 0 0", fontSize: 17, fontWeight: 900, color: "#ecfdf5" }}>
                 📊 {tr("الملخص التنفيذي لأهم الأحداث اليومية — وردية", "Daily Executive Summary — Shift")} ({formatArabicDateDisplay(selectedDate)})
               </h3>
             </div>
 
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="mobile-btn-grid" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {(canAdd || canEdit) && (
                 <button
                   type="button"
@@ -1141,7 +1142,7 @@ export default function NightShiftReportModule({
                     cursor: "pointer",
                   }}
                 >
-                  ✨ {tr("تحديث/توليد أهم الأحداث تلقائياً من الجداول", "Auto-Synthesize Highlights from Tables")}
+                  ✨ {tr("تحديث أهم الأحداث تلقائياً", "Auto-Synthesize Highlights")}
                 </button>
               )}
               <button
@@ -1174,6 +1175,7 @@ export default function NightShiftReportModule({
                   borderRight: `4px solid ${b.color}`,
                   borderRadius: 12,
                   padding: "12px 14px",
+                  minWidth: 0,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -1219,7 +1221,7 @@ export default function NightShiftReportModule({
                         gap: 10,
                       }}
                     >
-                      <div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           <span
                             style={{
@@ -1260,11 +1262,11 @@ export default function NightShiftReportModule({
 
             {/* Add new Executive Highlight */}
             {(canAdd || canEdit) && (
-              <div style={st.quickAddRow}>
+              <div className="mobile-stack-row" style={st.quickAddRow}>
                 <select
                   value={newHighlight.level}
                   onChange={(e) => setNewHighlight((p) => ({ ...p, level: e.target.value }))}
-                  style={{ ...st.input, maxWidth: 165 }}
+                  style={{ ...st.input, flex: "0 1 165px" }}
                 >
                   <option value="success">🟢 {tr("إنجاز رئيسي", "Key Achievement")}</option>
                   <option value="info">🔵 {tr("متابعة تشغيلية", "Operational Note")}</option>
@@ -1276,14 +1278,14 @@ export default function NightShiftReportModule({
                   placeholder={tr("عنوان الحدث الهام (مثال: الانتهاء من غسيل تند المطاعم...)", "Highlight title...")}
                   value={newHighlight.title}
                   onChange={(e) => setNewHighlight((p) => ({ ...p, title: e.target.value }))}
-                  style={{ ...st.input, flex: 1, minWidth: 200 }}
+                  style={{ ...st.input, flex: 1, minWidth: 0 }}
                 />
                 <input
                   type="text"
                   placeholder={tr("التفاصيل والإجراءات المتخذة...", "Details & actions taken...")}
                   value={newHighlight.details}
                   onChange={(e) => setNewHighlight((p) => ({ ...p, details: e.target.value }))}
-                  style={{ ...st.input, flex: 1.4, minWidth: 220 }}
+                  style={{ ...st.input, flex: 1.4, minWidth: 0 }}
                 />
                 <button type="button" onClick={handleAddHighlight} style={st.addBtn}>
                   ➕ {tr("إضافة للملخص التنفيذي", "Add Highlight")}
@@ -1298,7 +1300,7 @@ export default function NightShiftReportModule({
           🏗️ SECTION 1: أعمال المقاولين والوحدات (6 Zones Matrix)
          ══════════════════════════════════════════════════════════════════════ */}
       {(activeSectionFilter === "all" || activeSectionFilter === "contractors") && (
-        <div ref={sectionRefs.contractors} style={st.sectionCard}>
+        <div ref={sectionRefs.contractors} className="mobile-section-card" style={st.sectionCard}>
           <div style={st.sectionHeaderRow}>
             <div>
               <h3 style={st.sectionTitle}>
@@ -1317,7 +1319,7 @@ export default function NightShiftReportModule({
           </div>
 
           {/* 6-Columns Matrix View matching the user's sheet */}
-          <div style={st.zonesGrid}>
+          <div className="mobile-zones-grid" style={st.zonesGrid}>
             {CONTRACTOR_ZONES.map((zone) => {
               const items = execSummary.contractorByZone[zone.id] || []
               return (
@@ -1332,6 +1334,7 @@ export default function NightShiftReportModule({
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
+                    minWidth: 0,
                   }}
                 >
                   <div>
@@ -1375,7 +1378,7 @@ export default function NightShiftReportModule({
                               gap: 6,
                             }}
                           >
-                            <div style={{ lineHeight: 1.5 }}>
+                            <div style={{ lineHeight: 1.5, minWidth: 0 }}>
                               {item.unitOrArea && (
                                 <div style={{ fontSize: 11, fontWeight: 800, color: zone.color }}>
                                   📍 {item.unitOrArea}
@@ -1404,11 +1407,11 @@ export default function NightShiftReportModule({
 
           {/* Quick Add Contractor / Unit Work */}
           {(canAdd || canEdit) && (
-            <div style={{ ...st.quickAddRow, marginTop: 14 }}>
+            <div className="mobile-stack-row" style={{ ...st.quickAddRow, marginTop: 14 }}>
               <select
                 value={newContractor.zoneId}
                 onChange={(e) => setNewContractor((p) => ({ ...p, zoneId: e.target.value }))}
-                style={{ ...st.input, maxWidth: 160 }}
+                style={{ ...st.input, flex: "0 1 160px" }}
               >
                 {CONTRACTOR_ZONES.map((z) => (
                   <option key={z.id} value={z.id}>
@@ -1421,14 +1424,14 @@ export default function NightShiftReportModule({
                 placeholder={tr("رقم الوحدة / المنطقة (مثال: وحدة 2003 أو Kids Area)", "Unit / Area (e.g. Unit 2003)")}
                 value={newContractor.unitOrArea}
                 onChange={(e) => setNewContractor((p) => ({ ...p, unitOrArea: e.target.value }))}
-                style={{ ...st.input, maxWidth: 230 }}
+                style={{ ...st.input, flex: "1 1 190px", minWidth: 0 }}
               />
               <input
                 type="text"
                 placeholder={tr("تفاصيل أعمال المقاول أو الوحدة (مثال: عمل دهانات وجبسون بورد)...", "Contractor work details...")}
                 value={newContractor.work}
                 onChange={(e) => setNewContractor((p) => ({ ...p, work: e.target.value }))}
-                style={{ ...st.input, flex: 1, minWidth: 240 }}
+                style={{ ...st.input, flex: "2 1 220px", minWidth: 0 }}
               />
               <button type="button" onClick={handleAddContractorWork} style={st.addBtn}>
                 ➕ {tr("إضافة عمل مقاول / وحدة", "Add Work")}
@@ -1442,7 +1445,7 @@ export default function NightShiftReportModule({
           🧹 SECTION 2: أعمال النظافة الليلية (Night Housekeeping Works)
          ══════════════════════════════════════════════════════════════════════ */}
       {(activeSectionFilter === "all" || activeSectionFilter === "hk") && (
-        <div ref={sectionRefs.hk} style={st.sectionCard}>
+        <div ref={sectionRefs.hk} className="mobile-section-card" style={st.sectionCard}>
           <div style={st.sectionHeaderRow}>
             <div>
               <h3 style={st.sectionTitle}>
@@ -1481,7 +1484,7 @@ export default function NightShiftReportModule({
                   gap: 10,
                 }}
               >
-                <div style={{ fontSize: 12.5, lineHeight: 1.65 }}>
+                <div style={{ fontSize: 12.5, lineHeight: 1.65, minWidth: 0, flex: "1 1 240px" }}>
                   <div style={{ fontWeight: 900, color: "#e9d5ff" }}>
                     📌 {tr(`الأعمال التأسيسية الأسبوعية المقررة لوردية ليلة (${dayAr}):`, `Scheduled Weekly Night Foundation for (${dayAr}):`)}
                   </div>
@@ -1543,11 +1546,10 @@ export default function NightShiftReportModule({
                       color: "#fff",
                       border: "1px solid #c084fc",
                       borderRadius: 9,
-                      padding: "7px 12px",
+                      padding: "8px 12px",
                       fontSize: 12,
                       fontWeight: 800,
                       cursor: "pointer",
-                      whiteSpace: "nowrap",
                     }}
                   >
                     ⚡ {tr(`إدراج تأسيس ليلة (${dayAr}) بالجدول`, `Insert ${dayAr} Night Foundation`)}
@@ -1557,7 +1559,8 @@ export default function NightShiftReportModule({
             )
           })()}
 
-          <div style={{ overflowX: "auto" }}>
+          {/* Desktop Table View */}
+          <div className="desktop-table-view" style={{ overflowX: "auto" }}>
             <table style={st.table}>
               <thead>
                 <tr>
@@ -1631,21 +1634,100 @@ export default function NightShiftReportModule({
             </table>
           </div>
 
+          {/* Mobile Cards View for Section 2 (Night Housekeeping) */}
+          <div className="mobile-cards-view" style={{ gap: 10 }}>
+            {(currentReport.housekeepingWorks || []).map((row, idx) => {
+              const statusCfg =
+                row.status === "done"
+                  ? { label: tr("✓ تم التنفيذ", "✓ Done"), bg: "rgba(16,185,129,0.2)", color: "#34d399", border: "#10b981" }
+                  : row.status === "in_progress"
+                  ? { label: tr("⏳ جاري", "⏳ In Progress"), bg: "rgba(245,158,11,0.2)", color: "#fbbf24", border: "#f59e0b" }
+                  : { label: tr("❌ لم يتم", "❌ Pending"), bg: "rgba(239,68,68,0.2)", color: "#f87171", border: "#ef4444" }
+              return (
+                <div
+                  key={row.id}
+                  style={{
+                    background: "rgba(2,6,23,0.65)",
+                    border: `1px solid ${statusCfg.border}55`,
+                    borderRight: `4px solid ${statusCfg.border}`,
+                    borderRadius: 12,
+                    padding: 12,
+                    display: "grid",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 900, color: "#94a3b8" }}>#{idx + 1}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleHkStatus(row.id)}
+                        style={{
+                          background: statusCfg.bg,
+                          color: statusCfg.color,
+                          border: `1px solid ${statusCfg.border}`,
+                          borderRadius: 999,
+                          padding: "4px 10px",
+                          fontSize: 11.5,
+                          fontWeight: 800,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {statusCfg.label}
+                      </button>
+                      {canDelete && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteHkRow(row.id)}
+                          style={st.delRowBtn}
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: "#94a3b8", marginBottom: 3 }}>
+                      📍 {tr("المكان:", "Location:")}
+                    </div>
+                    <input
+                      type="text"
+                      value={row.location}
+                      onChange={(e) => handleUpdateHkField(row.id, "location", e.target.value)}
+                      style={{ ...st.input, width: "100%", fontWeight: 800 }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: "#94a3b8", marginBottom: 3 }}>
+                      🧹 {tr("الأعمال المنفذة:", "Work Executed:")}
+                    </div>
+                    <input
+                      type="text"
+                      value={row.work}
+                      onChange={(e) => handleUpdateHkField(row.id, "work", e.target.value)}
+                      style={{ ...st.input, width: "100%" }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
           {(canAdd || canEdit) && (
-            <div style={{ ...st.quickAddRow, marginTop: 12 }}>
+            <div className="mobile-stack-row" style={{ ...st.quickAddRow, marginTop: 12 }}>
               <input
                 type="text"
                 placeholder={tr("المكان (مثال: حمامات البلازا / ريسبشن مبنى 1)...", "Location...")}
                 value={newHk.location}
                 onChange={(e) => setNewHk((p) => ({ ...p, location: e.target.value }))}
-                style={{ ...st.input, maxWidth: 260 }}
+                style={{ ...st.input, flex: "1 1 200px", minWidth: 0 }}
               />
               <input
                 type="text"
                 placeholder={tr("الأعمال (مثال: تأسيس وتنظيف / غسيل باسكتات)...", "Night housekeeping work...")}
                 value={newHk.work}
                 onChange={(e) => setNewHk((p) => ({ ...p, work: e.target.value }))}
-                style={{ ...st.input, flex: 1, minWidth: 240 }}
+                style={{ ...st.input, flex: "2 1 220px", minWidth: 0 }}
               />
               <button type="button" onClick={handleAddHkRow} style={st.addBtn}>
                 ➕ {tr("إضافة بند نظافة ليلية", "Add Night HK Row")}
@@ -1659,7 +1741,7 @@ export default function NightShiftReportModule({
           🔧 SECTION 3: أعمال صيانة المول من قبل فريق الصيانة
          ══════════════════════════════════════════════════════════════════════ */}
       {(activeSectionFilter === "all" || activeSectionFilter === "maint") && (
-        <div ref={sectionRefs.maint} style={st.sectionCard}>
+        <div ref={sectionRefs.maint} className="mobile-section-card" style={st.sectionCard}>
           <div style={st.sectionHeaderRow}>
             <div>
               <h3 style={st.sectionTitle}>
@@ -1677,7 +1759,8 @@ export default function NightShiftReportModule({
             </span>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
+          {/* Desktop Table View */}
+          <div className="desktop-table-view" style={{ overflowX: "auto" }}>
             <table style={st.table}>
               <thead>
                 <tr>
@@ -1726,26 +1809,77 @@ export default function NightShiftReportModule({
             </table>
           </div>
 
+          {/* Mobile Cards View for Section 3 (Mall Maintenance) */}
+          <div className="mobile-cards-view" style={{ gap: 10 }}>
+            {(currentReport.maintenanceWorks || []).map((m, idx) => (
+              <div
+                key={m.id}
+                style={{
+                  background: "rgba(2,6,23,0.65)",
+                  border: "1px solid rgba(56,189,248,0.3)",
+                  borderRight: "4px solid #38bdf8",
+                  borderRadius: 12,
+                  padding: 12,
+                  display: "grid",
+                  gap: 6,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontWeight: 900, fontSize: 13.5, color: "#f8fafc" }}>
+                    #{idx + 1} • 📍 {m.location}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span
+                      style={{
+                        background: "rgba(56,189,248,0.15)",
+                        color: "#38bdf8",
+                        border: "1px solid rgba(56,189,248,0.35)",
+                        borderRadius: 999,
+                        padding: "2px 8px",
+                        fontSize: 10.5,
+                        fontWeight: 800,
+                      }}
+                    >
+                      🛠️ {m.category || "صيانة عامة"}
+                    </span>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteMaintRow(m.id)}
+                        style={st.delRowBtn}
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.6 }}>
+                  {m.details}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {(canAdd || canEdit) && (
-            <div style={{ ...st.quickAddRow, marginTop: 12 }}>
+            <div className="mobile-stack-row" style={{ ...st.quickAddRow, marginTop: 12 }}>
               <input
                 type="text"
                 placeholder={tr("المكان (مثال: البلازا / Kids Area / ضلع ثلاثة)...", "Location...")}
                 value={newMaint.location}
                 onChange={(e) => setNewMaint((p) => ({ ...p, location: e.target.value }))}
-                style={{ ...st.input, maxWidth: 230 }}
+                style={{ ...st.input, flex: "1 1 180px", minWidth: 0 }}
               />
               <input
                 type="text"
                 placeholder={tr("تفاصيل العمل (مثال: أعمال رخام / أعمال كهرباء / أعمال دهانات)...", "Work details...")}
                 value={newMaint.details}
                 onChange={(e) => setNewMaint((p) => ({ ...p, details: e.target.value }))}
-                style={{ ...st.input, flex: 1, minWidth: 240 }}
+                style={{ ...st.input, flex: "2 1 220px", minWidth: 0 }}
               />
               <select
                 value={newMaint.category}
                 onChange={(e) => setNewMaint((p) => ({ ...p, category: e.target.value }))}
-                style={{ ...st.input, maxWidth: 170 }}
+                style={{ ...st.input, flex: "0 1 170px" }}
               >
                 <option value="مدني ورخام">🧱 مدني ورخام</option>
                 <option value="كهرباء وإنارة">⚡ كهرباء وإنارة</option>
@@ -1766,7 +1900,7 @@ export default function NightShiftReportModule({
           🛢️ SECTION 4: متابعة تنظيف صناديق الدهون بالمطاعم
          ══════════════════════════════════════════════════════════════════════ */}
       {(activeSectionFilter === "all" || activeSectionFilter === "grease") && (
-        <div ref={sectionRefs.grease} style={st.sectionCard}>
+        <div ref={sectionRefs.grease} className="mobile-section-card" style={st.sectionCard}>
           <div style={st.sectionHeaderRow}>
             <div>
               <h3 style={st.sectionTitle}>
@@ -1784,7 +1918,8 @@ export default function NightShiftReportModule({
             </span>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
+          {/* Desktop Table View */}
+          <div className="desktop-table-view" style={{ overflowX: "auto" }}>
             <table style={st.table}>
               <thead>
                 <tr>
@@ -1879,14 +2014,98 @@ export default function NightShiftReportModule({
             </table>
           </div>
 
+          {/* Mobile Cards View for Section 4 (Grease Traps) */}
+          <div className="mobile-cards-view" style={{ gap: 10 }}>
+            {(currentReport.greaseTraps || []).map((g, idx) => (
+              <div
+                key={g.id}
+                style={{
+                  background: "rgba(2,6,23,0.65)",
+                  border: `1px solid ${g.followed !== false ? "rgba(245,158,11,0.4)" : "rgba(239,68,68,0.4)"}`,
+                  borderRight: `4px solid ${g.followed !== false ? "#f59e0b" : "#ef4444"}`,
+                  borderRadius: 12,
+                  padding: 12,
+                  display: "grid",
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontWeight: 900, fontSize: 14, color: "#f8fafc" }}>
+                    #{idx + 1} • 🍽️ {g.restaurant}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleGreaseFollowed(g.id)}
+                      style={{
+                        background: g.followed !== false ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)",
+                        color: g.followed !== false ? "#34d399" : "#f87171",
+                        border: `1px solid ${g.followed !== false ? "#10b981" : "#ef4444"}`,
+                        borderRadius: 999,
+                        padding: "4px 10px",
+                        fontSize: 11,
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {g.followed !== false ? tr("✓ تمت المتابعة", "✓ Followed") : tr("❌ لم يتم", "❌ Not Done")}
+                    </button>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteGreaseRestaurant(g.id)}
+                        style={st.delRowBtn}
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(15,23,42,0.8)", padding: "6px 10px", borderRadius: 8 }}>
+                  <span style={{ fontSize: 12, color: "#cbd5e1", fontWeight: 700 }}>
+                    🛢️ {tr("عدد صناديق الدهون:", "Traps Count:")}
+                  </span>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleAdjustGreaseCount(g.id, -1)}
+                      style={st.counterBtn}
+                    >
+                      -
+                    </button>
+                    <span style={{ fontWeight: 900, fontSize: 15, color: "#fbbf24", minWidth: 22, textAlign: "center" }}>
+                      {g.trapsCount}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleAdjustGreaseCount(g.id, 1)}
+                      style={st.counterBtn}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <input
+                  type="text"
+                  value={g.details || ""}
+                  onChange={(e) => handleUpdateGreaseDetails(g.id, e.target.value)}
+                  placeholder={tr("التفاصيل...", "Details...")}
+                  style={{ ...st.input, width: "100%" }}
+                />
+              </div>
+            ))}
+          </div>
+
           {(canAdd || canEdit) && (
-            <div style={{ ...st.quickAddRow, marginTop: 12 }}>
+            <div className="mobile-stack-row" style={{ ...st.quickAddRow, marginTop: 12 }}>
               <input
                 type="text"
                 placeholder={tr("اسم المطعم / الموقع (مثال: مارزيبان / بابل / جو)...", "Restaurant name...")}
                 value={newGrease.restaurant}
                 onChange={(e) => setNewGrease((p) => ({ ...p, restaurant: e.target.value }))}
-                style={{ ...st.input, maxWidth: 230 }}
+                style={{ ...st.input, flex: "1 1 180px", minWidth: 0 }}
               />
               <input
                 type="number"
@@ -1894,14 +2113,14 @@ export default function NightShiftReportModule({
                 placeholder={tr("عدد الصناديق", "Traps")}
                 value={newGrease.trapsCount}
                 onChange={(e) => setNewGrease((p) => ({ ...p, trapsCount: e.target.value }))}
-                style={{ ...st.input, maxWidth: 110 }}
+                style={{ ...st.input, flex: "0 1 110px", minWidth: 0 }}
               />
               <input
                 type="text"
                 placeholder={tr("التفاصيل...", "Details...")}
                 value={newGrease.details}
                 onChange={(e) => setNewGrease((p) => ({ ...p, details: e.target.value }))}
-                style={{ ...st.input, flex: 1, minWidth: 220 }}
+                style={{ ...st.input, flex: "2 1 200px", minWidth: 0 }}
               />
               <button type="button" onClick={handleAddGreaseRestaurant} style={st.addBtn}>
                 ➕ {tr("إضافة مطعم", "Add Restaurant")}
@@ -1915,7 +2134,7 @@ export default function NightShiftReportModule({
           🤝 SECTION 5: تسليم الوردية للشيفت التالي (Shift Handover)
          ══════════════════════════════════════════════════════════════════════ */}
       {(activeSectionFilter === "all" || activeSectionFilter === "handover") && (
-        <div ref={sectionRefs.handover} style={st.sectionCard}>
+        <div ref={sectionRefs.handover} className="mobile-section-card" style={st.sectionCard}>
           <div style={st.sectionHeaderRow}>
             <div>
               <h3 style={st.sectionTitle}>
@@ -1933,7 +2152,8 @@ export default function NightShiftReportModule({
             </span>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
+          {/* Desktop Table View */}
+          <div className="desktop-table-view" style={{ overflowX: "auto" }}>
             <table style={st.table}>
               <thead>
                 <tr>
@@ -2000,28 +2220,97 @@ export default function NightShiftReportModule({
             </table>
           </div>
 
+          {/* Mobile Cards View for Section 5 (Shift Handover) */}
+          <div className="mobile-cards-view" style={{ gap: 10 }}>
+            {(currentReport.handoverItems || []).length === 0 ? (
+              <div style={{ background: "rgba(2,6,23,0.55)", border: "1px solid #1e293b", borderRadius: 12, padding: 16, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
+                ✅ {tr("لا توجد بنود معلقة — تم تسليم الوردية للشيفت التالي بدون عوائق", "No pending handover items — Shift handed over cleanly")}
+              </div>
+            ) : (
+              currentReport.handoverItems.map((h, idx) => (
+                <div
+                  key={h.id}
+                  style={{
+                    background: "rgba(2,6,23,0.65)",
+                    border: "1px solid rgba(239,68,68,0.35)",
+                    borderRight: "4px solid #ef4444",
+                    borderRadius: 12,
+                    padding: 12,
+                    display: "grid",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontWeight: 900, fontSize: 13.5, color: "#f8fafc" }}>
+                      #{idx + 1} • 📍 {h.location}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {h.escalated ? (
+                        <span style={{ fontSize: 11, color: "#34d399", fontWeight: 800 }}>
+                          ✓ {tr("مُرحّل للسناج", "In Snags")}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleEscalateHandoverToSnag(h)}
+                          style={{
+                            background: "rgba(239,68,68,0.2)",
+                            color: "#fca5a5",
+                            border: "1px solid #ef4444",
+                            borderRadius: 8,
+                            padding: "4px 8px",
+                            fontSize: 11,
+                            fontWeight: 800,
+                            cursor: "pointer",
+                          }}
+                        >
+                          🚨 {tr("لسجل السناج", "To Snags")}
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteHandover(h.id)}
+                          style={st.delRowBtn}
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, color: "#fca5a5", fontWeight: 700 }}>
+                    🤝 {h.handoverNote}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "#cbd5e1" }}>
+                    ⚡ <strong>{tr("العمل المطلوب:", "Action Required:")}</strong> {h.actionRequired}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
           {(canAdd || canEdit) && (
-            <div style={{ ...st.quickAddRow, marginTop: 12 }}>
+            <div className="mobile-stack-row" style={{ ...st.quickAddRow, marginTop: 12 }}>
               <input
                 type="text"
                 placeholder={tr("المكان (مثال: مبنى 2 / البلازا)...", "Location...")}
                 value={newHandover.location}
                 onChange={(e) => setNewHandover((p) => ({ ...p, location: e.target.value }))}
-                style={{ ...st.input, maxWidth: 210 }}
+                style={{ ...st.input, flex: "1 1 160px", minWidth: 0 }}
               />
               <input
                 type="text"
                 placeholder={tr("تسليم للشيفت التالي (الحدث / الملاحظة)...", "Handover note...")}
                 value={newHandover.handoverNote}
                 onChange={(e) => setNewHandover((p) => ({ ...p, handoverNote: e.target.value }))}
-                style={{ ...st.input, flex: 1, minWidth: 220 }}
+                style={{ ...st.input, flex: "2 1 200px", minWidth: 0 }}
               />
               <input
                 type="text"
                 placeholder={tr("العمل المطلوب من الشيفت الصباحي...", "Action required...")}
                 value={newHandover.actionRequired}
                 onChange={(e) => setNewHandover((p) => ({ ...p, actionRequired: e.target.value }))}
-                style={{ ...st.input, flex: 1, minWidth: 220 }}
+                style={{ ...st.input, flex: "2 1 200px", minWidth: 0 }}
               />
               <button type="button" onClick={handleAddHandover} style={st.addBtn}>
                 ➕ {tr("إضافة بند تسليم شيفت", "Add Handover")}
@@ -2045,7 +2334,7 @@ function InteractiveKpiCard({ icon, value, title, sub, color, active, onClick })
           : "rgba(15,23,42,0.82)",
         border: active ? `2px solid ${color}` : "1px solid #1e293b",
         borderRadius: 14,
-        padding: "14px 14px",
+        padding: "12px 12px",
         textAlign: "right",
         cursor: "pointer",
         transition: "all 0.2s ease",
@@ -2053,27 +2342,29 @@ function InteractiveKpiCard({ icon, value, title, sub, color, active, onClick })
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        gap: 6,
+        gap: 5,
+        minWidth: 0,
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-        <span style={{ fontSize: 22 }}>{icon}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 4 }}>
+        <span style={{ fontSize: 20 }}>{icon}</span>
         <span
           style={{
-            fontSize: 10,
+            fontSize: 9.5,
             fontWeight: 800,
-            padding: "2px 8px",
+            padding: "2px 6px",
             borderRadius: 999,
             background: active ? color : "rgba(30,41,59,0.9)",
             color: active ? "#020617" : "#94a3b8",
+            whiteSpace: "nowrap",
           }}
         >
-          {active ? "✓ معروض الآن" : "اضغط للعرض"}
+          {active ? "✓ معروض" : "عرض"}
         </span>
       </div>
-      <div style={{ fontSize: 26, fontWeight: 900, color: color, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 12.5, fontWeight: 800, color: "#f8fafc" }}>{title}</div>
-      <div style={{ fontSize: 11, color: "#94a3b8" }}>{sub}</div>
+      <div style={{ fontSize: 22, fontWeight: 900, color: color, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: "#f8fafc", lineHeight: 1.3 }}>{title}</div>
+      <div style={{ fontSize: 10.5, color: "#94a3b8", lineHeight: 1.3 }}>{sub}</div>
     </button>
   )
 }
@@ -2081,13 +2372,16 @@ function InteractiveKpiCard({ icon, value, title, sub, color, active, onClick })
 const st = {
   wrapper: {
     display: "grid",
-    gap: 18,
+    gap: 16,
+    maxWidth: "100%",
+    minWidth: 0,
   },
   heroBanner: {
     background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #064e3b 100%)",
     border: "1px solid #334155",
     borderRadius: 18,
-    padding: "20px 22px",
+    padding: "18px 20px",
+    minWidth: 0,
   },
   badgePill: {
     display: "inline-block",
@@ -2096,39 +2390,40 @@ const st = {
     color: "#6ee7b7",
     borderRadius: 999,
     padding: "3px 12px",
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: 900,
     marginBottom: 8,
   },
   heroTitle: {
     margin: "0 0 6px 0",
-    fontSize: 21,
+    fontSize: 19,
     fontWeight: 900,
     color: "#f8fafc",
+    lineHeight: 1.4,
   },
   heroSub: {
     margin: 0,
-    fontSize: 13,
+    fontSize: 12.5,
     color: "#cbd5e1",
-    lineHeight: 1.7,
+    lineHeight: 1.65,
     maxWidth: 880,
   },
   dateBar: {
-    marginTop: 16,
-    paddingTop: 14,
+    marginTop: 14,
+    paddingTop: 12,
     borderTop: "1px solid rgba(148,163,184,0.2)",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 10,
   },
   dateInput: {
     background: "#0f172a",
     border: "1px solid #334155",
     color: "#f8fafc",
     borderRadius: 8,
-    padding: "6px 12px",
+    padding: "6px 10px",
     fontSize: 13,
     fontWeight: 700,
   },
@@ -2144,8 +2439,8 @@ const st = {
   quickDatePill: {
     border: "1px solid #334155",
     borderRadius: 8,
-    padding: "6px 12px",
-    fontSize: 12,
+    padding: "6px 10px",
+    fontSize: 11.5,
     fontWeight: 800,
     cursor: "pointer",
   },
@@ -2154,9 +2449,9 @@ const st = {
     color: "#fff",
     border: "1px solid #10b981",
     borderRadius: 10,
-    padding: "9px 14px",
+    padding: "8px 12px",
     fontWeight: 800,
-    fontSize: 12.5,
+    fontSize: 12,
     cursor: "pointer",
   },
   btnExcel: {
@@ -2164,9 +2459,9 @@ const st = {
     color: "#fff",
     border: "1px solid #22c55e",
     borderRadius: 10,
-    padding: "9px 14px",
+    padding: "8px 12px",
     fontWeight: 800,
-    fontSize: 12.5,
+    fontSize: 12,
     cursor: "pointer",
   },
   btnPdf: {
@@ -2174,28 +2469,29 @@ const st = {
     color: "#fff",
     border: "1px solid #3b82f6",
     borderRadius: 10,
-    padding: "9px 14px",
+    padding: "8px 12px",
     fontWeight: 800,
-    fontSize: 12.5,
+    fontSize: 12,
     cursor: "pointer",
   },
   kpiGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(195px, 1fr))",
-    gap: 12,
+    gridTemplateColumns: "repeat(auto-fit, minmax(175px, 1fr))",
+    gap: 10,
+    minWidth: 0,
   },
   filterNotice: {
     background: "rgba(16,185,129,0.12)",
     border: "1px solid #10b981",
     borderRadius: 12,
-    padding: "10px 16px",
+    padding: "10px 14px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     flexWrap: "wrap",
     gap: 10,
     color: "#a7f3d0",
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: 800,
   },
   showAllBtn: {
@@ -2203,20 +2499,21 @@ const st = {
     color: "#022c22",
     border: "none",
     borderRadius: 8,
-    padding: "6px 14px",
+    padding: "6px 12px",
     fontWeight: 900,
-    fontSize: 12,
+    fontSize: 11.5,
     cursor: "pointer",
   },
   execCard: {
     background: "linear-gradient(135deg, rgba(6,78,59,0.42), rgba(15,23,42,0.92))",
     border: "2px solid #10b981",
     borderRadius: 16,
-    padding: "18px 20px",
+    padding: "16px 18px",
+    minWidth: 0,
   },
   execBulletsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
     gap: 10,
     marginTop: 12,
   },
@@ -2224,7 +2521,8 @@ const st = {
     background: "rgba(15,23,42,0.82)",
     border: "1px solid #1e293b",
     borderRadius: 16,
-    padding: "18px 20px",
+    padding: "16px 18px",
+    minWidth: 0,
   },
   sectionHeaderRow: {
     display: "flex",
@@ -2236,22 +2534,24 @@ const st = {
   },
   sectionTitle: {
     margin: 0,
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: 900,
     color: "#f8fafc",
+    lineHeight: 1.4,
   },
   sectionSub: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: "#94a3b8",
     marginTop: 3,
+    lineHeight: 1.5,
   },
   countBadge: {
     background: "rgba(168,85,247,0.18)",
     border: "1px solid #a855f7",
     color: "#e9d5ff",
     borderRadius: 999,
-    padding: "5px 14px",
-    fontSize: 12,
+    padding: "4px 12px",
+    fontSize: 11.5,
     fontWeight: 800,
   },
   zonesGrid: {
@@ -2302,8 +2602,8 @@ const st = {
     background: "#1e293b",
     border: "1px solid #334155",
     color: "#f8fafc",
-    width: 26,
-    height: 26,
+    width: 28,
+    height: 28,
     borderRadius: 6,
     cursor: "pointer",
     fontWeight: 900,
@@ -2333,6 +2633,7 @@ const st = {
     borderRadius: 8,
     padding: "8px 12px",
     fontSize: 12.5,
+    boxSizing: "border-box",
   },
   addBtn: {
     background: "linear-gradient(135deg, #059669, #0d9488)",
