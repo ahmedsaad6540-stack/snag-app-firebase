@@ -578,7 +578,95 @@ export const HK_ITEM_FILTERS = [
   { id: "restaurant_joints",  icon: "🍽️", labelAr: "فواصل المطاعم",                     labelEn: "Restaurant Floor Joints" },
   { id: "interlock_sidewalks",icon: "🧱", labelAr: "الإنترلوك والأرصفة والرامب والدواسات", labelEn: "Interlock, Ramps, Sidewalks & Mats" },
   { id: "garage_basement",    icon: "🚗", labelAr: "الجراج والبيزمنت (B1 / B2)",        labelEn: "Garage & Basement (B1 / B2)" },
-  { id: "loading_back",       icon: "🚛", labelAr: "منطقة التحميل واللوكرز والقمامة",    labelEn: "Loading Dock, Lockers & Rubbish Room" },
+  { id: "loading_back",       icon: "🚛", labelAr: "منطقة التحميل واللوكرز وغرفة القمامة (تأسيس وتطهير)", labelEn: "Loading Dock, Lockers & Rubbish Room (Deep Clean & Sanitize)" },
+  { id: "fountain_outdoor",   icon: "⛲", labelAr: "النافورة والمنطقة الخارجية",        labelEn: "Fountain & Outdoor Area" },
+]
+
+// 4B-2. جدول الأعمال التأسيسية الأسبوعية الشامل (الصباحية • المسائية • الليلية • الكانوبي والتند • النافورة • غرفة القمامة)
+export const HK_WEEKLY_FOUNDATION_SCHEDULE = [
+  {
+    dayName: "السبت",
+    dayEn: "Saturday",
+    morning: "تأسيس سلم A+B مبنى (1) بالكامل - رسبشن 1/3 2A/2B/ الأرضي",
+    evening: "التأكد والمراجعة على نظافة الأدوار مبنى 1/2/3",
+    night: "غسيل أرضية رسبشن مبنى 1 / 3 وغسيل المشايات - تأسيس عالي ريتشارد الدور الأول - تأسيس حمامات البلازا بالكامل - تأسيس البلازا بالكامل والمنطقة الخارجية - غسيل رامب التحميل + ممر لـ 40",
+    canopyNight: "Canopy buil. (1) A+B",
+  },
+  {
+    dayName: "الأحد",
+    dayEn: "Sunday",
+    morning: "تأسيس طرق خدمات مبنى 1 / 2",
+    evening: "تأسيس مبنى 1/2 الدور 4",
+    night: "تأسيس حمامات البلازا بالكامل - تأسيس البلازا بالكامل والمنطقة الخارجية - تنظيف حوائط منطقة التحميل والأبواب",
+    canopyNight: "Canopy buil. (2) 2A",
+  },
+  {
+    dayName: "الاثنين",
+    dayEn: "Monday",
+    morning: "تأسيس سلم مبنى 3 A/B",
+    evening: "تأسيس مبنى 1/2 الدور 3",
+    night: "تأسيس حمامات البلازا بالكامل - تأسيس البلازا بالكامل والمنطقة الخارجية - تنظيف الهوايات ببيزمنت 1/2",
+    canopyNight: "Canopy buil. (2) 2B",
+  },
+  {
+    dayName: "الثلاثاء",
+    dayEn: "Tuesday",
+    morning: "تأسيس طرق الخدمات مبنى 3",
+    evening: "تأسيس مبنى 1/2 الدور 2",
+    night: "تأسيس حمامات البلازا بالكامل - تأسيس البلازا بالكامل والمنطقة الخارجية - تأسيس العالي بمنطقة التحميل ووحدات التكييف",
+    canopyNight: "Canopy buil. (3) A+B",
+  },
+  {
+    dayName: "الأربعاء",
+    dayEn: "Wednesday",
+    morning: "تأسيس المصاعد والمجر والمرور على نظافة أسطح المباني",
+    evening: "تأسيس مبنى 1 الدور 1 والـ 5/6 مبنى 2",
+    night: "تأسيس حمامات البلازا بالكامل - تأسيس البلازا بالكامل والمنطقة الخارجية - تأسيس اللوفر الحاجز للجراج وتأسيس طرقة مصاعد ني بمنطقة التحميل",
+    canopyNight: "Canopy buil. Ring road (1) A+B + تند مبنى (1)",
+  },
+  {
+    dayName: "الخميس",
+    dayEn: "Thursday",
+    morning: "تأسيس سلالم الطوارئ مبنى 2 عدد 2 سلم A",
+    evening: "تأسيس سلالم الطوارئ مبنى 2 عدد 2 سلم B",
+    night: "غسيل أرضية رسبشن مبنى 1 - تأسيس أعمدة الإنارة بالأضلاع - تأسيس حمامات البلازا بالكامل - تأسيس البلازا بالكامل - الكافيتريا",
+    canopyNight: "Canopy buil. Ring road (2) 2A+2B + تند مبنى (2)",
+  },
+  {
+    dayName: "الجمعة",
+    dayEn: "Friday",
+    morning: "تأسيس مداخل الرسبشن بالبيزمنت 1/2/2A/2B",
+    evening: "تأسيس المصلية وحمامات المصلية / تأسيس الدور الأول مبنى 3",
+    night: "غسيل أرضية رسبشن مبنى 2 - تأسيس عالي ريتشارد الدور B1/G - تأسيس حمامات البلازا بالكامل - تأسيس البلازا بالكامل والمنطقة الخارجية - تأسيس اللوكرات حريمي / رجالي",
+    canopyNight: "Canopy buil. Ring road (3) A+B + تند مبنى (3)",
+  },
+]
+
+export const HK_SPECIAL_FOUNDATION_ITEMS = [
+  {
+    id: "hk_fnd_rubbish_sanitize",
+    locationAr: "غرفة تجميع القمامة",
+    taskAr: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)",
+    shiftAr: "يومي (صباحي • مسائي • ليلي)",
+  },
+  {
+    id: "hk_fnd_fountain_in",
+    locationAr: "النافورة (من الداخل)",
+    taskAr: "تنظيف النافورة من الداخل — الوردية الليلية",
+    shiftAr: "أول الشهر (الوردية الليلية)",
+  },
+  {
+    id: "hk_fnd_fountain_out",
+    locationAr: "النافورة (من الخارج)",
+    taskAr: "تنظيف النافورة من الخارج — الوردية الصباحية",
+    shiftAr: "أول الشهر (الوردية الصباحية)",
+  },
+  {
+    id: "hk_fnd_tents_on_demand",
+    locationAr: "التند (Awnings)",
+    taskAr: "تنظيف وغسيل التند (حسب الطلب + الجدول الدوري)",
+    shiftAr: "حسب الطلب / دوري",
+  },
 ]
 
 /**
@@ -618,14 +706,20 @@ export function matchesHkItemFilter(taskItem, filterId) {
     case "garage_basement":
       return /جراج|الجراج|بيزمنت|الإيبوكسي|الحواجز الصفراء|اللوفر|المواسير العلوية/i.test(text)
     case "loading_back":
-      return /منطقة التحميل|اللوكر|Lockers|الكافيتريا|القمامة|الشيلر|Chiller/i.test(text)
+      return /منطقة التحميل|اللوكر|Lockers|الكافيتريا|القمامة|تطهير|الشيلر|Chiller/i.test(text)
+    case "fountain_outdoor":
+      return /النافورة|المنطقة الخارجية|Ring road/i.test(text)
     default:
       return true
   }
 }
 
 // 4C. Dynamic Generator for the 3-Shift Weekly Checklists (Morning, Evening, Night)
-export function getHousekeepingShiftChecklistForDay(dayName) {
+export function getHousekeepingShiftChecklistForDay(dayName, dayOfMonth = 1) {
+  const weeklyFoundation =
+    HK_WEEKLY_FOUNDATION_SCHEDULE.find((w) => w.dayName === dayName) ||
+    HK_WEEKLY_FOUNDATION_SCHEDULE[0]
+
   // Morning Shift (الوردية الصباحية)
   const morningStairsZone =
     dayName === "السبت" || dayName === "الثلاثاء"
@@ -646,6 +740,15 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
       : "مبنى 1 و 3"
 
   const morning = [
+    // ★ بند جدول الأعمال التأسيسية الأسبوعية للوردية الصباحية
+    {
+      id: "m_fnd_weekly",
+      shift: "morning",
+      area: "جدول الأعمال التأسيسية الأسبوعية",
+      zone: `تأسيس يوم ${dayName} (صباحي)`,
+      tags: ["reception", "stairs", "service_corridors", "elevators", "canopies_tents", "garage_basement"],
+      task: `📌 تأسيس أسبوعي (${dayName}): ${weeklyFoundation.morning}`,
+    },
     // الرسبشن (6 بنود)
     { id: "m_rec_1", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception"], task: "متابعة نظافة الرسبشن — تنظيف الأتربة من الأسطح" },
     { id: "m_rec_2", shift: "morning", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "glass_mirrors"], task: "متابعة نظافة الرسبشن — تنظيف المرايات والزجاج" },
@@ -703,17 +806,26 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
           { id: "m_wc_fri_3", shift: "morning", area: "الحمامات", zone: "حمامات المصلى", tags: ["restrooms", "glass_mirrors"], task: "تأسيس الحمامات — تنظيف الأحواض والمرايات وأسفل الأحواض وغسيل الأرضية" },
         ]
       : [{ id: "m_wc_1", shift: "morning", area: "الحمامات", zone: "جميع المباني", tags: ["restrooms"], task: "متابعة نظافة الحمامات الدورية" }]),
-    // البلازا (5 بنود)
+    // البلازا (5 بنود) + النافورة أول الشهر
     { id: "m_plz_1", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الداست (Dust)" },
     { id: "m_plz_2", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings", "reception"], task: "متابعة نظافة البلازا — تنظيف البوابة الرئيسية" },
     { id: "m_plz_3", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الوحدات الفارغة" },
     { id: "m_plz_4", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings", "restrooms"], task: "متابعة نظافة البلازا — تنظيف الحمامات" },
     { id: "m_plz_5", shift: "morning", area: "البلازا", zone: "البلازا والكانوبي", tags: ["plaza_wings"], task: "متابعة نظافة البلازا — تنظيف الأضلاع" },
-    // منطقة التحميل (5 بنود)
+    {
+      id: "m_fountain_out",
+      shift: "morning",
+      area: "النافورة والمنطقة الخارجية",
+      zone: dayOfMonth <= 3 ? "🔥 أول الشهر (موعد التأسيس)" : "النافورة الخارجية",
+      tags: ["fountain_outdoor", "plaza_wings"],
+      task: "تنظيف النافورة من الخارج — الوردية الصباحية (جدول التأسيس - أول الشهر)",
+    },
+    // منطقة التحميل وغرفة تجميع القمامة (6 بنود شاملة التأسيس والتطهير)
     { id: "m_ld_1", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف منطقة التحميل الخارجية" },
     { id: "m_ld_2", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف اللوكرز (Lockers)" },
     { id: "m_ld_3", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف الكافيتريا" },
     { id: "m_ld_4", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة" },
+    { id: "m_ld_4_sanitize", shift: "morning", area: "غرفة تجميع القمامة", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)" },
     { id: "m_ld_5", shift: "morning", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف منطقة الشيلر (Chiller)" },
   ]
 
@@ -722,16 +834,16 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
     dayName === "السبت"
       ? "مبنى 1 / 2 / 3 — التشييك على كل الأدوار"
       : dayName === "الأحد"
-      ? "الدور الأول مبنى 1 / الخامس والسادس مبنى 2"
+      ? "الدور الأول مبنى 1 / الخامس والسادس مبنى 2 + تأسيس مبنى 1/2 الدور 4"
       : dayName === "الاثنين"
-      ? "الدور الرابع مبنى 1 / 2"
+      ? "الدور الرابع مبنى 1 / 2 + تأسيس مبنى 1/2 الدور 3"
       : dayName === "الثلاثاء"
-      ? "الدور الثالث مبنى 1 / 2"
+      ? "الدور الثالث مبنى 1 / 2 + تأسيس مبنى 1/2 الدور 2"
       : dayName === "الأربعاء"
-      ? "الدور الثاني مبنى 1 / 2"
+      ? "الدور الثاني مبنى 1 / 2 + تأسيس مبنى 1 الدور 1 والـ 5/6 مبنى 2"
       : dayName === "الخميس"
-      ? "التشييك على جميع الأدوار"
-      : "مبنى 3 B البنك العربي + المصلى الحريمي (غسيل الكاربت بعد الغلق)"
+      ? "التشييك على جميع الأدوار + تأسيس سلالم الطوارئ مبنى 2 عدد 2 سلم B"
+      : "مبنى 3 B البنك العربي + المصلى الحريمي + تأسيس المصلية وحمامات المصلية / تأسيس الدور الأول مبنى 3"
 
   const eveningLoadingTask =
     dayName === "السبت"
@@ -749,6 +861,15 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
       : "تأسيس طرقة خدمات مصاعد ني (سقف + حوائط + مصعد + باب + أرضية)"
 
   const evening = [
+    // ★ بند جدول الأعمال التأسيسية الأسبوعية للوردية المسائية
+    {
+      id: "e_fnd_weekly",
+      shift: "evening",
+      area: "جدول الأعمال التأسيسية الأسبوعية",
+      zone: `تأسيس يوم ${dayName} (مسائي)`,
+      tags: ["floors_corridors", "stairs", "restrooms"],
+      task: `📌 تأسيس أسبوعي (${dayName}): ${weeklyFoundation.evening}`,
+    },
     // الرسبشن (5 بنود)
     { id: "e_rec_1", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception"], task: "تنظيف جزء من العالي بالرسبشن" },
     { id: "e_rec_2", shift: "evening", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "إزالة البقع من الحوائط بالرسبشن" },
@@ -770,8 +891,9 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
     { id: "e_wc_1", shift: "evening", area: "الحمامات", zone: eveningFloorTarget, tags: ["restrooms", "glass_mirrors"], task: "تأسيس الحمامات — تزعيف الهوايات وتنظيف الحوائط بالبلة والكبائن والقواعد والأحواض وغسيل الأرضية" },
     // البلازا
     { id: "e_plz_1", shift: "evening", area: "البلازا", zone: "البلازا", tags: ["plaza_wings", "restrooms"], task: "متابعة نظافة البلازا — تنظيف الداست والبوابة الرئيسية والوحدات الفارغة والحمامات والأضلاع" },
-    // منطقة التحميل
+    // منطقة التحميل وغرفة القمامة
     { id: "e_ld_1", shift: "evening", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back", "interlock_sidewalks", "garage_basement"], task: eveningLoadingTask },
+    { id: "e_ld_rubbish_sanitize", shift: "evening", area: "غرفة تجميع القمامة", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)" },
   ]
 
   // Night Shift (الوردية الليلية)
@@ -793,15 +915,39 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
   const nightLoadingExtra =
     dayName === "السبت"
       ? "غسيل الرامب + غسيل ممر لـ 40"
+      : dayName === "الأحد"
+      ? "تنظيف حوائط منطقة التحميل والأبواب"
+      : dayName === "الاثنين"
+      ? "تنظيف الهوايات ببيزمنت 1/2"
+      : dayName === "الثلاثاء"
+      ? "تأسيس العالي بمنطقة التحميل ووحدات التكييف"
       : dayName === "الأربعاء"
-      ? "غسيل الأرضية + تأسيس اللوكر الرجالي + تنظيف الكافيتريا واللوكر الحريمي"
+      ? "غسيل الأرضية + تأسيس اللوفر الحاجز للجراج وتأسيس طرقة مصاعد ني بمنطقة التحميل + تأسيس اللوكر الرجالي + تنظيف الكافيتريا واللوكر الحريمي"
       : dayName === "الخميس"
       ? "غسيل الأرضية + تأسيس اللوكر الحريمي + تنظيف الكافيتريا واللوكر الرجالي"
       : dayName === "الجمعة"
-      ? "غسيل الأرضية + تنظيف الهوايات ببيزمنت 1"
+      ? "غسيل الأرضية + تنظيف الهوايات ببيزمنت 1 + تأسيس اللوكرات حريمي / رجالي"
       : "غسيل الأرضية + تنظيف اللوكرات والكافيتريا"
 
   const night = [
+    // ★ بند جدول الأعمال التأسيسية الأسبوعية للوردية الليلية
+    {
+      id: "n_fnd_weekly",
+      shift: "night",
+      area: "جدول الأعمال التأسيسية الأسبوعية",
+      zone: `تأسيس يوم ${dayName} (ليلي)`,
+      tags: ["reception", "restrooms", "plaza_wings", "loading_back", "fountain_outdoor"],
+      task: `📌 تأسيس أسبوعي (${dayName}): ${weeklyFoundation.night}`,
+    },
+    // ★ بند الكانوبي والتند الليلي الأسبوعي (Canopy & Awnings)
+    {
+      id: "n_fnd_canopy",
+      shift: "night",
+      area: "الكانوبي والتند (جدول التأسيس الليلي)",
+      zone: `ليلة ${dayName}`,
+      tags: ["canopies_tents", "fountain_outdoor"],
+      task: `⛺ تأسيس الكانوبي والتند (${dayName}): ${weeklyFoundation.canopyNight}`,
+    },
     { id: "n_rec_1", shift: "night", area: "نظافة الرسبشن", zone: "المداخل والرسبشن", tags: ["reception", "floors_corridors"], task: "غسيل أرضية الرسبشن بالماكينة" },
     ...(dayName === "السبت"
       ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "stairs"], task: "تنظيف عالي الدور الأول بريتشارد" }]
@@ -811,9 +957,11 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
       ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "garage_basement"], task: "تنظيف عالي دور بيزمنت 1 بريتشارد" }]
       : dayName === "الثلاثاء"
       ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "garage_basement"], task: "تنظيف عالي دور بيزمنت 2 بريتشارد" }]
+      : dayName === "الجمعة"
+      ? [{ id: "n_rit_1", shift: "night", area: "المباني وريتشارد", zone: "ريتشارد", tags: ["floors_corridors", "garage_basement"], task: "تأسيس عالي ريتشارد الدور B1/G" }]
       : []),
-    { id: "n_wc_1", shift: "night", area: "حمامات البلازا", zone: "البلازا", tags: ["restrooms", "plaza_wings", "glass_mirrors"], task: "تأسيس حمامات البلازا ليلاً (هوايات + حوائط بالبلة + كبائن + قواعد + أحواض ومرايات + غسيل أرضية)" },
-    { id: "n_plz_1", shift: "night", area: "البلازا", zone: "البلازا", tags: ["plaza_wings"], task: "غسيل أرضية البلازا + غسيل التراسات للوحدات الفارغة" },
+    { id: "n_wc_1", shift: "night", area: "حمامات البلازا", zone: "البلازا", tags: ["restrooms", "plaza_wings", "glass_mirrors"], task: "تأسيس حمامات البلازا بالكامل ليلاً (هوايات + حوائط بالبلة + كبائن + قواعد + أحواض ومرايات + غسيل أرضية)" },
+    { id: "n_plz_1", shift: "night", area: "البلازا", zone: "البلازا والمنطقة الخارجية", tags: ["plaza_wings", "fountain_outdoor"], task: "تأسيس وغسيل أرضية البلازا بالكامل والمنطقة الخارجية + غسيل التراسات للوحدات الفارغة" },
     {
       id: "n_plz_2",
       shift: "night",
@@ -828,16 +976,30 @@ export function getHousekeepingShiftChecklistForDay(dayName) {
       task: `تنظيف أحواض الزرع والطفايات ونظافة المشايات + ${nightPlazaExtra}`,
     },
     { id: "n_ld_1", shift: "night", area: "منطقة التحميل", zone: "Loading Area", tags: ["loading_back", "interlock_sidewalks", "garage_basement"], task: nightLoadingExtra },
+    // ★ تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)
+    { id: "n_ld_rubbish_sanitize", shift: "night", area: "غرفة تجميع القمامة", zone: "Loading Area", tags: ["loading_back"], task: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)" },
+    // ★ تنظيف النافورة من الداخل (الوردية الليلية - أول الشهر)
+    {
+      id: "n_fountain_in",
+      shift: "night",
+      area: "النافورة والمنطقة الخارجية",
+      zone: dayOfMonth <= 3 ? "🔥 أول الشهر (موعد التأسيس)" : "النافورة الداخلية",
+      tags: ["fountain_outdoor", "plaza_wings"],
+      task: "تنظيف النافورة من الداخل — الوردية الليلية (جدول التأسيس - أول الشهر)",
+    },
   ]
 
-  return { morning, evening, night }
+  return { morning, evening, night, weeklyFoundation }
 }
 
 export function getHousekeepingDayPlan(dateStr) {
   const dayName = getArabicDayName(dateStr)
   const dayOfMonth = Math.min(31, Math.max(1, Number((dateStr || "").split("-")[2]) || 1))
   const monthlyEntry = HK_MONTHLY_DAYS.find((d) => d.day === dayOfMonth) || HK_MONTHLY_DAYS[0]
-  const shifts = getHousekeepingShiftChecklistForDay(dayName)
+  const shifts = getHousekeepingShiftChecklistForDay(dayName, dayOfMonth)
+  const weeklyFoundation =
+    HK_WEEKLY_FOUNDATION_SCHEDULE.find((w) => w.dayName === dayName) ||
+    HK_WEEKLY_FOUNDATION_SCHEDULE[0]
 
   const specializedTasks = [
     {
@@ -845,7 +1007,7 @@ export function getHousekeepingDayPlan(dateStr) {
       categoryAr: "أعمال التنظيف الرئيسية (التند والكانوبي والسلالم)",
       categoryEn: "Main Cleaning (Awnings, Canopies & Stairs)",
       tags: ["canopies_tents", "stairs", "reception"],
-      taskAr: monthlyEntry.main,
+      taskAr: `${monthlyEntry.main} | ⛺ تأسيس الكانوبي الليلي (${dayName}): ${weeklyFoundation.canopyNight}`,
     },
     {
       id: "hk_spec_joints",
@@ -856,10 +1018,13 @@ export function getHousekeepingDayPlan(dateStr) {
     },
     {
       id: "hk_spec_side",
-      categoryAr: "الأعمال الجانبية والإنترلوك",
-      categoryEn: "Side Works & Interlock",
-      tags: ["interlock_sidewalks", "plaza_wings", "reception"],
-      taskAr: monthlyEntry.side,
+      categoryAr: "الأعمال الجانبية والإنترلوك والنافورة",
+      categoryEn: "Side Works, Interlock & Fountain",
+      tags: ["interlock_sidewalks", "plaza_wings", "reception", "fountain_outdoor"],
+      taskAr:
+        dayOfMonth === 1
+          ? `${monthlyEntry.side} + 🔥 أول الشهر: تنظيف النافورة من الداخل (الوردية الليلية) ومن الخارج (الوردية الصباحية)`
+          : monthlyEntry.side,
     },
     {
       id: "hk_spec_garage",
@@ -878,11 +1043,19 @@ export function getHousekeepingDayPlan(dateStr) {
           ? `${monthlyEntry.loading} + 🔥 موعد نظافة الأسطح الشهري (إزالة المخلفات وتنظيف الأبواب والأرضية)`
           : monthlyEntry.loading,
     },
+    {
+      id: "hk_spec_rubbish_room_sanitize",
+      categoryAr: "غرفة تجميع القمامة — تأسيس (نظافة - تطهير)",
+      categoryEn: "Garbage Collection Room — Deep Cleaning & Sanitization",
+      tags: ["loading_back"],
+      taskAr: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)",
+    },
   ]
 
   return {
     dayName,
     dayOfMonth,
+    weeklyFoundation,
     specializedTasks,
     shifts,
   }

@@ -28,6 +28,7 @@ export const DEFAULT_NIGHT_HOUSEKEEPING = [
   { id: "nhk-14", location: "PLAZA",                          work: "تأسيس البلازا",                                     status: "done", notes: "" },
   { id: "nhk-15", location: "main lobby",                     work: "سحب المياه وتنظيف 3 الأدوار",                       status: "done", notes: "" },
   { id: "nhk-16", location: "PLAZA",                          work: "فواصل المطاعم",                                     status: "done", notes: "" },
+  { id: "nhk-17", location: "غرفة تجميع القمامة",             work: "تنظيف غرفة تجميع القمامة تأسيس (نظافة - تطهير)",    status: "done", notes: "" },
 ]
 
 export const DEFAULT_GREASE_TRAPS = [

@@ -17,6 +17,8 @@ import {
   getPestControlDayPlan,
   HK_MONTHLY_DAYS,
   HK_ITEM_FILTERS,
+  HK_WEEKLY_FOUNDATION_SCHEDULE,
+  HK_SPECIAL_FOUNDATION_ITEMS,
   matchesHkItemFilter,
   getHousekeepingDayPlan,
 } from "../constants/operationsPlansData.js"
@@ -1220,6 +1222,85 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
           </button>
         )}
       </div>
+
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* VIEW 0: WEEKLY FOUNDATIONAL SCHEDULE (جدول الأعمال التأسيسية الأسبوعية) */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {(activeSector === "all" || activeSector === "housekeeping") && (
+        <div style={{ ...s.card, border: "1px solid #a855f7", background: "linear-gradient(135deg, rgba(88,28,135,0.22), rgba(15,23,42,0.92))" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 900, color: "#c084fc", letterSpacing: 0.6 }}>
+                WEEKLY DEEP-CLEANING & FOUNDATION MASTER SCHEDULE
+              </div>
+              <h3 style={{ margin: "2px 0 0 0", fontSize: 16.5, fontWeight: 900, color: "#f8fafc" }}>
+                🧹 {tr("جدول الأعمال التأسيسية الأسبوعية والكانوبي والنافورة وغرفة القمامة (مُدمج مع الـ 3 ورديات)", "Weekly Foundational Schedule, Canopies, Fountain & Garbage Room Sanitization")}
+              </h3>
+            </div>
+            <span style={{ background: "rgba(168,85,247,0.2)", border: "1px solid #a855f7", color: "#e9d5ff", borderRadius: 999, padding: "4px 12px", fontSize: 11.5, fontWeight: 800 }}>
+              📌 {tr(`اليوم المحدد: ${getArabicDayName(selectedDate)}`, `Selected Day: ${getArabicDayName(selectedDate)}`)}
+            </span>
+          </div>
+
+          <div style={{ overflowX: "auto", border: "1px solid #334155", borderRadius: 12, marginBottom: 12 }}>
+            <table style={s.table}>
+              <thead>
+                <tr>
+                  <th style={{ ...s.th, width: 95 }}>{tr("اليوم", "Day")}</th>
+                  <th style={{ ...s.th, color: "#fcd34d" }}>🌅 {tr("الوردية الصباحية (تأسيس)", "Morning Shift")}</th>
+                  <th style={{ ...s.th, color: "#fb923c" }}>🌇 {tr("الوردية المسائية (تأسيس)", "Evening Shift")}</th>
+                  <th style={{ ...s.th, color: "#38bdf8" }}>🌙 {tr("الوردية الليلية (تأسيس)", "Night Shift")}</th>
+                  <th style={{ ...s.th, color: "#c084fc" }}>⛺ {tr("الكانوبي والتند (الليلية)", "Canopies & Awnings (Night)")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {HK_WEEKLY_FOUNDATION_SCHEDULE.map((row) => {
+                  const isCurrentDay = row.dayName === getArabicDayName(selectedDate)
+                  return (
+                    <tr
+                      key={row.dayName}
+                      style={{
+                        background: isCurrentDay ? "rgba(168,85,247,0.18)" : "transparent",
+                      }}
+                    >
+                      <td style={{ ...s.td, fontWeight: 900, color: isCurrentDay ? "#e9d5ff" : "#f8fafc" }}>
+                        {isCurrentDay ? `🔥 ${row.dayName}` : row.dayName}
+                      </td>
+                      <td style={{ ...s.td, fontSize: 12.5, lineHeight: 1.6 }}>{row.morning}</td>
+                      <td style={{ ...s.td, fontSize: 12.5, lineHeight: 1.6 }}>{row.evening}</td>
+                      <td style={{ ...s.td, fontSize: 12.5, lineHeight: 1.6 }}>{row.night}</td>
+                      <td style={{ ...s.td, fontSize: 12.5, fontWeight: 800, color: "#d8b4fe" }}>{row.canopyNight}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Special Foundational Items Bar (غرفة تجميع القمامة تأسيس نظافة وتطهير + النافورة + التند) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 8 }}>
+            {HK_SPECIAL_FOUNDATION_ITEMS.map((sp) => (
+              <div
+                key={sp.id}
+                style={{
+                  background: "rgba(15,23,42,0.8)",
+                  border: "1px solid #334155",
+                  borderRight: "3px solid #10b981",
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                }}
+              >
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#34d399" }}>
+                  📍 {sp.locationAr} • <span style={{ color: "#94a3b8" }}>{sp.shiftAr}</span>
+                </div>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: "#f8fafc", marginTop: 2 }}>
+                  {sp.taskAr}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* VIEW A: MONTHLY MASTER SCHEDULE TABLES (When periodMode === "monthly") */}
