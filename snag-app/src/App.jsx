@@ -556,7 +556,16 @@ export default function App() {
           </>
         )}
         
-        {activeTab === "whatsapp-hub" && canUser(user, "whatsapp-hub", "view") && <WhatsAppShiftHubModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
+        {activeTab === "whatsapp-hub" && canUser(user, "whatsapp-hub", "view") && (
+          <WhatsAppShiftHubModule
+            currentUser={user}
+            notify={notify}
+            onAddSnag={addSnag}
+            snags={snags}
+            onCycleSnagStatus={cycleStatus}
+            onUpdateSnag={updateSnag}
+          />
+        )}
         {activeTab === "operations-plans" && canUser(user, "operations-plans", "view") && <OperationsPlansModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "park-street" && canUser(user, "park-street", "view") && <ParkStreetModule currentUser={user} notify={notify} onAddSnag={addSnag} />}
         {activeTab === "restrooms" && canUser(user, "restrooms", "view") && <RestroomsModule currentUser={user} notify={notify} onAddSnag={addSnag} />}

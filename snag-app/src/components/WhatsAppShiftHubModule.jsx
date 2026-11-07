@@ -16,6 +16,7 @@ import {
   WA_GROUPS,
   SHIFT_DEFINITIONS,
   ORDER_STATUSES,
+  detectShiftFromHour,
   classifyWhatsAppMessage,
   parseWhatsAppChatDump,
 } from "../utils/whatsappChatAnalyzer.js"
@@ -28,7 +29,14 @@ function getTodayIso() {
   return `${yyyy}-${mm}-${dd}`
 }
 
-export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag }) {
+export default function WhatsAppShiftHubModule({
+  currentUser,
+  notify,
+  onAddSnag,
+  snags = [],
+  onCycleSnagStatus,
+  onUpdateSnag,
+}) {
   const { lang, tr } = useLanguage()
   const userName = currentUser?.displayName || currentUser?.email || "مشرف التشغيل"
   const canModify =
@@ -42,11 +50,17 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
 
   // State
   const [selectedDate, setSelectedDate] = useState(getTodayIso)
+  const [dateScope, setDateScope] = useState("all_dates") // "all_dates" | "selected_date"
+  const [includeAppSnags, setIncludeAppSnags] = useState(true)
   const [activeGroup, setActiveGroup] = useState("all")
   const [activeShift, setActiveShift] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [subCategoryFilter, setSubCategoryFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [activeKpiDrawer, setActiveKpiDrawer] = useState(null) // null | "maintenance" | "sla"
+
+  const ordersSectionRef = useRef(null)
+  const openAlertSectionRef = useRef(null)
 
   // Chat Parser State
   const [rawChatText, setRawChatText] = useState("")
@@ -112,12 +126,64 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
     return () => unsub()
   }, [])
 
-  // Filter orders for selectedDate
+  // Convert real App Snags into unified Shift Order objects when `includeAppSnags` is active
+  const normalizedAppSnags = useMemo(() => {
+    if (!includeAppSnags || !Array.isArray(snags)) return []
+    return snags.map((sn) => {
+      const text = `${sn.description || ""} ${sn.location || ""} ${sn.trade || ""}`
+      let forcedGrp = "auto"
+      if (sn.trade === "mep" || sn.trade === "civil" || sn.type === "maintenance") forcedGrp = "maintenance"
+      else if (sn.trade === "security_cctv") forcedGrp = "security"
+      else if (sn.trade === "cleanliness") forcedGrp = "housekeeping"
+      else if (sn.trade === "fire_safety") forcedGrp = "safety"
+
+      const cls = classifyWhatsAppMessage(text, forcedGrp)
+      const createdDate = sn.createdAt ? String(sn.createdAt).slice(0, 10) : selectedDate
+      let timeStr = "10:00"
+      let hr = 10
+      if (sn.createdAt) {
+        const dt = new Date(sn.createdAt)
+        if (!Number.isNaN(dt.getTime())) {
+          hr = dt.getHours()
+          timeStr = `${String(hr).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`
+        }
+      }
+      const mappedStatus =
+        sn.status === "resolved" || sn.status === "closed" || sn.status === "done"
+          ? "done"
+          : sn.status === "in_progress"
+          ? "in_progress"
+          : "open"
+
+      return {
+        uid: `snag_${sn.id}`,
+        isFromMainSnags: true,
+        rawSnag: sn,
+        date: createdDate,
+        time: timeStr,
+        shift: detectShiftFromHour(hr),
+        sender: sn.inspector || "سجل الملاحظات العام",
+        description: sn.description || "ملاحظة مسجلة",
+        groupId: cls.groupId,
+        groupLabelAr: cls.groupLabelAr,
+        subCategoryId: cls.subCategoryId,
+        subCategoryLabelAr: cls.subCategoryLabelAr,
+        locationAr: sn.location || cls.locationAr,
+        priority: sn.priority === "urgent" || sn.priority === "high" ? "urgent" : cls.priority,
+        status: mappedStatus,
+        resolutionNote: sn.resolutionNote || (mappedStatus === "done" ? "تم الإنجاز في السجل العام ✅" : ""),
+      }
+    })
+  }, [includeAppSnags, snags, selectedDate])
+
+  // Combine WhatsApp orders + Live App Snags and filter by dateScope
   const dateOrders = useMemo(() => {
-    return Object.values(ordersMap)
-      .filter((o) => o.date === selectedDate)
+    const waList = Object.values(ordersMap)
+    const combined = [...waList, ...normalizedAppSnags]
+    return combined
+      .filter((o) => (dateScope === "all_dates" ? true : o.date === selectedDate))
       .sort((a, b) => (a.time || "").localeCompare(b.time || ""))
-  }, [ordersMap, selectedDate])
+  }, [ordersMap, normalizedAppSnags, dateScope, selectedDate])
 
   // Filtered orders according to Group, Shift, Status, SubCategory, Search
   const filteredOrders = useMemo(() => {
@@ -231,10 +297,24 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
     }
   }, [dateOrders])
 
-  // Save or update an order in Firestore
+  // Save or update an order in Firestore (supports both WhatsApp orders & synced Main Snags!)
   async function saveOrder(orderObj) {
     if (!canModify) {
       toast.error(tr("ليس لديك صلاحية التعديل", "No edit permission"))
+      return
+    }
+    if (orderObj.isFromMainSnags && orderObj.rawSnag && onUpdateSnag) {
+      const targetSnagStatus =
+        orderObj.status === "done"
+          ? "resolved"
+          : orderObj.status === "in_progress"
+          ? "in_progress"
+          : "open"
+      await onUpdateSnag(orderObj.rawSnag.id, {
+        status: targetSnagStatus,
+        resolutionNote: orderObj.resolutionNote || "",
+      })
+      toast.success(tr("🔄 تم تحديث حالة البلاغ وتحديث المؤشرات فوراً!", "🔄 Status & KPIs updated!"))
       return
     }
     const uid = orderObj.uid || `wa_${selectedDate}_${Math.random().toString(36).slice(2, 9)}`
@@ -760,28 +840,64 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
           </div>
         </div>
 
-        {/* Date Selector & Quick Demo Loader */}
+        {/* Date Selector & Data Scope Controls */}
         <div style={s.dateBar}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, fontWeight: 800, color: "#4ade80" }}>
-              🗓️ {tr("تاريخ يوم التشغيل (الـ 3 شيفتات):", "Shift Date:")}
+              🗓️ {tr("نطاق العرض:", "View Scope:")}
             </span>
+            <button
+              type="button"
+              onClick={() => setDateScope("all_dates")}
+              style={{
+                ...s.smallBtn,
+                background: dateScope === "all_dates" ? "#10b981" : "#0f172a",
+                color: dateScope === "all_dates" ? "#fff" : "#cbd5e1",
+                border: "1px solid #10b981",
+              }}
+            >
+              🌐 {tr("كل البلاغات المسجلة", "All Recorded Dates")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDateScope("selected_date")}
+              style={{
+                ...s.smallBtn,
+                background: dateScope === "selected_date" ? "#0ea5e9" : "#0f172a",
+                color: dateScope === "selected_date" ? "#fff" : "#cbd5e1",
+                border: "1px solid #0ea5e9",
+              }}
+            >
+              📅 {tr("تاريخ محدد:", "Specific Date:")}
+            </button>
             <input
               type="date"
               value={selectedDate}
-              onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setSelectedDate(e.target.value)
+                  setDateScope("selected_date")
+                }
+              }}
               style={s.dateInput}
             />
-            <button
-              type="button"
-              onClick={() => setSelectedDate(getTodayIso())}
-              style={{ ...s.smallBtn, background: "#0ea5e9", color: "#fff" }}
-            >
-              📍 {tr("اليوم", "Today")}
-            </button>
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => setIncludeAppSnags((v) => !v)}
+              style={{
+                ...s.smallBtn,
+                background: includeAppSnags ? "rgba(56,189,248,0.2)" : "#0f172a",
+                color: includeAppSnags ? "#38bdf8" : "#94a3b8",
+                border: `1px solid ${includeAppSnags ? "#38bdf8" : "#334155"}`,
+              }}
+            >
+              {includeAppSnags
+                ? tr("🔗 مدمج مع ملاحظات التطبيق الحية ✓", "🔗 Synced with Live App Snags ✓")
+                : tr("💬 عرض رسائل الواتساب فقط", "💬 WhatsApp Messages Only")}
+            </button>
             <button
               type="button"
               onClick={() => setShowAnalyzerBox((v) => !v)}
@@ -789,57 +905,220 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
             >
               {showAnalyzerBox ? tr("🔼 إخفاء نافذة لصق المحادثات", "Hide Chat Box") : tr("🔽 فتح نافذة لصق محادثات الواتساب", "Open Chat Analyzer")}
             </button>
-            {dateOrders.length > 0 && canModify && (
+            {Object.keys(ordersMap).length > 0 && canModify && (
               <button
                 type="button"
                 onClick={handleClearDayOrders}
                 style={{ ...s.smallBtn, background: "rgba(239,68,68,0.18)", color: "#fca5a5", border: "1px solid #ef4444" }}
               >
-                🗑️ {tr("مسح بلاغات اليوم", "Clear Day")}
+                🗑️ {tr("مسح رسائل الواتساب", "Clear WhatsApp Messages")}
               </button>
             )}
           </div>
         </div>
 
-        {/* 6 Executive KPIs */}
+        {/* 6 Interactive Executive KPIs (اضغط على أي كارت للفلترة والتفاعل الفوري) */}
+        <div style={{ fontSize: 11.5, color: "#a7f3d0", fontWeight: 700, marginBottom: -6 }}>
+          👆 {tr("اضغط على أي كارت بالأسفل لتصفية البلاغات وعرض تفاصيلها التفاعلية فوراً:", "Click any KPI card below to interactively filter & drill down:")}
+        </div>
         <div style={s.kpiGrid}>
           <KpiCard
             label={tr("إجمالي البلاغات والمهام (3 شيفتات)", "Total Orders (3 Shifts)")}
             value={analytics.total}
             sub={tr(`منها ${analytics.opsTasksTotal} مهام تشغيلية وأمن ونظافة وسيفتي`, `${analytics.opsTasksTotal} ops/sec/hk/safety tasks`)}
             color="#38bdf8"
+            active={activeGroup === "all" && statusFilter === "all" && activeShift === "all" && !activeKpiDrawer}
+            badgeText={tr("عرض الكل", "Show All")}
+            onClick={() => {
+              setActiveGroup("all")
+              setStatusFilter("all")
+              setActiveShift("all")
+              setSubCategoryFilter("all")
+              setActiveKpiDrawer(null)
+              ordersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
           />
           <KpiCard
             label={tr("🔧 إجمالي أوردرات الصيانة", "🔧 Maintenance Orders")}
             value={analytics.maintenanceTotal}
             sub={tr(`خلص: ${analytics.maintenanceDone} | مفتوح: ${analytics.maintenanceOpen}`, `Done: ${analytics.maintenanceDone} | Open: ${analytics.maintenanceOpen}`)}
             color="#f59e0b"
+            active={activeGroup === "maintenance" || activeKpiDrawer === "maintenance"}
+            badgeText={activeGroup === "maintenance" ? tr("✓ مفعّل (اضغط للإلغاء)", "✓ Active Filter") : tr("اضغط لتفصيل الفئات", "Click for Categories")}
+            onClick={() => {
+              if (activeGroup === "maintenance" && activeKpiDrawer === "maintenance") {
+                setActiveGroup("all")
+                setSubCategoryFilter("all")
+                setActiveKpiDrawer(null)
+              } else {
+                setActiveGroup("maintenance")
+                setSubCategoryFilter("all")
+                setActiveKpiDrawer("maintenance")
+              }
+            }}
           />
           <KpiCard
             label={tr("🟢 خلص (تم الإنجاز)", "🟢 Completed (Done)")}
             value={analytics.done}
-            sub={tr("تم تأكيد الإغلاق في الجروب ✅", "Confirmed done in group ✅")}
+            sub={tr("تم تأكيد الإغلاق والإنجاز ✅", "Confirmed completed ✅")}
             color="#10b981"
+            active={statusFilter === "done"}
+            badgeText={statusFilter === "done" ? tr("✓ مفعّل (اضغط للإلغاء)", "✓ Active Filter") : tr("اضغط لعرض المنجز", "Filter Completed")}
+            onClick={() => {
+              const next = statusFilter === "done" ? "all" : "done"
+              setStatusFilter(next)
+              ordersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
           />
           <KpiCard
             label={tr("🔴 مفتوح (لسه ما خلصش)", "🔴 Open (Not Finished)")}
             value={analytics.open}
             sub={tr(`منها ${analytics.urgentOpen} بلاغ طارئ/عاجل`, `${analytics.urgentOpen} urgent open items`)}
             color="#ef4444"
+            active={statusFilter === "open"}
+            badgeText={statusFilter === "open" ? tr("✓ مفعّل (اضغط للإلغاء)", "✓ Active Filter") : tr("اضغط لعرض المفتوح", "Filter Open Items")}
+            onClick={() => {
+              const next = statusFilter === "open" ? "all" : "open"
+              setStatusFilter(next)
+              if (next === "open" && openAlertSectionRef.current) {
+                openAlertSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+              } else {
+                ordersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            }}
           />
           <KpiCard
             label={tr("⏳ جاري التنفيذ حالياً", "⏳ In Progress")}
             value={analytics.inProgress}
             sub={tr("تحت المتابعة في الشيفت", "Being worked on in shift")}
             color="#eab308"
+            active={statusFilter === "in_progress"}
+            badgeText={statusFilter === "in_progress" ? tr("✓ مفعّل (اضغط للإلغاء)", "✓ Active Filter") : tr("اضغط لعرض الجاري", "Filter In-Progress")}
+            onClick={() => {
+              const next = statusFilter === "in_progress" ? "all" : "in_progress"
+              setStatusFilter(next)
+              ordersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
           />
           <KpiCard
             label={tr("📈 نسبة الإنجاز بنهاية الشيفتات", "📈 3-Shift Completion Rate")}
             value={`${analytics.completionPct}%`}
-            sub={tr("مؤشر الأداء اليومي العام", "Overall daily shift SLA")}
+            sub={tr("اضغط لتحليل نسب الـ 3 شيفتات والجروبات", "Click for 3-Shifts SLA breakdown")}
             color="#c084fc"
+            active={activeKpiDrawer === "sla"}
+            badgeText={activeKpiDrawer === "sla" ? tr("✓ إخفاء المؤشرات", "Hide Breakdown") : tr("اضغط لتحليل النسب", "Show SLA Bars")}
+            onClick={() => setActiveKpiDrawer((prev) => (prev === "sla" ? null : "sla"))}
           />
         </div>
+
+        {/* Interactive Drawer when Maintenance Card or SLA Card is clicked */}
+        {activeKpiDrawer === "maintenance" && (
+          <div style={{
+            background: "rgba(15,23,42,0.92)",
+            border: "1.5px solid #f59e0b",
+            borderRadius: 14,
+            padding: 14,
+            marginTop: 4,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+              <div style={{ fontWeight: 800, fontSize: 14, color: "#fde047" }}>
+                🔧 {tr("تفصيل فئات أوردرات الصيانة (اضغط على أي فئة لعرض بلاغاتها):", "Maintenance Sub-Categories Interactive Breakdown:")}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSubCategoryFilter("all")
+                  setActiveKpiDrawer(null)
+                }}
+                style={{ ...s.tinyBtn, background: "#1e293b", color: "#cbd5e1" }}
+              >
+                ✖ {tr("إغلاق", "Close")}
+              </button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(175px, 1fr))", gap: 8 }}>
+              {WA_GROUPS[0].subCategories.map((sc) => {
+                const st = analytics.byGroup.maintenance?.subMap[sc.id] || { total: 0, done: 0, open: 0, inProgress: 0 }
+                const selected = subCategoryFilter === sc.id
+                return (
+                  <button
+                    key={sc.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveGroup("maintenance")
+                      setSubCategoryFilter(selected ? "all" : sc.id)
+                      ordersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }}
+                    style={{
+                      background: selected ? "rgba(245,158,11,0.25)" : "#060d1a",
+                      border: `1.5px solid ${selected ? "#f59e0b" : "#334155"}`,
+                      borderRadius: 10,
+                      padding: "10px 12px",
+                      textAlign: "start",
+                      cursor: "pointer",
+                      color: "#f8fafc",
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, fontSize: 12.5, color: selected ? "#fde047" : "#e2e8f0" }}>
+                      {lang === "ar" ? sc.labelAr : sc.labelEn}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginTop: 6 }}>
+                      <span style={{ color: "#38bdf8", fontWeight: 800 }}>إجمالي: {st.total}</span>
+                      <span style={{ color: "#4ade80" }}>✓ {st.done}</span>
+                      <span style={{ color: "#f87171" }}>🔴 {st.open + st.inProgress}</span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {activeKpiDrawer === "sla" && (
+          <div style={{
+            background: "rgba(15,23,42,0.92)",
+            border: "1.5px solid #c084fc",
+            borderRadius: 14,
+            padding: 14,
+            marginTop: 4,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div style={{ fontWeight: 800, fontSize: 14, color: "#e9d5ff" }}>
+                📈 {tr("مؤشرات نسب الإنجاز التفاعلية عبر الـ 3 شيفتات والـ 5 جروبات:", "Interactive Completion Rate across 3 Shifts & 5 Groups:")}
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveKpiDrawer(null)}
+                style={{ ...s.tinyBtn, background: "#1e293b", color: "#cbd5e1" }}
+              >
+                ✖ {tr("إغلاق", "Close")}
+              </button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+              { WA_GROUPS.map((g) => {
+                const st = analytics.byGroup[g.id] || { total: 0, done: 0, inProgress: 0 }
+                const pct = st.total > 0 ? Math.round(((st.done + st.inProgress * 0.4) / st.total) * 100) : 0
+                return (
+                  <div
+                    key={g.id}
+                    onClick={() => {
+                      setActiveGroup(g.id)
+                      ordersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }}
+                    style={{ background: "#060d1a", border: `1px solid ${g.color}55`, borderRadius: 10, padding: 10, cursor: "pointer" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 800, color: g.color }}>
+                      <span>{g.icon} {lang === "ar" ? g.labelAr : g.labelEn}</span>
+                      <span>{pct}% ({st.done}/{st.total})</span>
+                    </div>
+                    <div style={{ height: 7, background: "#1e293b", borderRadius: 999, overflow: "hidden", marginTop: 6 }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: g.color, transition: "width 0.3s" }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════════ */}
@@ -1131,11 +1410,14 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
       {/* 3. OPEN / PENDING ORDERS ALERT LIST (المفتوح واللي لسه ما خلصش)          */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {analytics.openOrdersList.length > 0 && (
-        <div style={{
-          ...s.card,
-          border: "1.5px solid #ef4444",
-          background: "linear-gradient(135deg, rgba(127,29,29,0.18), rgba(10,22,40,0.95))",
-        }}>
+        <div
+          ref={openAlertSectionRef}
+          style={{
+            ...s.card,
+            border: "1.5px solid #ef4444",
+            background: "linear-gradient(135deg, rgba(127,29,29,0.18), rgba(10,22,40,0.95))",
+          }}
+        >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
             <div>
               <h3 style={{ margin: 0, fontSize: 16, color: "#fca5a5" }}>
@@ -1217,7 +1499,7 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* 4. FILTER BAR & DETAILED ORDERS LOG                                     */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
-      <div style={s.card}>
+      <div ref={ordersSectionRef} style={s.card}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
           <input
             style={{ ...s.input, flex: 1, minWidth: 220 }}
@@ -1505,21 +1787,52 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
   )
 }
 
-function KpiCard({ label, value, sub, color }) {
+function KpiCard({ label, value, sub, color, active, badgeText, onClick }) {
   return (
-    <div style={{
-      background: "rgba(6,13,26,0.8)",
-      border: `1px solid ${color}44`,
-      borderTop: `3px solid ${color}`,
-      borderRadius: 12,
-      padding: "10px 14px",
-      flex: "1 1 160px",
-      minWidth: 155,
-    }}>
-      <div style={{ fontSize: 22, fontWeight: 900, color }}>{value}</div>
-      <div style={{ fontSize: 12, fontWeight: 800, color: "#f8fafc", marginTop: 2 }}>{label}</div>
-      <div style={{ fontSize: 10.5, color: "#94a3b8", marginTop: 2 }}>{sub}</div>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        background: active
+          ? `linear-gradient(135deg, ${color}28, rgba(15,23,42,0.95))`
+          : "rgba(6,13,26,0.85)",
+        border: active ? `2px solid ${color}` : `1px solid ${color}44`,
+        borderTop: `4px solid ${color}`,
+        borderRadius: 14,
+        padding: "12px 14px",
+        flex: "1 1 170px",
+        minWidth: 160,
+        textAlign: "start",
+        cursor: "pointer",
+        boxShadow: active ? `0 0 18px ${color}40` : "none",
+        transition: "all 0.2s ease",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+      }}
+    >
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+          <div style={{ fontSize: 24, fontWeight: 900, color }}>{value}</div>
+          {badgeText && (
+            <span style={{
+              background: active ? color : "rgba(15,23,42,0.9)",
+              color: active ? "#0f172a" : color,
+              border: `1px solid ${color}66`,
+              borderRadius: 999,
+              padding: "2px 8px",
+              fontSize: 10,
+              fontWeight: 800,
+              whiteSpace: "nowrap",
+            }}>
+              {badgeText}
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: "#f8fafc", marginTop: 4 }}>{label}</div>
+      </div>
+      <div style={{ fontSize: 11, color: active ? "#e2e8f0" : "#94a3b8", marginTop: 6 }}>{sub}</div>
+    </button>
   )
 }
 
