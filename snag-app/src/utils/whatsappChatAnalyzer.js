@@ -277,32 +277,39 @@ export function analyzeMessageIntent(text = "") {
     return { type: "noise" }
   }
 
-  // Check if it's a completion message
-  const isCompletionReply =
-    /^(تم|تمت|خلص|انتهى|تم الاصلاح|تم الإصلاح|تم التنفيذ|تمت النظافة|تمت المعالجة|تم الحل|تم تغيير|تم تركيب|تم الغلق|done|completed|fixed)/i.test(clean) ||
-    /(تم الإصلاح بنجاح|تم الانتهاء من|تم حل المشكلة|وتم التشغيل|تم التنفيذ بالكامل|✅\s*تم|تم\s*✅)/i.test(clean)
+  // Check if it's a completion message (starts with تم / خلص / انتهى)
+  const startsWithDone =
+    /^(تم|تمت|خلص|انتهى|تم الاصلاح|تم الإصلاح|تم التنفيذ|تمت النظافة|تمت المعالجة|تم الحل|تم تغيير|تم تركيب|تم الغلق|تم إزالة|تم تنظيف|done|completed|fixed)\b/i.test(clean)
 
-  // Check if it's an in-progress update
-  const isInProgressReply =
-    /^(جاري|جارى|تحت التنفيذ|في الطريق|تم إبلاغ الفني|بانتظار قطع|جاري العمل|جاري المتابعة)/i.test(clean)
+  const startsWithInProgress =
+    /^(جاري|جارى|تحت التنفيذ|في الطريق|تم إبلاغ الفني|بانتظار قطع|جاري العمل|جاري المتابعة|جاري فحص)\b/i.test(clean)
 
-  // Check if it's a single line that contains BOTH the order and "تم" (e.g. "إصلاح لمبة مبنى 1 - تم")
+  if (startsWithDone) {
+    return { type: "completion_reply" }
+  }
+  if (startsWithInProgress) {
+    return { type: "progress_reply" }
+  }
+
+  // Check if it's a single line that contains BOTH the order and "- تم" at the end (e.g. "إصلاح لمبة مبنى 1 - تم")
   const hasOrderAndDone =
-    clean.length > 22 &&
-    /(إصلاح|صيانة|تنظيف|تركيب|تغيير|فحص|مراجعة|معالجة|عطل|تسريب|تكييف|إنارة|حمام|بلازا|مبنى)/i.test(clean) &&
-    /(-\s*تم|—\s*تم|✅|تم التنفيذ|تم الإصلاح)/i.test(clean)
+    clean.length > 15 &&
+    /(-\s*تم|—\s*تم|✅|تم التنفيذ|تم الإصلاح)$/i.test(clean)
 
   if (hasOrderAndDone) {
     return { type: "order_already_done" }
   }
-  if (isCompletionReply && clean.length < 85) {
-    return { type: "completion_reply" }
-  }
-  if (isInProgressReply && clean.length < 85) {
-    return { type: "progress_reply" }
-  }
 
   return { type: "new_order" }
+}
+
+function makeDeterministicId(str = "") {
+  let h = 2166136261
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return (h >>> 0).toString(36)
 }
 
 /**
@@ -312,12 +319,6 @@ export function parseWhatsAppChatDump(rawText = "", defaultDate = "", forcedGrou
   const lines = (rawText || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
   const parsedMessages = []
 
-  // Common WhatsApp line patterns:
-  // 1) [11/7/26, 9:15:00 AM] حسام مشرف: عطل تكييف في مبنى 1
-  // 2) 07/11/2026, 14:22 - م. أحمد: تسريب مياه في حمام البلازا
-  // 3) [09:30 ص، 2026/11/07] مشرف الأمن: ...
-  // 4) 10:15 ص - محمد: ...
-  // 5) Plain text lines: "09:15 | الصيانة | عطل اسبوتات مبنى 2 الدور الأول"
   const regexBracket = /^\[?(\d{1,4}[/-]\d{1,2}[/-]\d{1,4})[،,\s]+(\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM|am|pm|ص|م)?)\]?\s*[-–:]?\s*([^:]+):\s*(.+)$/
   const regexTimeFirst = /^\[?(\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM|am|pm|ص|م)?)(?:[،,\s]+\d{1,4}[/-]\d{1,2}[/-]\d{1,4})?\]?\s*[-–:]?\s*([^:]+):\s*(.+)$/
 
@@ -338,7 +339,6 @@ export function parseWhatsAppChatDump(rawText = "", defaultDate = "", forcedGrou
         sender = m2[2].trim()
         body = m2[3].trim()
       } else {
-        // Check if line starts with shift keyword like "[الشيفت الصباحي]" or time "14:20"
         const mSimple = line.match(/^(\d{1,2}:\d{2}\s*(?:ص|م|AM|PM)?)\s*[-|:]\s*(.+)$/i)
         if (mSimple) {
           timeStr = mSimple[1]
@@ -364,17 +364,29 @@ export function parseWhatsAppChatDump(rawText = "", defaultDate = "", forcedGrou
     if (intent.type === "noise") continue
 
     if (intent.type === "completion_reply" || intent.type === "progress_reply") {
-      // Find the most recent open order that matches location/keywords or just the last open order
       const targetLoc = detectMallLocation(msg.body)
+      const replyCls = classifyWhatsAppMessage(msg.body, forcedGroupId)
       let matchedOrder = null
-      for (let i = orders.length - 1; i >= 0; i--) {
-        if (orders[i].status !== "done") {
-          if (targetLoc !== "عام / داخل المول" && orders[i].locationAr === targetLoc) {
+
+      // 1. Match by same location & open status
+      if (targetLoc !== "عام / داخل المول") {
+        for (let i = orders.length - 1; i >= 0; i--) {
+          if (orders[i].status !== "done" && orders[i].locationAr === targetLoc) {
             matchedOrder = orders[i]
             break
           }
         }
       }
+      // 2. Match by same subCategory & open status
+      if (!matchedOrder) {
+        for (let i = orders.length - 1; i >= 0; i--) {
+          if (orders[i].status !== "done" && orders[i].subCategoryId === replyCls.subCategoryId) {
+            matchedOrder = orders[i]
+            break
+          }
+        }
+      }
+      // 3. Fallback to most recent open order
       if (!matchedOrder) {
         for (let i = orders.length - 1; i >= 0; i--) {
           if (orders[i].status !== "done") {
@@ -401,8 +413,10 @@ export function parseWhatsAppChatDump(rawText = "", defaultDate = "", forcedGrou
     const isInProg =
       !isAlreadyDone && /(⏳|جاري العمل|جاري الإصلاح|تحت التنفيذ|بانتظار)/i.test(msg.body)
 
+    const detHash = makeDeterministicId(`${defaultDate}|${msg.time}|${msg.sender}|${msg.body}`)
+
     orders.push({
-      uid: `wa_${defaultDate || "today"}_${Math.random().toString(36).slice(2, 9)}`,
+      uid: `wa_${defaultDate || "today"}_${detHash}`,
       date: defaultDate,
       time: msg.time || "09:00",
       shift: msg.shift,
@@ -422,31 +436,4 @@ export function parseWhatsAppChatDump(rawText = "", defaultDate = "", forcedGrou
   }
 
   return orders
-}
-
-/**
- * Generates a realistic 3-Shift WhatsApp Groups conversation sample for Park Street Mall
- * so the user can test the analyzer with 1 click!
- */
-export function getSampleThreeShiftsWhatsAppChat(dateStr = "2026-11-07") {
-  return `[07:45 ص، ${dateStr}] م. محمود (مشرف صباحي): عطل في 4 اسبوتات إنارة بممر الدور الثاني مبنى 1 أمام الوحدات
-[08:15 ص، ${dateStr}] مشرف الهاوس كيبنج: جاري غسيل وتلميع الرسبشن والمداخل الرئيسية لمبنى 1 ومبنى 3 وتم الانتهاء من المرايات ✅
-[08:50 ص، ${dateStr}] كابتن أمن البوابة: كاميرا رقم 14 في بيزمنت 1 مسار السيارات فاصلة صورة وتحتاج مراجعة التيار الخفيف
-[09:20 ص، ${dateStr}] فني الكهرباء حسن: تم تغيير الـ 4 اسبوتات بمبنى 1 الدور الثاني وتم التشغيل بنجاح ✅
-[10:10 ص، ${dateStr}] مشرف السيفتي: طفاية الحريق بجوار سلم الطوارئ مبنى 2 الدور الثالث تحتاج إعادة تعبئة وفحص المؤشر
-[11:05 ص، ${dateStr}] م. محمود (مشرف صباحي): تسريب مياه في شطاف ومحبس حمام الرجال بالبلازا، يرجى سرعة توجه فني السباكة فوراً
-[11:40 ص، ${dateStr}] فني السباكة سعيد: تم إصلاح تسريب المياه وتغيير المحبس في حمام البلازا بالكامل ✅
-[01:15 م، ${dateStr}] مشرف التشغيل: مطلوب مراجعة نظافة أحواض الزرع واللاندسكيب أمام كاف ودولاتو بالبلازا
-[02:10 م، ${dateStr}] شركة اللاندسكيب: تم تنظيف وري أحواض الزرع أمام كاف ودولاتو بالكامل ✅
-[03:30 م، ${dateStr}] م. كريم (مشرف مسائي): شكوى من وحدة إدارية بالدور الثالث مبنى 2 من ضعف التبريد في التكييف المركزي HVAC
-[04:15 م، ${dateStr}] فني التكييف: جاري فحص وحدة المناولة والفلاتر للتكييف بالدور الثالث مبنى 2 وبانتظار شحن الفريون ⏳
-[05:20 م، ${dateStr}] مشرف الهاوس كيبنج المسائي: وجود انسكاب مياه في ممر ريتشارد مبنى 3 وتم توجيه العامل وتجفيف الأرضية فوراً ✅
-[06:40 م، ${dateStr}] مشرف السيفتي: وجود كراتين ومخلفات تعيق مخرج وباب الطوارئ الخلفي في منطقة التحميل، يرجى الإزالة العاجلة
-[07:10 م، ${dateStr}] مشرف منطقة التحميل: تم إزالة الكراتين وفتح مسار باب الطوارئ بمنطقة التحميل بالكامل ✅
-[08:30 م، ${dateStr}] م. كريم (مشرف مسائي): كسر في كالون ومفصلة باب غرفة خدمات النظافة بمبنى 1 الدور الأول ويحتاج تغيير كالون
-[09:45 م، ${dateStr}] مشرف الأمن المسائي: تكدس سيارات عند منحدر النزول لبيزمنت 2 وتم توجيه أفراد الأمن لتنظيم المسار ✅
-[11:20 م، ${dateStr}] مشرف الشيفت الليلي: بدء غسيل أرضية البلازا وفواصل المطاعم بالماكينة وتطهير حمامات البلازا
-[12:30 ص، ${dateStr}] فني الصيانة الليلي: عطل في حساس باب المصعد رقم 2 بمبنى 3 ويحتاج ضبط ومراجعة شركة المصاعد صباحاً
-[02:15 ص، ${dateStr}] مشرف الشيفت الليلي: تم الانتهاء من غسيل أرضية البلازا وتطهير حمامات البلازا وتفريغ غرفة القمامة بالكامل ✅
-[04:00 ص، ${dateStr}] مشرف السيفتي الليلي: لوحة إنذار الحريق تعطي إشارة خطأ (Fault) في حساس دخان بيزمنت 2 وتحتاج فحص مهندس الأنظمة`
 }

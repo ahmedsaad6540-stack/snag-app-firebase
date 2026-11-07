@@ -18,7 +18,6 @@ import {
   ORDER_STATUSES,
   classifyWhatsAppMessage,
   parseWhatsAppChatDump,
-  getSampleThreeShiftsWhatsAppChat,
 } from "../utils/whatsappChatAnalyzer.js"
 
 function getTodayIso() {
@@ -66,14 +65,43 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
   const [exporting, setExporting] = useState(false)
   const txtFileInputRef = useRef(null)
 
-  // Listen to `whatsapp_shift_orders` in Firestore
+  // Listen to `whatsapp_shift_orders` in Firestore & auto-purge any leftover demo/fake sample records
   useEffect(() => {
+    const FAKE_DEMO_SENDERS = new Set([
+      "م. محمود (مشرف صباحي)",
+      "مشرف الهاوس كيبنج",
+      "كابتن أمن البوابة",
+      "فني الكهرباء حسن",
+      "مشرف السيفتي",
+      "فني السباكة سعيد",
+      "مشرف التشغيل",
+      "شركة اللاندسكيب",
+      "م. كريم (مشرف مسائي)",
+      "فني التكييف",
+      "مشرف الهاوس كيبنج المسائي",
+      "مشرف منطقة التحميل",
+      "مشرف الأمن المسائي",
+      "مشرف الشيفت الليلي",
+      "فني الصيانة الليلي",
+      "مشرف السيفتي الليلي",
+    ])
     const unsub = onSnapshot(
       collection(db, "whatsapp_shift_orders"),
       (snap) => {
         const map = {}
         snap.docs.forEach((d) => {
-          map[d.id] = { uid: d.id, ...d.data() }
+          const data = d.data()
+          if (
+            FAKE_DEMO_SENDERS.has(data.sender) ||
+            /عطل في 4 اسبوتات إنارة بممر الدور الثاني|كاميرا رقم 14 في بيزمنت 1 مسار السيارات|طفاية الحريق بجوار سلم الطوارئ مبنى 2|حساس باب المصعد رقم 2 بمبنى 3/.test(
+              data.description || ""
+            )
+          ) {
+            // Auto-delete fake sample records from Firestore
+            deleteDoc(doc(db, "whatsapp_shift_orders", d.id)).catch(() => {})
+            return
+          }
+          map[d.id] = { uid: d.id, ...data }
         })
         setOrdersMap(map)
       },
@@ -264,7 +292,7 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
   async function handleAnalyzeChatText(textToAnalyze = rawChatText) {
     const clean = (textToAnalyze || "").trim()
     if (!clean) {
-      toast.error(tr("الرجاء لصق رسائل جروب الواتساب أولاً أو الضغط على زر «تجربة محادثة 3 شيفتات»", "Please paste WhatsApp group messages first"))
+      toast.error(tr("الرجاء لصق رسائل جروب الواتساب أو رفع ملف المحادثة (.txt) أولاً", "Please paste WhatsApp group messages or upload a .txt file first"))
       return
     }
     const extracted = parseWhatsAppChatDump(clean, selectedDate, importTargetGroup)
@@ -754,27 +782,6 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={() => {
-                const sample = getSampleThreeShiftsWhatsAppChat(selectedDate)
-                setRawChatText(sample)
-                setShowAnalyzerBox(true)
-                handleAnalyzeChatText(sample)
-              }}
-              style={{
-                background: "linear-gradient(135deg, #eab308, #ca8a04)",
-                color: "#0f172a",
-                border: "none",
-                borderRadius: 9,
-                padding: "8px 14px",
-                fontSize: 12,
-                fontWeight: 900,
-                cursor: "pointer",
-              }}
-            >
-              ⚡ {tr("تجربة فورية: تحميل وتحليل محادثة يوم كامل (3 شيفتات)", "Load & Analyze Sample 3-Shift Chat")}
-            </button>
             <button
               type="button"
               onClick={() => setShowAnalyzerBox((v) => !v)}
@@ -1310,8 +1317,8 @@ export default function WhatsAppShiftHubModule({ currentUser, notify, onAddSnag 
           {filteredOrders.length === 0 ? (
             <div style={{ padding: 36, textAlign: "center", color: "#64748b" }}>
               {tr(
-                "لا توجد رسائل أو أوردرات مسجلة لهذا الفلتر — الصق محادثة جروب الواتساب بالأعلى أو اضغط على زر «⚡ تجربة فورية: تحميل وتحليل محادثة يوم كامل (3 شيفتات)»",
-                "No orders found — paste a WhatsApp chat above or click 'Load & Analyze Sample 3-Shift Chat'"
+                "لا توجد رسائل أو أوردرات مسجلة حالياً — الصق محادثة جروب الواتساب الحقيقية بالأعلى أو ارفع ملف الدردشة (.txt) أو اربط البوت التلقائي",
+                "No orders recorded yet — paste your real WhatsApp group chat above, upload a .txt export, or connect the QR Bot"
               )}
             </div>
           ) : (
