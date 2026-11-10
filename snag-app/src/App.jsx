@@ -12,6 +12,7 @@ import RestroomsModule from "./components/RestroomsModule.jsx"
 import ParkStreetModule from "./components/ParkStreetModule.jsx"
 import OperationsPlansModule from "./components/OperationsPlansModule.jsx"
 import NightShiftReportModule from "./components/NightShiftReportModule.jsx"
+import ViolationsModule from "./components/ViolationsModule.jsx"
 import AICommandCenter from "./components/AICommandCenter.jsx"
 import { useSnags } from "./hooks/useSnags.js"
 import { useAuth }  from "./hooks/useAuth.js"
@@ -263,6 +264,14 @@ export default function App() {
               🌙 {tr("التقرير الليلي والملخص التنفيذي (Executive Summary)", "Night Report & Executive Summary")}
             </button>
           )}
+          {canUser(user, "violations", "view") && (
+            <button 
+              style={{ ...s.tab, ...(activeTab === "violations" ? { ...s.activeTab, background: "linear-gradient(135deg, #dc2626, #7f1d1d)", color: "#fef2f2" } : {}) }}
+              onClick={() => setActiveTab("violations")}
+            >
+              ⚖️ {tr("لائحة ونماذج المخالفات (Park St.)", "Violations & Penalties Registry")}
+            </button>
+          )}
           {canUser(user, "operations-plans", "view") && (
             <button 
               style={{ ...s.tab, ...(activeTab === "operations-plans" ? { ...s.activeTab, background: "linear-gradient(135deg, #16a34a, #0e7490)", color: "#f0fdf4" } : {}) }}
@@ -392,6 +401,50 @@ export default function App() {
                     whiteSpace: "nowrap",
                   }}>
                     {tr("فتح التقرير الليلي والملخص ←", "Open Night Report →")}
+                  </span>
+                </div>
+              )}
+
+              {canUser(user, "violations", "view") && (
+                <div
+                  onClick={() => setActiveTab("violations")}
+                  style={{
+                    background: "linear-gradient(135deg, rgba(153,27,27,0.45), rgba(30,27,75,0.7))",
+                    border: "1px solid #ef4444",
+                    borderRadius: 14,
+                    padding: "12px 16px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 24 }}>⚖️</span>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: "#fef2f2" }}>
+                        {tr("PARK ST. VIOLATIONS | لائحة ونماذج المخالفات والغرامات الرسمية", "PARK ST. VIOLATIONS | Official Violations & Penalties")}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#fca5a5" }}>
+                        {tr(
+                          "105 بند غرامة رسمي • تحرير نموذج مخالفة تعليمات المركز التجاري • مشاركة فورية على الواتساب (صورة ونَص)",
+                          "105 Catalog Rules • Official Westwing Mall Form Replica • 1-Tap WhatsApp Group Share"
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{
+                    background: "#dc2626",
+                    color: "#fff",
+                    fontWeight: 900,
+                    fontSize: 11,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    whiteSpace: "nowrap",
+                  }}>
+                    {tr("تحرير ومشاركة مخالفة ←", "Open Violations →")}
                   </span>
                 </div>
               )}
@@ -562,6 +615,12 @@ export default function App() {
             notify={notify}
             onAddSnag={addSnag}
             snags={snags}
+          />
+        )}
+        {activeTab === "violations" && canUser(user, "violations", "view") && (
+          <ViolationsModule
+            currentUser={user}
+            notify={notify}
           />
         )}
         {activeTab === "operations-plans" && canUser(user, "operations-plans", "view") && <OperationsPlansModule currentUser={user} notify={notify} onAddSnag={addSnag} />}

@@ -20,6 +20,14 @@ export const APP_MODULES = [
     descEn: "Manage night shift contractors, housekeeping, maintenance, restaurant grease traps & shift handover with Daily Executive Summary",
   },
   {
+    id: "violations",
+    icon: "⚖️",
+    labelAr: "لائحة ونماذج المخالفات والغرامات (Park St. Violations)",
+    labelEn: "Park St. Violations & Penalties Registry",
+    descAr: "إصدار ومشاركة نماذج مخالفات الوحدات الرسمية (105 بند)، ومطابقة المخالفات ذكياً ومشاركتها فوراً على الواتساب",
+    descEn: "Issue official unit violation forms (105 catalog items), smart incident matcher & 1-tap WhatsApp sharing",
+  },
+  {
     id: "operations-plans",
     icon: "📅",
     labelAr: "خطط التشغيل والتقارير (اللاندسكيب • السبايدر • المكافحة • النظافة)",
@@ -230,6 +238,7 @@ export const ROLE_PRESETS = {
     matrix: buildMatrix({
       "snags":            { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "night-report":     { view: true, add: true, edit: true, status: true, delete: false, export: true },
+      "violations":       { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "operations-plans": { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "park-street":      { view: true, add: true, edit: true, status: true, delete: false, export: true },
       "restrooms":        { view: true, add: true, edit: true, status: true, delete: false, export: true },
@@ -258,6 +267,7 @@ export const ROLE_PRESETS = {
     matrix: buildMatrix({
       "snags":            { view: true, add: true, edit: false, status: true, delete: false, export: false },
       "night-report":     { view: true, add: true, edit: true, status: true, delete: false, export: false },
+      "violations":       { view: true, add: false, edit: false, status: true, delete: false, export: false },
       "operations-plans": { view: true, add: false, edit: true, status: true, delete: false, export: false },
       "park-street":      { view: true, add: false, edit: true, status: true, delete: false, export: false },
       "restrooms":        { view: true, add: false, edit: true, status: true, delete: false, export: false },
