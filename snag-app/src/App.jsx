@@ -256,7 +256,7 @@ export default function App() {
               style={{ ...s.tab, ...(activeTab === "snags" ? s.activeTab : {}) }}
               onClick={() => setActiveTab("snags")}
             >
-              📋 {tr("سجل الملاحظات", "Snags Log")}
+              📋 {tr("سجل الملاحظات", "Observations Log")}
             </button>
           )}
           {canUser(user, "night-report", "view") && (
@@ -288,7 +288,7 @@ export default function App() {
               style={{ ...s.tab, ...(activeTab === "park-street" ? { ...s.activeTab, background: "linear-gradient(135deg, #0e7490, #4c1d95)", color: "#f0f9ff" } : {}) }}
               onClick={() => setActiveTab("park-street")}
             >
-              🌟 {tr("سناج بارك ستريت (الأمن • العميل • الزراعة • البيزمنت)", "Park St. Snag (4 Sectors)")}
+              🌟 {tr("ملاحظات بارك ستريت (الأمن • العميل • الزراعة • البيزمنت)", "Park St. Observations (4 Sectors)")}
             </button>
           )}
           {canUser(user, "restrooms", "view") && (
@@ -516,7 +516,7 @@ export default function App() {
                     <span style={{ fontSize: 24 }}>🌟</span>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: 14, color: "#f0f9ff" }}>
-                        {tr("PARK ST. SNAG | منظومة فحص بارك ستريت الشاملة", "PARK ST. SNAG | Integrated Mall Inspection")}
+                        {tr("PARK ST. OBSERVATIONS | منظومة ملاحظات وفحص بارك ستريت الشاملة", "PARK ST. OBSERVATIONS | Integrated Mall Inspection")}
                       </div>
                       <div style={{ fontSize: 11, color: "#a5f3fc" }}>
                         {tr(
@@ -535,7 +535,7 @@ export default function App() {
                     borderRadius: 8,
                     whiteSpace: "nowrap",
                   }}>
-                    {tr("فتح سناج بارك ستريت ←", "Open Park St. Snag →")}
+                    {tr("فتح ملاحظات بارك ستريت ←", "Open Park St. Observations →")}
                   </span>
                 </div>
               )}
@@ -560,7 +560,7 @@ export default function App() {
                     <span style={{ fontSize: 24 }}>🚽</span>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: 14, color: "#ecfdf5" }}>
-                        {tr("RESTROOM & JANITOR SNAG | مركز الحمامات وغرف النظافة", "RESTROOM & JANITOR SNAG | Restrooms & Janitor Rooms")}
+                        {tr("RESTROOM & JANITOR OBSERVATIONS | مركز الحمامات وغرف النظافة", "RESTROOM & JANITOR OBSERVATIONS | Restrooms & Janitor Rooms")}
                       </div>
                       <div style={{ fontSize: 11, color: "#a7f3d0" }}>
                         {tr(

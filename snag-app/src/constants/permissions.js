@@ -7,9 +7,9 @@ export const APP_MODULES = [
     id: "snags",
     icon: "📋",
     labelAr: "سجل الملاحظات العام",
-    labelEn: "General Snags Log",
+    labelEn: "General Observations Log",
     descAr: "تسجيل ومتابعة ملاحظات الصيانة والتشغيل في المول والمباني",
-    descEn: "Record and track maintenance & operations snags across the mall",
+    descEn: "Record and track maintenance & operations observations across the mall",
   },
   {
     id: "night-report",
@@ -38,8 +38,8 @@ export const APP_MODULES = [
   {
     id: "park-street",
     icon: "🌟",
-    labelAr: "سناج بارك ستريت الشامل",
-    labelEn: "Park St. Comprehensive Snag",
+    labelAr: "ملاحظات بارك ستريت الشاملة",
+    labelEn: "Park St. Comprehensive Observations",
     descAr: "الأمن والحراسة • رحلة العميل • الزراعة • مسار السيارات بالبيزمنت",
     descEn: "Security • Customer Journey • Landscape • Basement Car Path",
   },
@@ -227,7 +227,7 @@ export const ROLE_PRESETS = {
     labelAr: "مشرف فحص ميداني (Field Supervisor)",
     labelEn: "Field Inspector / Supervisor",
     descAr: "رؤية الأقسام الميدانية، إدخال الملاحظات والصور، تعديل ملاحظاته، تغيير الحالة، وتصدير التقارير (بدون حذف)",
-    descEn: "View field modules, add snags & photos, edit own records, update statuses & export reports (no delete)",
+    descEn: "View field modules, add observations & photos, edit own records, update statuses & export reports (no delete)",
     privileges: {
       canEditAll: false,
       canManageLocations: false,
@@ -256,7 +256,7 @@ export const ROLE_PRESETS = {
     labelAr: "فني / مهندس صيانة (Maintenance Tech)",
     labelEn: "Maintenance Engineer / Tech",
     descAr: "رؤية الملاحظات والحمامات وبارك ستريت، تحديث حالة الإصلاح وإضافة ملاحظات فنية (بدون حذف أو بيانات الوحدات)",
-    descEn: "View snags, Park St. & restrooms, update repair statuses and add technical notes (no delete or units access)",
+    descEn: "View observations, Park St. & restrooms, update repair statuses and add technical notes (no delete or units access)",
     privileges: {
       canEditAll: false,
       canManageLocations: false,

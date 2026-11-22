@@ -80,7 +80,7 @@ export default function ParkStreetModule({ currentUser, notify, onAddSnag }) {
 
   async function saveRecord(key, patch) {
     if (!canModify) {
-      alert(tr("ليس لديك صلاحية التعديل أو الإدخال في سناج بارك ستريت (وضع القراءة فقط).", "You do not have permission to edit or add records in Park St. Snag (Read-Only mode)."))
+      alert(tr("ليس لديك صلاحية التعديل أو الإدخال في ملاحظات بارك ستريت (وضع القراءة فقط).", "You do not have permission to edit or add records in Park St. Observations (Read-Only mode)."))
       return
     }
     const existing = records[key] || {}
@@ -137,7 +137,7 @@ export default function ParkStreetModule({ currentUser, notify, onAddSnag }) {
       photos: [...existingPhotos, compressed].slice(0, 4),
       status: currentStatus === "na" ? "snag" : currentStatus,
     })
-    if (notify) notify("add", "📸 تم إرفاق الصورة في سناج بارك ستريت")
+    if (notify) notify("add", "📸 تم إرفاق الصورة في ملاحظات بارك ستريت")
   }
 
   async function handleRemovePhoto(key, photoId) {
@@ -361,10 +361,10 @@ export default function ParkStreetModule({ currentUser, notify, onAddSnag }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div>
             <div style={{ fontSize: 12, fontWeight: 800, color: "#bae6fd", letterSpacing: 1 }}>
-              PARK ST. MALL — INTEGRATED SNAG & OPERATIONS SYSTEM
+              PARK ST. MALL — INTEGRATED OBSERVATIONS & OPERATIONS SYSTEM
             </div>
             <h2 style={{ margin: "4px 0 6px", fontSize: 22, fontWeight: 900, color: "#fff" }}>
-              🌟 {tr("منظومة سناج بارك ستريت الشاملة", "Park St. Comprehensive Snag System")}
+              🌟 {tr("منظومة ملاحظات بارك ستريت الشاملة", "Park St. Comprehensive Observations System")}
             </h2>
             <div style={{ fontSize: 13, color: "#e2e8f0" }}>
               {tr(
@@ -400,7 +400,7 @@ export default function ParkStreetModule({ currentUser, notify, onAddSnag }) {
         <div style={st.kpiGrid}>
           <KpiCard label={tr("إجمالي نقاط الفحص", "Total Checkpoints")} value={stats.totalItems} color="#38bdf8" />
           <KpiCard label={tr("سليم ومطابق ✅", "Intact / OK ✅")} value={stats.okCount} color="#10b981" />
-          <KpiCard label={tr("ملاحظات وأعطال 🔴", "Defects / Snags 🔴")} value={stats.snagCount} color="#ef4444" />
+          <KpiCard label={tr("ملاحظات وأعطال 🔴", "Defects / Observations 🔴")} value={stats.snagCount} color="#ef4444" />
           <KpiCard label={tr("يحتاج متابعة 🟡", "Needs Follow-up 🟡")} value={stats.followupCount} color="#f59e0b" />
           <KpiCard label={tr("صور الفحص الموثقة 📸", "Documented Photos 📸")} value={stats.photosCount} color="#c084fc" />
         </div>

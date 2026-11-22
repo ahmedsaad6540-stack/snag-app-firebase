@@ -5,7 +5,7 @@ const CARDS = [
   {
     key:     "total",
     labelAr: "إجمالي الملاحظات",
-    labelEn: "Total Snags",
+    labelEn: "Total Observations",
     filter:  "all",
     icon:    "📋",
     color:   "#f1f5f9",

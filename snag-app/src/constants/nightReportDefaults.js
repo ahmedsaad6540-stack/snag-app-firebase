@@ -293,9 +293,9 @@ export function buildNightExecutiveSummary(report, daySnags = []) {
       color: "#ef4444",
       textAr:
         handoverItems.length > 0
-          ? `يوجد (${handoverItems.length}) بند تسليم للشيفت الصباحي: ${hoText}${openDaySnags.length > 0 ? ` — بالإضافة إلى (${openDaySnags.length}) ملاحظة مفتوحة بسجل السناج العام.` : ""}`
-          : `لا توجد بنود معلقة بجدول تسليم الوردية، ويوجد (${openDaySnags.length}) ملاحظة مفتوحة في سجل السناج العام للمتابعة.`,
-      textEn: `${handoverItems.length} shift handover items & ${openDaySnags.length} open snags for next shift follow-up.`,
+          ? `يوجد (${handoverItems.length}) بند تسليم للشيفت الصباحي: ${hoText}${openDaySnags.length > 0 ? ` — بالإضافة إلى (${openDaySnags.length}) ملاحظة مفتوحة بسجل الملاحظات العام.` : ""}`
+          : `لا توجد بنود معلقة بجدول تسليم الوردية، ويوجد (${openDaySnags.length}) ملاحظة مفتوحة في سجل الملاحظات العام للمتابعة.`,
+      textEn: `${handoverItems.length} shift handover items & ${openDaySnags.length} open observations for next shift follow-up.`,
     })
   } else {
     autoBullets.push({

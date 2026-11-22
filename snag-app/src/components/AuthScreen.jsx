@@ -61,7 +61,7 @@ export default function AuthScreen({ onLogin, onRegister, error }) {
         <p style={s.sub}>
           {tr(
             "نظام ذكي لتسجيل ومتابعة ملاحظات التشغيل والصيانة",
-            "Smart Operations & Maintenance Snag Management System"
+            "Smart Operations & Maintenance Observations System"
           )}
         </p>
 

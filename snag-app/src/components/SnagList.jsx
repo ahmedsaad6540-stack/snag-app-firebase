@@ -135,7 +135,7 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
   return (
     <div style={s.card}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-        <h3 style={{ fontWeight:800, fontSize:17 }}>{tr("قائمة الملاحظات", "Snags List")}</h3>
+        <h3 style={{ fontWeight:800, fontSize:17 }}>{tr("قائمة الملاحظات", "Observations List")}</h3>
         <span style={{ color:"#475569", fontSize:13 }}>{filtered.length} / {snags.length}</span>
       </div>
 
@@ -365,7 +365,7 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
       {filtered.length === 0 ? (
         <div style={{ textAlign:"center", padding:"60px 20px", color:"#334155" }}>
           <div style={{ fontSize:40, marginBottom:12 }}>🗂️</div>
-          {tr("لا توجد ملاحظات مطابقة", "No matching snags found")}
+          {tr("لا توجد ملاحظات مطابقة", "No matching observations found")}
         </div>
       ) : (
         <div style={s.list}>
@@ -437,7 +437,7 @@ function SnagCard({ snag: s, currentUser, locations = [], onCycleStatus, onRemov
     return (
       <div style={{ ...cs.item, borderInlineStart: `4px solid #3b82f6`, background: "#0a1628" }}>
         <div style={{ fontWeight: 800, fontSize: 14, color: "#60a5fa", marginBottom: 12 }}>
-          ✏️ {tr("تعديل الملاحظة", "Edit Snag")}
+          ✏️ {tr("تعديل الملاحظة", "Edit Observation")}
         </div>
 
         <div style={cs.editField}>
@@ -567,7 +567,7 @@ function SnagCard({ snag: s, currentUser, locations = [], onCycleStatus, onRemov
       {showConfirm && (
         <ConfirmDialog
           title={tr("تأكيد الحذف", "Confirm Deletion")}
-          message={tr("هل أنت متأكد أنك تريد حذف هذه الملاحظة نهائياً؟", "Are you sure you want to permanently delete this snag?")}
+          message={tr("هل أنت متأكد أنك تريد حذف هذه الملاحظة نهائياً؟", "Are you sure you want to permanently delete this observation?")}
           onConfirm={() => { setShowConfirm(false); onRemove(s.id); }}
           onCancel={() => setShowConfirm(false)}
         />
@@ -578,7 +578,7 @@ function SnagCard({ snag: s, currentUser, locations = [], onCycleStatus, onRemov
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: 20 }} onClick={() => setViewingDetails(false)}>
           <div style={{ background: "#0f172a", padding: 24, borderRadius: 16, border: "1px solid #1e293b", width: "100%", maxWidth: 600, maxHeight: "90vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0 }}>📋 {tr("تفاصيل الملاحظة", "Snag Details")}</h3>
+              <h3 style={{ margin: 0 }}>📋 {tr("تفاصيل الملاحظة", "Observation Details")}</h3>
               <button style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 18 }} onClick={() => setViewingDetails(false)}>✕</button>
             </div>
             

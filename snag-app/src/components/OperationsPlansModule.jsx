@@ -429,7 +429,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
         dataUrl: p.dataUrl,
       }))
     )
-    toast.success(tr("🚨 تم ترحيل عدم التنفيذ إلى سجل الملاحظات العام!", "🚨 Promoted to Main Snags Log!"))
+    toast.success(tr("🚨 تم ترحيل عدم التنفيذ إلى سجل الملاحظات العام!", "🚨 Promoted to Main Observations Log!"))
   }
 
   async function handleAddExtraShiftTask() {
@@ -2890,7 +2890,7 @@ export default function OperationsPlansModule({ currentUser, notify, onAddSnag }
                           onClick={() => handlePromoteToSnag(task)}
                           style={{ ...s.smallBtn, background: "#dc2626", color: "#fff" }}
                         >
-                          🚨 {tr("تحويل لسناج", "Push to Snag")}
+                          🚨 {tr("تحويل لملاحظة", "Push to Notes")}
                         </button>
                       )}
                     </div>

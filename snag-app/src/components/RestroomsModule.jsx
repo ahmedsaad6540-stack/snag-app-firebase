@@ -167,7 +167,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
   async function handleSyncAllDefectsToSnags() {
     const defectRows = filteredRows.filter(r => getRowHealth(r) === "defect" && !r.linkedSnagId)
     if (defectRows.length === 0) {
-      toast("لا توجد أعطال جديدة غير مرحلة لسجل السناج", { icon: "ℹ️" })
+      toast("لا توجد أعطال جديدة غير مرحلة لسجل الملاحظات", { icon: "ℹ️" })
       return
     }
     if (!window.confirm(`هل تريد ترحيل ${defectRows.length} عطل من الحمامات إلى سجل الملاحظات العام (Snag List)؟`)) return
@@ -296,7 +296,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
       {/* ── Top Banner (Matching Sheet Header) ── */}
       <div style={s.heroBanner}>
         <div style={{ flex: 1 }}>
-          <div style={s.heroBadge}>RESTROOM & JANITOR SNAG SYSTEM</div>
+          <div style={s.heroBadge}>RESTROOM & JANITOR OBSERVATIONS SYSTEM</div>
           <h2 style={s.heroTitle}>🚽 {tr("مركز متابعة وفحص الحمامات وغرف النظافة", "Restrooms & Janitor Rooms Inspection Center")}</h2>
           <p style={s.heroSub}>
             {tr(
@@ -305,7 +305,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
             )}
           </p>
           <div style={s.guideBox}>
-            <span>💡 <strong>{tr("دليل العمل:", "Workflow Guide:")}</strong> {tr("ابدأ من «دليل المواقع»، ثم «جولة الفحص» أو «الجدول الشامل»، وسجل الأعطال لترحيلها لسجل السناج.", "Start from Locations Directory, then Inspection Tour or Master Sheet, and record defects.")}</span>
+            <span>💡 <strong>{tr("دليل العمل:", "Workflow Guide:")}</strong> {tr("ابدأ من «دليل المواقع»، ثم «جولة الفحص» أو «الجدول الشامل»، وسجل الأعطال لترحيلها لسجل الملاحظات.", "Start from Locations Directory, then Inspection Tour or Master Sheet, and record defects.")}</span>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
               <span style={{ ...s.legendPill, background: "rgba(234,179,8,0.18)", color: "#fde047", borderColor: "#ca8a04" }}>🟡 {tr("الأصفر: إدخال مطلوب", "Yellow: Pending Input")}</span>
               <span style={{ ...s.legendPill, background: "rgba(16,185,129,0.18)", color: "#6ee7b7", borderColor: "#059669" }}>🟢 {tr("الأخضر: سليم", "Green: Intact / OK")}</span>
@@ -356,7 +356,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
               style={{ ...s.actionBtn, background: "linear-gradient(135deg, #4f46e5, #7c3aed)" }}
               onClick={handleSyncAllDefectsToSnags}
             >
-              🚨 {tr(`ترحيل الأعطال لسجل السناج (${dashboard.defectComponents})`, `Push Defects to Snags Log (${dashboard.defectComponents})`)}
+              🚨 {tr(`ترحيل الأعطال لسجل الملاحظات (${dashboard.defectComponents})`, `Push Defects to Observations Log (${dashboard.defectComponents})`)}
             </button>
           )}
           {canWipe && (
@@ -376,7 +376,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
         <KpiCard label={tr("قيد التأكيد", "Pending Confirmation")} value={dashboard.pendingRestrooms} sub={tr("بانتظار استكمال الفحص", "Awaiting inspection completion")} color="#f59e0b" icon="⏳" />
         <KpiCard label={tr("الجولات المسجلة", "Recorded Rounds")} value={dashboard.totalRounds} sub={tr("جولة فحص ميدانية", "Field inspection rounds")} color="#3b82f6" icon="📋" />
         <KpiCard label={tr("مكونات تم فحصها", "Inspected Components")} value={dashboard.inspectedComponents} sub={tr(`من أصل ${dashboard.totalComponents} مكون`, `Out of ${dashboard.totalComponents} components`)} color="#06b6d4" icon="🔍" />
-        <KpiCard label={tr("سناج مفتوح / أعطال", "Open Snags / Defects")} value={dashboard.defectComponents} sub={tr("مكونات بها عطل أو نقص", "Defective or missing items")} color="#ef4444" icon="🚨" />
+        <KpiCard label={tr("ملاحظات مفتوحة / أعطال", "Open Observations / Defects")} value={dashboard.defectComponents} sub={tr("مكونات بها عطل أو نقص", "Defective or missing items")} color="#ef4444" icon="🚨" />
         <KpiCard label={tr("مؤشر السلامة الفنية", "Technical Health Index")} value={`${healthPct}%`} sub={tr(`${dashboard.okComponents} مكون سليم`, `${dashboard.okComponents} intact items`)} color="#8b5cf6" icon="🛡️" />
       </div>
 
@@ -785,7 +785,7 @@ export default function RestroomsModule({ currentUser, notify, onAddSnag }) {
                             <button
                               style={{ ...s.iconBtn, background: row.linkedSnagId ? "#065f46" : "#7f1d1d" }}
                               onClick={() => handlePromoteToSnag(row)}
-                              title="إرسال لسجل السناج"
+                              title="إرسال لسجل الملاحظات"
                             >
                               {row.linkedSnagId ? "✅" : "🚨"}
                             </button>
@@ -1047,7 +1047,7 @@ function InspectorComponentRow({ row, userName, onSave, onOpenModal, onPromoteTo
               type="button"
               style={{ ...s.iconBtn, background: row.linkedSnagId ? "#065f46" : "#dc2626" }}
               onClick={onPromoteToSnag}
-              title="ترحيل لسجل السناج العام"
+              title="ترحيل لسجل الملاحظات العام"
             >
               {row.linkedSnagId ? "✅" : "🚨"}
             </button>
@@ -1306,7 +1306,7 @@ function EditComponentModal({ row, userName, onClose, onSave, onPromoteToSnag })
               await onPromoteToSnag({ ...row, ...form })
             }}
           >
-            🚨 حفظ وترحيل للسناج
+            🚨 حفظ وترحيل للملاحظات
           </button>
         </div>
       </div>

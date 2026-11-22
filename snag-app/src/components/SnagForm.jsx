@@ -121,11 +121,11 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
   async function handleSubmit(e) {
     e.preventDefault()
     if (!canAddSnag) {
-      alert(tr("ليس لديك صلاحية إضافة ملاحظات جديدة.", "You do not have permission to add new snags."))
+      alert(tr("ليس لديك صلاحية إضافة ملاحظات جديدة.", "You do not have permission to add new observations."))
       return
     }
     if (!form.description.trim()) {
-      alert(tr("اكتب وصف الملاحظة أولاً", "Please enter a snag description first"))
+      alert(tr("اكتب وصف الملاحظة أولاً", "Please enter an observation description first"))
       return
     }
     if (saving) return
@@ -169,7 +169,7 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
         <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.7 }}>
           {tr(
             "حسابك الحالي يمتلك صلاحية الرؤية والاطلاع على سجل الملاحظات بدون صلاحية الإدخال. لطلب صلاحية الإضافة، تواصل مع مدير النظام.",
-            "Your account has View permission on the Snags Log without Add/Insert privilege. Contact the System Admin to request data-entry access."
+            "Your account has View permission on the Observations Log without Add/Insert privilege. Contact the System Admin to request data-entry access."
           )}
         </div>
       </div>
@@ -182,7 +182,7 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
 
   return (
     <form style={s.card} onSubmit={handleSubmit}>
-      <h3 style={s.heading}>➕ {tr("إضافة ملاحظة جديدة", "Add New Snag")}</h3>
+      <h3 style={s.heading}>➕ {tr("إضافة ملاحظة جديدة", "Add New Observation")}</h3>
 
       {/* ⚡ Park St. Quick Inspection Tracks */}
       <div style={{
@@ -197,7 +197,7 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
             ⚡ {tr("الفحص السريع — بارك ستريت (Park St.)", "Quick Inspection — Park St.")}
           </div>
           <span style={{ fontSize: 10, color: "#64748b" }}>
-            {tr("اختر القطاع لتعبئة الملاحظة بضغطة واحدة", "Select a sector for 1-click snag templates")}
+            {tr("اختر القطاع لتعبئة الملاحظة بضغطة واحدة", "Select a sector for 1-click observation templates")}
           </span>
         </div>
 
@@ -319,7 +319,7 @@ export default function SnagForm({ onAdd, userName, userEmail, currentUser, noti
       </Field>
 
       {/* Description */}
-      <Field label={tr("وصف المشكلة", "Issue / Snag Description")}>
+      <Field label={tr("وصف المشكلة", "Issue / Observation Description")}>
         <textarea
           style={{ ...s.input, minHeight:90, resize:"vertical" }}
           value={form.description}

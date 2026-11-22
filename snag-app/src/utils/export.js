@@ -109,7 +109,7 @@ export async function exportExcel(snags, locations) {
 
     wsDash.mergeCells("B2:I2")
     const dTitle = wsDash.getCell("B2")
-    dTitle.value = "مول بارك ستريت — منظومة إدارة ومتابعة السناج والصيانة الشاملة (تطبيق الإكسيل البديل)"
+    dTitle.value = "مول بارك ستريت — منظومة إدارة ومتابعة الملاحظات والصيانة الشاملة (تطبيق الإكسيل البديل)"
     dTitle.font = { name: "Arial", size: 15, bold: true, color: { argb: THEME.white } }
     dTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.darkNavy } }
     dTitle.alignment = { horizontal: "center", vertical: "middle" }
@@ -232,7 +232,7 @@ export async function exportExcel(snags, locations) {
 
     wsSnags.mergeCells("A1:M1")
     const sTitle = wsSnags.getCell("A1")
-    sTitle.value = "PARK ST. MALL | سجل الملاحظات ومتابعة الصيانة الشامل (Master Snag List)"
+    sTitle.value = "PARK ST. MALL | سجل الملاحظات ومتابعة الصيانة الشامل (Master Observations List)"
     sTitle.font = { name: "Arial", size: 14, bold: true, color: { argb: THEME.white } }
     sTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: THEME.darkNavy } }
     sTitle.alignment = { horizontal: "center", vertical: "middle" }
@@ -619,7 +619,7 @@ export async function exportExcel(snags, locations) {
     const buf = await wb.xlsx.writeBuffer()
     _download(
       new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
-      `سجل_سناج_بارك_ستريت_التطبيقي_الشامل_${new Date().toISOString().slice(0, 10)}.xlsx`
+      `سجل_ملاحظات_بارك_ستريت_التطبيقي_الشامل_${new Date().toISOString().slice(0, 10)}.xlsx`
     )
   } catch (err) {
     console.error("Excel Export Error:", err)
@@ -787,7 +787,7 @@ export function importJSON(file) {
 
 export async function exportRestroomsExcel(rows, dashboard) {
   const wb = new ExcelJS.Workbook()
-  wb.creator = "Smart Mall OS - Restroom Snag"
+  wb.creator = "Smart Mall OS - Restroom Observations"
   wb.created = new Date()
 
   // ── Sheet 1: مركز متابعة الحمامات (مطابق تماماً لتصميم الشيت الأصلي + صور مدمجة) ──
@@ -815,7 +815,7 @@ export async function exportRestroomsExcel(rows, dashboard) {
   ]
 
   // Row 1: Title
-  const r1 = ws.addRow(["RESTROOM SNAG | مركز متابعة الحمامات"])
+  const r1 = ws.addRow(["RESTROOM OBSERVATIONS | مركز متابعة الحمامات"])
   ws.mergeCells("A1:P1")
   r1.height = 32
   r1.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } }
@@ -831,7 +831,7 @@ export async function exportRestroomsExcel(rows, dashboard) {
   r2.getCell(1).alignment = { vertical: "middle", horizontal: "center" }
 
   // Row 3: Instructions
-  const r3 = ws.addRow(["ابدأ من «دليل المواقع»، ثم «حصر المكونات» و«جولات الفحص»، وسجل العطل في «سجل السناج». الأصفر إدخال مطلوب؛ الأخضر سليم؛ الأحمر عطل."])
+  const r3 = ws.addRow(["ابدأ من «دليل المواقع»، ثم «حصر المكونات» و«جولات الفحص»، وسجل العطل في «سجل الملاحظات». الأصفر إدخال مطلوب؛ الأخضر سليم؛ الأحمر عطل."])
   ws.mergeCells("A3:P3")
   r3.height = 22
   r3.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF9C3" } }
@@ -843,7 +843,7 @@ export async function exportRestroomsExcel(rows, dashboard) {
   // Row 5-6: KPIs Summary
   const kpiHeader = ws.addRow([
     "الحمامات المؤكدة", "", "الحمامات قيد التأكيد", "", "الجولات المسجلة", "",
-    "مكونات تم فحصها", "", "سناج مفتوح / أعطال", "", "إجمالي المكونات", ""
+    "مكونات تم فحصها", "", "ملاحظات مفتوحة / أعطال", "", "إجمالي المكونات", ""
   ])
   kpiHeader.font = { name: "Arial", size: 10, bold: true, color: { argb: "FF1E293B" } }
 
@@ -1066,7 +1066,7 @@ export function exportRestroomsReport(rows, dashboard) {
 
   const html = `<!doctype html>
 <html dir="rtl" lang="ar"><head><meta charset="UTF-8"/>
-<title>RESTROOM SNAG | مركز متابعة الحمامات</title>
+<title>RESTROOM OBSERVATIONS | مركز متابعة الحمامات</title>
 <style>
   *{box-sizing:border-box}
   body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:20px;background:#f8fafc;color:#0f172a;margin:0}
@@ -1084,13 +1084,13 @@ export function exportRestroomsReport(rows, dashboard) {
 </style>
 </head><body onload="setTimeout(()=>window.print(),600)">
   <div class="header">
-    <h1>🚽 RESTROOM SNAG | مركز متابعة الحمامات</h1>
+    <h1>🚽 RESTROOM OBSERVATIONS | مركز متابعة الحمامات</h1>
     <p>تشغيل وصيانة • فحص الأصول • حصر فني • بلاغات • إغلاق ومتابعة — تاريخ التقرير: ${esc(now)}</p>
     <div class="kpis">
       <div class="kpi"><strong>${dashboard.confirmedRestrooms} / ${dashboard.totalRestrooms}</strong>الحمامات المؤكدة</div>
       <div class="kpi"><strong>${dashboard.totalRounds}</strong>الجولات المسجلة</div>
       <div class="kpi"><strong>${dashboard.inspectedComponents} / ${dashboard.totalComponents}</strong>مكونات تم فحصها</div>
-      <div class="kpi"><strong>${dashboard.defectComponents}</strong>سناج مفتوح / أعطال</div>
+      <div class="kpi"><strong>${dashboard.defectComponents}</strong>ملاحظات مفتوحة / أعطال</div>
     </div>
   </div>
   <button class="print-btn" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>

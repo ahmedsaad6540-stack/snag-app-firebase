@@ -2045,7 +2045,7 @@ export default function NightShiftReportModule({
               </h3>
               <div style={st.sectionSub}>
                 {tr(
-                  `تاريخ الوردية: ${formatArabicDateDisplay(selectedDate)} • أي أعمال مفتوحة أو مطلوبة من الشيفت الصباحي مع إمكانية ترحيلها لسجل السناج العام`,
+                  `تاريخ الوردية: ${formatArabicDateDisplay(selectedDate)} • أي أعمال مفتوحة أو مطلوبة من الشيفت الصباحي مع إمكانية ترحيلها لسجل الملاحظات العام`,
                   `Shift Date: ${formatArabicDateDisplay(selectedDate)} • Handover notes & actions required for next shift`
                 )}
               </div>
@@ -2085,7 +2085,7 @@ export default function NightShiftReportModule({
                         <div style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
                           {h.escalated ? (
                             <span style={{ fontSize: 11, color: "#34d399", fontWeight: 800 }}>
-                              ✓ {tr("مُرحّل للسناج", "In Snags")}
+                              ✓ {tr("مُرحّل للملاحظات", "In Observations")}
                             </span>
                           ) : (
                             <button
@@ -2102,7 +2102,7 @@ export default function NightShiftReportModule({
                                 cursor: "pointer",
                               }}
                             >
-                              🚨 {tr("لسجل السناج", "To Snags")}
+                              🚨 {tr("لسجل الملاحظات", "To Observations")}
                             </button>
                           )}
                           {canDelete && (
@@ -2150,7 +2150,7 @@ export default function NightShiftReportModule({
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       {h.escalated ? (
                         <span style={{ fontSize: 11, color: "#34d399", fontWeight: 800 }}>
-                          ✓ {tr("مُرحّل للسناج", "In Snags")}
+                          ✓ {tr("مُرحّل للملاحظات", "In Observations")}
                         </span>
                       ) : (
                         <button
@@ -2167,7 +2167,7 @@ export default function NightShiftReportModule({
                             cursor: "pointer",
                           }}
                         >
-                          🚨 {tr("لسجل السناج", "To Snags")}
+                          🚨 {tr("لسجل الملاحظات", "To Observations")}
                         </button>
                       )}
                       {canDelete && (

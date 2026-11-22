@@ -61,7 +61,7 @@ export default function Header({ snags, selectedDate = "", onImport, isAdmin, cu
                 title={tr("تحذير خطير ⚠️", "Critical Warning ⚠️")}
                 message={tr(
                   "هل أنت متأكد من رغبتك في حذف جميع الملاحظات في النظام نهائياً؟ هذا الإجراء لا يمكن التراجع عنه!",
-                  "Are you sure you want to permanently wipe all snags in the system? This action cannot be undone!"
+                  "Are you sure you want to permanently wipe all observations in the system? This action cannot be undone!"
                 )}
                 onConfirm={() => { setShowConfirm(false); onWipeAll() }}
                 onCancel={() => setShowConfirm(false)}
