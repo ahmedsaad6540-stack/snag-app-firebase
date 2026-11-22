@@ -433,6 +433,7 @@ export default function ViolationsModule({ currentUser, notify }) {
   const [catalogSearch, setCatalogSearch] = useState("")
   const [archiveSearch, setArchiveSearch] = useState("")
   const [archiveCategory, setArchiveCategory] = useState("all")
+  const [archiveDate, setArchiveDate] = useState("")
 
   // حالة النموذج الحالي
   const [form, setForm] = useState(() => createDefaultForm(currentUser))
@@ -1034,13 +1035,80 @@ export default function ViolationsModule({ currentUser, notify }) {
     const normQ = normalizeArabicText(archiveSearch)
     return savedViolations.filter(v => {
       if (archiveCategory !== "all" && v.categoryAr !== archiveCategory) return false
+      if (archiveDate && (v.date || "") !== archiveDate) return false
       if (!normQ) return true
       const hay = normalizeArabicText(
         `${v.unitName} ${v.unitNo} ${v.building} ${v.floor} ${v.violationTitleAr} ${v.customIncidentText} ${v.supervisorName} ${v.date}`
       )
       return hay.includes(normQ)
     })
-  }, [savedViolations, archiveCategory, archiveSearch])
+  }, [savedViolations, archiveCategory, archiveDate, archiveSearch])
+
+  // طباعة تقرير المخالفات لليوم المحدد أو القائمة المفلترة
+  function handlePrintArchiveDayReport() {
+    const items = filteredArchive
+    const totalAmount = items.reduce((sum, v) => sum + Number(v.finalAmount || 0), 0)
+    const escHtml = (s) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+    const rowsHtml = items
+      .map(
+        (v, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${escHtml(v.date || "-")}</td>
+          <td>${escHtml(v.unitName || "-")} ${v.unitNo ? `(${escHtml(v.unitNo)})` : ""}</td>
+          <td>مبنى ${escHtml(v.building || "-")} / دور ${escHtml(v.floor || "-")}</td>
+          <td>بند #${escHtml(v.violationCode || "-")} — ${escHtml(v.categoryAr || "")}</td>
+          <td>${escHtml(v.customIncidentText || v.violationTitleAr || "-")}</td>
+          <td><strong>${Number(v.finalAmount || 0).toLocaleString("en-US")} ج.م</strong>${v.isDoubled ? " (مضاعفة ×2)" : ""}</td>
+          <td>${escHtml(v.supervisorName || "-")}</td>
+          <td>${escHtml(v.status || "قيد التحصيل")}</td>
+        </tr>`
+      )
+      .join("")
+
+    const win = window.open("", "_blank")
+    if (!win) {
+      toast.error("يرجى السماح بالنوافذ المنبثقة لطباعة التقرير")
+      return
+    }
+    win.document.write(`<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8" />
+<title>تقرير مخالفات Park St. West${archiveDate ? ` - ${archiveDate}` : ""}</title>
+<style>
+  body { font-family: Arial, Tahoma, sans-serif; padding: 24px; color: #0f172a; background: #f8fafc; }
+  .head { background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; font-size: 12px; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: right; vertical-align: top; }
+  th { background: #7f1d1d; color: #fff; }
+  .btn { padding: 8px 14px; border: none; border-radius: 8px; background: #dc2626; color: #fff; font-weight: bold; cursor: pointer; }
+  @media print { .btn { display: none; } body { background: #fff; padding: 0; } .head { border: none; padding: 0 0 12px; } }
+</style>
+</head>
+<body onload="setTimeout(() => window.print(), 400)">
+  <div class="head">
+    <h2>⚖️ تقرير مخالفات الوحدات — Park St. West (WESTWING)</h2>
+    ${archiveDate ? `<p style="font-size:15px;font-weight:bold;color:#b91c1c">📅 تاريخ اليوم المحدد: ${escHtml(archiveDate)}</p>` : "<p>نطاق التقرير: كافة التواريخ المفلترة</p>"}
+    <p>عدد المخالفات: <strong>${items.length}</strong> | إجمالي الغرامات: <strong>${totalAmount.toLocaleString("en-US")} ج.م</strong></p>
+    <button class="btn" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>التاريخ</th><th>الوحدة</th><th>الموقع</th><th>التصنيف</th><th>بيان المخالفة</th><th>الغرامة</th><th>مشرف التشغيل</th><th>الحالة</th>
+      </tr>
+    </thead>
+    <tbody>${rowsHtml || '<tr><td colspan="9" style="text-align:center">لا توجد مخالفات مسجلة في هذا اليوم</td></tr>'}</tbody>
+  </table>
+</body>
+</html>`)
+    win.document.close()
+  }
 
   // إحصائيات سريعة
   const archiveStats = useMemo(() => {
@@ -1940,7 +2008,34 @@ export default function ViolationsModule({ currentUser, notify }) {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <input
+                type="date"
+                value={archiveDate}
+                onChange={e => setArchiveDate(e.target.value)}
+                style={{ ...st.input, width: "auto" }}
+                title="بحث بالتاريخ"
+              />
+              <button
+                type="button"
+                onClick={() => setArchiveDate(todayIso())}
+                style={{
+                  ...st.resetBtn,
+                  background: archiveDate === todayIso() ? "#0284c7" : "#1e293b",
+                  color: "#fff",
+                }}
+              >
+                📅 اليوم
+              </button>
+              {archiveDate && (
+                <button
+                  type="button"
+                  onClick={() => setArchiveDate("")}
+                  style={{ ...st.resetBtn, borderColor: "#7f1d1d", color: "#fca5a5" }}
+                >
+                  ✖ كل التواريخ
+                </button>
+              )}
               <select
                 value={archiveCategory}
                 onChange={e => setArchiveCategory(e.target.value)}
@@ -1957,8 +2052,15 @@ export default function ViolationsModule({ currentUser, notify }) {
                 value={archiveSearch}
                 onChange={e => setArchiveSearch(e.target.value)}
                 placeholder="🔍 ابحث باسم الوحدة أو المشرف أو التاريخ..."
-                style={{ ...st.input, minWidth: 240 }}
+                style={{ ...st.input, minWidth: 220, width: "auto", flex: 1 }}
               />
+              <button
+                type="button"
+                onClick={handlePrintArchiveDayReport}
+                style={{ ...st.printBtn, padding: "9px 14px" }}
+              >
+                🖨️ {archiveDate ? `طباعة تقرير يوم (${archiveDate})` : "طباعة التقرير (PDF)"}
+              </button>
             </div>
           </div>
 

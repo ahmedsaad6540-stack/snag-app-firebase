@@ -30,6 +30,8 @@ export default function App() {
   const { snags, stats, loading, error, addSnag, cycleStatus, removeSnag, updateSnag, mergeImported, wipeAll } = useSnags(notify, user)
   const { customLists, addCustomList, removeCustomList } = useCustomLists(user)
   const [filteredSnags, setFilteredSnags] = useState([])
+  const [hasFilteredSnags, setHasFilteredSnags] = useState(false)
+  const [selectedSnagsDate, setSelectedSnagsDate] = useState("")
   const [showUsersManager, setShowUsersManager] = useState(false)
   const [activeTab, setActiveTab] = useState("snags")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -151,8 +153,8 @@ export default function App() {
   const canManageUsers = user.role === "admin" || hasPrivilege(user, "canManageUsers")
   const canManageLists = user.role === "admin" || hasPrivilege(user, "canManageLocations")
 
-  // Default to all snags if no filter is applied yet
-  const displaySnags = filteredSnags.length > 0 ? filteredSnags : snags
+  // Use filtered snags when SnagList has initialized, otherwise all snags
+  const displaySnags = hasFilteredSnags ? filteredSnags : snags
 
   return (
     <div style={s.app}>
@@ -239,6 +241,7 @@ export default function App() {
         {/* Header receives filtered snags for reports */}
         <Header 
           snags={displaySnags} 
+          selectedDate={selectedSnagsDate}
           onImport={mergeImported} 
           isAdmin={user.role === "admin"}
           currentUser={user}
@@ -601,7 +604,11 @@ export default function App() {
                 onCycleStatus={cycleStatus} 
                 onRemove={removeSnag} 
                 onUpdate={updateSnag}
-                onFilteredChange={setFilteredSnags}
+                onFilteredChange={(list, dateVal) => {
+                  setFilteredSnags(list)
+                  setHasFilteredSnags(true)
+                  setSelectedSnagsDate(dateVal || "")
+                }}
                 externalStatusFilter={statusFilter}
                 onExternalStatusChange={setStatusFilter}
               />

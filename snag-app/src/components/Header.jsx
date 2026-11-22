@@ -5,7 +5,7 @@ import { useLocations } from "../hooks/useLocations.js"
 import { useLanguage } from "../i18n/LanguageContext.jsx"
 import { canUser, hasPrivilege } from "../constants/permissions.js"
 
-export default function Header({ snags, onImport, isAdmin, currentUser, activeModule = "snags", onWipeAll }) {
+export default function Header({ snags, selectedDate = "", onImport, isAdmin, currentUser, activeModule = "snags", onWipeAll }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const { locations } = useLocations()
   const { tr } = useLanguage()
@@ -43,8 +43,8 @@ export default function Header({ snags, onImport, isAdmin, currentUser, activeMo
             <button style={{ ...s.btn, ...s.ghost }} onClick={() => exportWord(snags, locations)}>
               📝 {tr("وورد", "Word")}
             </button>
-            <button style={{ ...s.btn, ...s.ghost }} onClick={() => exportReport(snags, locations)}>
-              📄 PDF
+            <button style={{ ...s.btn, ...s.ghost }} onClick={() => exportReport(snags, locations, { selectedDate })}>
+              📄 {selectedDate ? tr(`PDF (${selectedDate})`, `PDF (${selectedDate})`) : "PDF"}
             </button>
           </>
         )}

@@ -4,6 +4,38 @@ import { TRADES, TYPES, PRIORITIES, PARK_ST_TRACKS, tradeOf, priOf, staOf, typeO
 import { useLocations } from "../hooks/useLocations.js"
 import { useLanguage } from "../i18n/LanguageContext.jsx"
 import { canUser, hasPrivilege } from "../constants/permissions.js"
+import { exportReport, exportExcel, exportWord } from "../utils/export.js"
+
+function toLocalIsoDate(d) {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function getTodayIso() {
+  return toLocalIsoDate(new Date())
+}
+
+function getYesterdayIso() {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  return toLocalIsoDate(d)
+}
+
+function getSnagIsoDate(ts) {
+  if (!ts) return ""
+  try {
+    let d
+    if (typeof ts.toDate === "function") d = ts.toDate()
+    else if (ts.seconds) d = new Date(ts.seconds * 1000)
+    else d = new Date(ts)
+    if (isNaN(d.getTime())) return ""
+    return toLocalIsoDate(d)
+  } catch {
+    return ""
+  }
+}
 
 const FILTER_TABS = [
   { id:"all",         labelAr:"الكل",         labelEn:"All" },
@@ -52,6 +84,9 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
   const [filterTrade,    setFilterTrade]    = useState("all")
   const [filterLocation, setFilterLocation] = useState("all")
   const [filterType,     setFilterType]     = useState("all")
+  const [filterDate,     setFilterDate]     = useState("")
+
+  const canExport = !currentUser || canUser(currentUser, "snags", "export")
 
   // Use external status filter if provided (controlled by StatBar), else internal
   const filterStatus = externalStatusFilter ?? "all"
@@ -73,6 +108,7 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
       const matchTrade  = filterTrade    === "all" || s.trade    === filterTrade
       const matchLoc    = filterLocation === "all" || s.location === filterLocation
       const matchType   = filterType     === "all" || s.type     === filterType
+      const matchDate   = !filterDate || getSnagIsoDate(s.timestamp) === filterDate
       
       const q = query.trim().toLowerCase()
       const locName = (locations.find(l => l.id === s.location)?.name ||
@@ -84,17 +120,17 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
         tradeOf(s.trade).label.toLowerCase().includes(q) ||
         locName.includes(q)
 
-      return matchSector && matchStatus && matchTrade && matchLoc && matchType && matchQuery
+      return matchSector && matchStatus && matchTrade && matchLoc && matchType && matchDate && matchQuery
     })
-  }, [snags, filterSector, filterStatus, filterTrade, filterLocation, filterType, query, locations])
+  }, [snags, filterSector, filterStatus, filterTrade, filterLocation, filterType, filterDate, query, locations])
 
   // Inform parent when filtered list changes — use stable IDs to prevent infinite loop
   const filteredIds = useMemo(() => filtered.map(s => s.id).join(","), [filtered])
   React.useEffect(() => {
     if (onFilteredChange) {
-      onFilteredChange(filtered)
+      onFilteredChange(filtered, filterDate)
     }
-  }, [filteredIds]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filteredIds, filterDate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={s.card}>
@@ -188,6 +224,133 @@ export default function SnagList({ snags, onCycleStatus, onRemove, onUpdate, onF
           <option value="all">{tr("كل الأنواع", "All Categories")}</option>
           {TYPES.map(t => <option key={t.id} value={t.id}>{trLabel(t.label)}</option>)}
         </select>
+      </div>
+
+      {/* ── Date Filter & Print Selected Day Report Bar ── */}
+      <div style={{
+        display: "flex",
+        gap: 8,
+        marginTop: 10,
+        flexWrap: "wrap",
+        alignItems: "center",
+        padding: "10px 12px",
+        background: "#060d1a",
+        borderRadius: 12,
+        border: filterDate ? "1px solid #0ea5e9" : "1px solid #1e293b",
+      }}>
+        <span style={{ fontSize: 12, fontWeight: 800, color: "#38bdf8", whiteSpace: "nowrap" }}>
+          📅 {tr("بحث بالتاريخ:", "Filter by Date:")}
+        </span>
+        <input
+          type="date"
+          value={filterDate}
+          onChange={e => setFilterDate(e.target.value)}
+          style={{ ...s.input, width: "auto", minWidth: 145, padding: "7px 10px" }}
+        />
+        <button
+          type="button"
+          onClick={() => setFilterDate(getTodayIso())}
+          style={{
+            background: filterDate === getTodayIso() ? "#0284c7" : "#0f172a",
+            color: filterDate === getTodayIso() ? "#fff" : "#cbd5e1",
+            border: "1px solid #334155",
+            borderRadius: 8,
+            padding: "6px 10px",
+            fontSize: 11,
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          {tr("اليوم", "Today")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilterDate(getYesterdayIso())}
+          style={{
+            background: filterDate === getYesterdayIso() ? "#0284c7" : "#0f172a",
+            color: filterDate === getYesterdayIso() ? "#fff" : "#cbd5e1",
+            border: "1px solid #334155",
+            borderRadius: 8,
+            padding: "6px 10px",
+            fontSize: 11,
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          {tr("أمس", "Yesterday")}
+        </button>
+        {filterDate && (
+          <button
+            type="button"
+            onClick={() => setFilterDate("")}
+            style={{
+              background: "#1e293b",
+              color: "#fca5a5",
+              border: "1px solid #7f1d1d",
+              borderRadius: 8,
+              padding: "6px 10px",
+              fontSize: 11,
+              fontWeight: 800,
+              cursor: "pointer",
+            }}
+          >
+            ✖ {tr("كل التواريخ", "All Dates")}
+          </button>
+        )}
+
+        {canExport && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginInlineStart: "auto" }}>
+            <button
+              type="button"
+              onClick={() => exportReport(filtered, locations, { selectedDate: filterDate })}
+              style={{
+                background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                color: "#020617",
+                border: "none",
+                borderRadius: 8,
+                padding: "7px 12px",
+                fontSize: 11,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+              title={tr("طباعة التقرير للملاحظات الظاهرة أو اليوم المحدد", "Print PDF report for filtered / selected day")}
+            >
+              🖨️ {filterDate ? tr(`طباعة تقرير يوم (${filterDate})`, `Print (${filterDate})`) : tr("طباعة التقرير (PDF)", "Print Report (PDF)")}
+            </button>
+            <button
+              type="button"
+              onClick={() => exportExcel(filtered, locations)}
+              style={{
+                background: "#065f46",
+                color: "#ecfdf5",
+                border: "1px solid #10b981",
+                borderRadius: 8,
+                padding: "7px 10px",
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: "pointer",
+              }}
+            >
+              📊 {tr("إكسيل", "Excel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => exportWord(filtered, locations)}
+              style={{
+                background: "#1e293b",
+                color: "#cbd5e1",
+                border: "1px solid #334155",
+                borderRadius: 8,
+                padding: "7px 10px",
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: "pointer",
+              }}
+            >
+              📝 {tr("وورد", "Word")}
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ display:"flex", gap:6, flexWrap:"wrap", margin:"12px 0 10px" }}>

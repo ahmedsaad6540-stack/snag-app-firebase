@@ -677,9 +677,11 @@ export function exportWord(snags, locations) {
 }
 
 /* ─── PDF / HTML Report ─── */
-export function exportReport(snags, locations) {
+export function exportReport(snags, locations, options = {}) {
   const sorted = sortSnags(snags, locations)
   const now  = new Date().toLocaleString("ar-EG")
+  const selectedDate = options?.selectedDate || ""
+  const reportTitle = options?.title || "تقرير ملاحظات Smart Mall OS"
   const rows = sorted
     .map((s, i) => {
       const tr    = tradeOf(s.trade)
@@ -715,7 +717,7 @@ export function exportReport(snags, locations) {
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="UTF-8" />
-<title>تقرير Smart Mall OS</title>
+<title>${esc(reportTitle)}${selectedDate ? ` - ${esc(selectedDate)}` : ""}</title>
 <style>
 body{font-family:Arial,sans-serif;padding:24px;background:#f8fafc;color:#0f172a}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px}
@@ -732,7 +734,8 @@ button{padding:10px 16px;border:none;border-radius:10px;background:#f59e0b;color
 </head>
 <body onload="setTimeout(() => window.print(), 500)">
 <div class="card">
-<h1>📋 تقرير ملاحظات Smart Mall OS</h1>
+<h1>📋 ${esc(reportTitle)}</h1>
+${selectedDate ? `<p style="font-size:16px;font-weight:700;color:#0f766e">📅 تاريخ اليوم المحدد: <strong>${esc(selectedDate)}</strong></p>` : ""}
 <p>تاريخ التصدير: ${esc(now)}</p>
 <p>إجمالي الملاحظات: <strong>${snags.length}</strong></p>
 <button onclick="window.print()">🖨️ طباعة / حفظ كـ PDF</button>
